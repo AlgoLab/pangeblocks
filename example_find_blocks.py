@@ -1,6 +1,12 @@
-from pprint import pprint 
+from tkinter import FIRST
 import numpy as np
+import networkx as nx
+
 from collections import defaultdict
+from graphviz import Digraph
+from pprint import pprint 
+from networkx.algorithms.flow import maximum_flow
+
 from pangeblocks.blocks_suffix_tree import (
     Block,
     map_coverage, 
@@ -8,33 +14,27 @@ from pangeblocks.blocks_suffix_tree import (
     is_maximal_block, 
 )
 
-from pangeblocks.pangeblocks.graph_max_flow import nodes_edges_from_blocks, Node, Edge, disect_blocks
+from pangeblocks.graph_max_flow import (
+    nodes_edges_from_blocks, 
+    is_consecutive,
+    missing_edge,
+    Node, 
+    Edge, 
+)
 
 ## Inputs
-# ALPHABET = {"A","C","G","T","-"}
-ALPHABET = {"0","1","2"}
-FIRST_CHAR = chr(97)
-seqs = [
-        "01010100",
-        "10111101",
-        "01011100"  
-    ]   
+ALPHABET = {"A","C","G","T"}
+FIRST_CHAR = chr(1000)
 
-# seqs = [
-#         "0120210100",
-#         "1021211101",
-#         "0120211100"  
-#     ]   
-# seqs = [
-#     "0001001101",
-#     "0001010001",
-#     "0001010011",
-#     "0001110001"
-# ]
+seqs = [
+        "ACCGTCGTAAAATT--ACG",
+        "ACCGTCGTCCCCTT--ACG",
+        "ACCGTCGTCCCCTTACACT"  
+    ]   
 
 num_seqs = len(seqs)
 id_seqs = list(range(num_seqs))
-# f = lambda n : "X" if n=="0" else "Y"
+# f = lambda n : "a" if n=="0" else "b"
 # seqs = [ "".join([f(n) for n in seq]) for seq in seqs]
 
 block2node = lambda block: Node(block.K, block.i, block.j, block.seq)
@@ -47,7 +47,7 @@ assert all([len_seq==size_msa for len_seq in lens]), "all seqs must have same le
 ## Experiment
 # 0. source and sink blocks
 source_block = Block(K=id_seqs, i=-2,j=-2,seq='source')
-post_blocks = [Block(K=[id_seq], i=-1,j=-1, seq=f'post-sink-{id_seq}') for id_seq,_ in enumerate(seqs)]
+post_blocks = [Block(K=[id_seq], i=-1,j=-1, seq=f'post-source-{id_seq}') for id_seq,_ in enumerate(seqs)]
 
 prev_blocks = [Block(K=[id_seq], i=size_msa,j=size_msa, seq=f'prev-sink-{id_seq}') for id_seq,_ in enumerate(seqs)]
 sink_block = Block(K=id_seqs, i=size_msa+1,j=size_msa+1,seq='sink')
@@ -74,14 +74,6 @@ no_cov = np.where(coverage==0)
 list_seq, list_col = no_cov
 list_seq = np.append(list_seq, -1)
 list_col  = np.append(list_col, -1)
-
-def is_consecutive(pair1, pair2):
-    "consecutive cols in the coverage, pair=(id_seq, num_col)"
-    seq1, col1 = pair1
-    seq2, col2 = pair2 
-    if seq1 == seq2 and col1 == col2-1:
-        return True
-    return False
 
 # find positions of blocks
 pos_extra_blocks = defaultdict(list)
@@ -163,15 +155,6 @@ for block in prev_blocks:
 
 # Add missing edges between consecutives block-nodes
 # consecutive blocks : connect them
-def missing_edge(node1, node2):
-    b1, b2 = node1, node2
-    common_rows = set(b1.K).intersection(set(b2.K))
-    capacity = len(common_rows)
-    if b1.j == b2.i-1 and capacity>0:
-        # if node1 == Node(source_block.K, source_block.i, source_block.j, source_block.seq):
-        #     print(node1,node2)
-        return [Edge(node1, node2, capacity)]
-    return []
 
 list_missing_edges = []
 for node1 in list_nodes:
@@ -215,7 +198,7 @@ for edge in list_edges:
         capacities[hash_edge] = edge.capacity
 
 print(pg.source)
-pg.render(directory='pg-graph', view=True).replace('\\', '/')
+pg.render(directory='output/graph', view=True).replace('\\', '/')
 
 # ________________________
 # Build pangeblock_
@@ -227,7 +210,7 @@ for edge in edges_added:
     capacity = capacities[edge]
     node1 = idnode2node[id_node1]
     node2 = idnode2node[id_node2]
-    edges_nx.append((id_node1, id_node2, {"capacity": capacity, "weight": -len(node2.K)}))#1}))
+    edges_nx.append((id_node1, id_node2, {"capacity": capacity, "weight": -len(node2.K)*(len(node1.seq)+len(node2.seq))})) # round((len(node1.K)+len(node2.K)/2)) }))#1}))
 
 
 # Auxiliar nodes
@@ -247,8 +230,7 @@ id_sink = node2str(block2node(sink_block))
 edges_nx.append((hash_node[id_sink][0], "t", {"capacity":num_seqs,"weight":1}))
 
 #  --------------       Max Flow min cost         ----------------
-import networkx as nx
-from networkx.algorithms.flow import maximum_flow
+
 G = nx.DiGraph()
 G.add_edges_from(
     edges_nx
@@ -271,7 +253,6 @@ for k,v in maxFlow.items():
             flow_by_edge[(id_node1, id_node2)] = flow
 
 
-from graphviz import Digraph
 pb = Digraph(format="png")
 
 for id_node in pangeblock["nodes"]:
@@ -282,4 +263,4 @@ for id_node in pangeblock["nodes"]:
 for edge in pangeblock["edges"]:
     pb.edge(edge[0],edge[1], label = str(flow_by_edge[edge]))
 
-pb.render(directory='pb-graph', view=True).replace('\\', '/')
+pb.render(directory='output/pb', view=True).replace('\\', '/')

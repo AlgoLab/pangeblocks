@@ -6,13 +6,14 @@ j: end position (from [1,n])
 """
 import numpy as np
 from collections import defaultdict, namedtuple
-from tkinter import FIRST
 from suffix_tree import Tree
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
+ALPHABET ={"A","C","G","T","-"}
+FIRST_CHAR = chr(100)
 ## ___ ___ ___ 
 Block = namedtuple("Block",["K","i","j","seq"])
-_Block = Tuple[List[int], int, int] # Block (K,i,j)
+_Block = Tuple[List[Union[int,str]], int, int] # Block (K,i,j)
 
 ## Functions
 def save_as_dot(tree, path_save: str = "graph.dot"):
@@ -80,44 +81,6 @@ def is_maximal_block(block, previous_blocks) -> bool:
             return False
     return True
 
-
-
-## Inputs
-ALPHABET = {"A","C","G","T","-"}
-ALPHABET = {"0","1"}
-FIRST_CHAR = chr(97)
-SEQS = [
-        "01010100",
-        "10111101",
-        "01011100"  
-    ]   
-
-lens = [len(seq) for seq in SEQS]
-size_msa = max(lens)
-assert all([len_seq==size_msa for len_seq in lens]), "all seqs must have same length"
-
-
-
-## ___ ___ ___
-## Experiment
-
-# 1. Define tree containing all the sequences starting at position i
-i = 0
-assert i < size_msa
-
-# 2. Find maximal blocks
-# following "Linear‑time method I: based on suffix trees" from https://doi.org/10.1186/s13015-020-0163-6
-max_blocks = []
-# iterate over all starting positions
-for i in range(size_msa-1):
-
-    blocks = maximal_blocks_from(i, seqs = SEQS)
-
-    # add new maximal blocks    
-    for block in blocks:
-        if is_maximal_block(block, max_blocks):
-            max_blocks.append(block)
-
 def map_coverage(blocks, size_msa, n_seqs):
     "fill a matrix with 1 if there exist a maximal block covering a position"
     coverage = np.zeros((n_seqs, size_msa))
@@ -126,10 +89,3 @@ def map_coverage(blocks, size_msa, n_seqs):
             coverage[k,block.i:block.j+1] = 1
     return coverage
 
-coverage = map_coverage(max_blocks, size_msa = size_msa , n_seqs=len(SEQS))
-# 3. Build pangenome graph.- 
-# (i) all vertical blocks as nodes
-
-
-# (ii) Sub-problems:_generate nodes between maximal vertical blocks
-#  
