@@ -89,3 +89,16 @@ def map_coverage(blocks, size_msa, n_seqs):
             coverage[k,block.i:block.j+1] = 1
     return coverage
 
+def compute_max_blocks(seqs, size_msa):
+
+    max_blocks = []
+
+    # iterate over all starting positions
+    for i in range(size_msa-1):
+        blocks = maximal_blocks_from(i, seqs = seqs)
+        # add new maximal blocks    
+        for block in blocks:
+            if is_maximal_block(block, max_blocks):
+                max_blocks.append(block)
+
+    return max_blocks

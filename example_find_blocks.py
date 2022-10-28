@@ -1,4 +1,3 @@
-from tkinter import FIRST
 import numpy as np
 import networkx as nx
 
@@ -7,14 +6,14 @@ from graphviz import Digraph
 from pprint import pprint 
 from networkx.algorithms.flow import maximum_flow
 
-from pangeblocks.blocks_suffix_tree import (
+from src.blocks.blocks_suffix_tree import (
     Block,
     map_coverage, 
     maximal_blocks_from, 
     is_maximal_block, 
 )
 
-from pangeblocks.graph_max_flow import (
+from src.flow.graph_max_flow import (
     nodes_edges_from_blocks, 
     is_consecutive,
     missing_edge,
