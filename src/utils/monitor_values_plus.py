@@ -10,9 +10,11 @@ class MonitorValuesPlus(MonitorValues):
         self.sep = None # will be set depending on the out file
         self.out_file = out_file
         self.overwrite = overwrite
+        
         if out_file:
-            # TODO: check if list_vars match with the colnames when overwrite is False 
-            # otherwise, rise an error since the Monitors are different
+
+            if Path(out_file).exists() and overwrite is False:
+                assert self._read_colnames(out_file) == list_vars,f"{out_file} exists and has different variables"
             self._create_file(out_file)
         
     def __call__(self,):
@@ -39,10 +41,9 @@ class MonitorValuesPlus(MonitorValues):
     def _get_sep(self,):
         "Get the right separator for values depending on the out_file (tsv or csv)"
         if self.out_file.endswith(".csv"):
-            sep=str(",")
+            return str(",")
         elif self.out_file.endswith(".tsv"):
-            sep=str("\t")
-        return sep
+            return str("\t")
 
     def _create_file(self, out_file):
         """Create the output file to save values
@@ -59,3 +60,8 @@ class MonitorValuesPlus(MonitorValues):
                 with open(Path(out_file),"w") as fp:
                     fp.write(cols)
                     fp.write("\n")
+
+    def _read_colnames(self, out_file):
+        with open(out_file) as fp:
+            first_line = fp.readline().replace("\n","").split(self._get_sep())
+        return first_line

@@ -2,7 +2,6 @@ import time
 from pathlib import Path
 from Bio import AlignIO #load MSA
 from src.utils.monitor_values import MonitorValues
-from src.blocks.blocks_suffix_tree import compute_max_blocks
 from rich.progress import track
 
 # log values
