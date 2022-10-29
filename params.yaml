@@ -1,0 +1,3 @@
+PATH_MSAS: "/home/disco/Data/pandora-msas/msas"
+MAX_MSAS: 30
+RANDOMIZE: True
