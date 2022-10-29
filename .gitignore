@@ -1,3 +1,4 @@
+.snakemake/
 *out/
 # python env
 *env/
