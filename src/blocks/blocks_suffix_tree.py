@@ -4,6 +4,8 @@ K: set of rows
 i: start position (from [0,n-1])
 j: end position (from [1,n])
 """
+# TODO: write as a class
+# TODO: use Block dataclass
 import numpy as np
 from collections import defaultdict, namedtuple
 from suffix_tree import Tree

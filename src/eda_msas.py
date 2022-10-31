@@ -37,5 +37,6 @@ def run(path_msas: str):
 
 if __name__ == "__main__":
 
+    # TODO: use argparse
     path_msas = sys.argv[-1]
     run(path_msas)

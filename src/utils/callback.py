@@ -2,6 +2,7 @@
 a callback receives as input all the variables the monitor collect
 and can perform any operation with those values
 """
+# TODO: add callback base class for monitor value
 # write info to a csv
 class Callback: 
 
