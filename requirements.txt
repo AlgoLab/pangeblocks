@@ -1,8 +1,9 @@
 numpy==1.23.2
-pandas
+pandas==1.5.1
 suffix-tree==0.0.7
 graphviz==0.20.1
 networkx==2.8.5
-rich
-biopython
-snakemake
+rich==12.6.0
+biopython==1.79
+snakemake==7.17.1
+seaborn==0.12.1

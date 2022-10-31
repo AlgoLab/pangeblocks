@@ -1,6 +1,6 @@
 ```bash
 python3 -m venv pbenv
-pbenv source/bin/activate
+source pbenv/bin/activate
 pip install -r requirements.txt
 ```
 
