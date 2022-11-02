@@ -7,3 +7,4 @@ rich==12.6.0
 biopython==1.79
 snakemake==7.17.1
 seaborn==0.12.1
+pydantic==1.10.2

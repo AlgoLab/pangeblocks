@@ -53,17 +53,17 @@ class BlockAnalyzer:
 
         # overlap between blocks
         for l,bl in enumerate(list_blocks[:-1]):
-            for m, bm in enumerate(list_blocks[1:]):
-            
+            for m, bm in enumerate(list_blocks[l+1:]):
+                
                 if set(bl.K).intersection(set(bm.K)) and \
                     set(range(bl.i,bl.j+1)).intersection(set(range(bm.i,bm.j+1))) and \
                     bl != bm:
-                    inter_blocks[l, m+1] += 1
+                    inter_blocks[l, m+l+1] += 1
 
         return inter_blocks
 
     @staticmethod
-    def _load_list_blocks(path_list_blocks: Union[str,Path])->list[Block]:
+    def _load_list_blocks(path_list_blocks: Union[str,Path]) -> list[Block]:
         "load blocks in a list from a json file"
         with open(path_list_blocks,"r") as fp:
             list_blocks=[Block(*args) for args in json.load(fp)]

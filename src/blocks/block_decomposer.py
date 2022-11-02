@@ -29,17 +29,19 @@ class Decomposer(BlockAnalyzer):
 
     @staticmethod
     def decomposition_from_inter_blocks(list_blocks, inter_blocks):
-        # TODO: decidir si retornar todos los bloques, o solo aquellos distintos del input
-        # ademas, decidir como retornar aquellos bloques que no intersectan, si hacerlo aqui o en una funcion aparte
-        # (yo creo que aqui, aquellos con inter_blocks==0)
+        "Return a new list of blocks that arise from the decomposition of the intersections"
         decomposed_blocks=[]
 
         rows, cols = np.where(inter_blocks>0)
         for row, col in zip(rows, cols):
             block1 = list_blocks[row]
             block2 = list_blocks[col]
-            
+            # get new blocks (not maximal)
+            blocks_from_inter = [block for block in block_decomposition(block1, block2) if block not in [block1,block2]]
             decomposed_blocks.extend(
-                block_decomposition(block1, block2)    
-            )    
-        return decomposed_blocks
+                blocks_from_inter       
+            )
+        
+        # join decomposed blocks and input blocks
+        decomposed_blocks.extend(list_blocks)
+        return list(set(decomposed_blocks))
