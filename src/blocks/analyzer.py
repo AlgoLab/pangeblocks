@@ -1,17 +1,23 @@
-from importlib.resources import path
 import json
 import numpy as np
-import pandas as pd
 from typing import Optional, Union
 from pathlib import Path
 from .block import Block
 
-
-class BlockStats:
+class BlockAnalyzer:
     """Compute some stats for a list of blocks"""
 
     def __call__(self, list_blocks: Optional[list[Block]]=None, path_blocks: Optional[Union[str, Path]]=None, **kwargs) -> dict:
-        """Compute statistics for a set of blocks
+        """Compute statistics for a list of blocks.
+            If a list of blocks is not provided
+
+        Args:
+            list_blocks (Optional[list[Block]], optional): a collection of elements of the type Block. Defaults to None.
+            path_blocks (Optional[Union[str, Path]], optional): a path to a json file containing blocks (will be parsed as Block when loaded). 
+                                                                Defaults to None.
+
+        Returns:
+            dict: number of blocks, number of blocks with overlap and number of intersections between blocks
         """
         
         if path_blocks is not None:
@@ -28,19 +34,19 @@ class BlockStats:
         )
         
     @staticmethod
-    def _blocks_with_overlap(inter_blocks) -> int:
+    def _blocks_with_overlap(inter_blocks: np.ndarray) -> int:
         "number of blocks that has at least one overlap"
         blocks_with_overlap=(inter_blocks.max(axis=1)>0).sum()
         return int(blocks_with_overlap)
 
     @staticmethod
-    def _inter_between_blocks(inter_blocks) -> int:
+    def _inter_between_blocks(inter_blocks: np.ndarray) -> int:
         "number of intersections between pairs of blocks"
         inter_between_blocks=(inter_blocks).sum().sum()
         return int(inter_between_blocks)
     
     @staticmethod
-    def _matrix_inter_blocks(list_blocks) -> np.ndarray:
+    def _matrix_inter_blocks(list_blocks: list[Block]) -> np.ndarray:
         "matrix to count overlaps by pairs of blocks"
         n_blocks=len(list_blocks)
         inter_blocks=np.zeros((n_blocks, n_blocks))

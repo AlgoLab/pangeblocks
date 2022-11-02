@@ -1,3 +1,3 @@
 from .block import Block
 from .block_decomposition import block_decomposition
-from .stats import BlockStats
+from .analyzer import BlockAnalyzer

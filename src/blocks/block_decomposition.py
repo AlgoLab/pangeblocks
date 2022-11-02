@@ -1,10 +1,16 @@
 from .block import Block
-from ..positional_strings.positional_string import PositionalString
-
-# FIXME: conditions based on the manuscript
 
 def block_decomposition(block1: Block, block2: Block):
-    "Generate blocks from 2 blocks based on their intersection" 
+    """Decompose 2 blocks based on their intersection
+
+    Args:
+        block1 (Block): a block
+        block2 (Block): another block
+
+    Returns:
+        list: blocks decomposed from the intersection. If input blocks 
+                does not intersect, the output is an empty list.
+    """ 
     # sort blocks (left most first)
     b1,b2=sorted([block1,block2], key=lambda b: (b.i,b.j))
 
