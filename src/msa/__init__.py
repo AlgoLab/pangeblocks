@@ -1,0 +1,1 @@
+from .analyzer_msa import AnalyzerMSA
