@@ -1,2 +1,1 @@
 from .positional_string import PositionalString
-from .utils import positional_string_from_block

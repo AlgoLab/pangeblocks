@@ -4,7 +4,6 @@ from typing import Optional, Union
 from .block import Block
 from .analyzer import BlockAnalyzer
 from .block_decomposition import block_decomposition
-from ..positional_strings.utils import positional_string_from_block
 
 class Decomposer(BlockAnalyzer):
 
@@ -23,7 +22,7 @@ class Decomposer(BlockAnalyzer):
         decomposed_blocks=self.decomposition_from_inter_blocks(list_blocks, inter_blocks)
         
         if self.return_positional_strings is True:
-            return [positional_string_from_block(block) for block in decomposed_blocks]        
+            return [block.to_positional_string() for block in decomposed_blocks]        
         
         return decomposed_blocks
 
@@ -44,4 +43,6 @@ class Decomposer(BlockAnalyzer):
         
         # join decomposed blocks and input blocks
         decomposed_blocks.extend(list_blocks)
+
+        # return non-duplicated blocks
         return list(set(decomposed_blocks))
