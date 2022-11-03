@@ -2,7 +2,7 @@ from pydantic import root_validator, validator
 from pydantic.dataclasses import dataclass
 from ..positional_strings import PositionalString
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Block:
     "class for keeping track a block"
     K: tuple

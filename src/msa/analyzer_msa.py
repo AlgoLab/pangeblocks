@@ -2,12 +2,7 @@ from Bio import AlignIO #load MSA
 from typing import Union
 from pathlib import Path
 
-# TODO: add what is computed in src/eda_msas.py in this class
 class AnalyzerMSA:
-
-    # def __init__(self,):
-    #     self.n_cols = None # number of columns
-    #     self.n_seqs = None # number of sequences
 
     def __call__(self, path_msa: Union[str, Path]) -> tuple:
         "Compute metrics/analysis over an MSA"
