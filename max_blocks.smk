@@ -56,11 +56,10 @@ rule compute_blocks:
     output:
         "out/blocks/{name_msa}.json",
     run:   
-        
+        ti = time.time() # time until max blocks are computed
         # load MSA, count seqs and columns
         path_msa=path_msa_from_name(f"{wildcards.name_msa}")
-        # try:
-        ti = time.time()
+        
         align=AlignIO.read(path_msa, "fasta")
         n_cols = align.get_alignment_length()
         n_seqs = len(align)
@@ -70,6 +69,7 @@ rule compute_blocks:
         # compute max blocks and count them
         max_blocks = compute_max_blocks(seqs, n_cols)
         n_max_blocks = len(max_blocks)
+        t = time.time()-ti  
 
         # save max blocks in a file linked to the MSA's name
         path_blocks = f"out/blocks/{wildcards.name_msa}.json" 
@@ -80,14 +80,9 @@ rule compute_blocks:
         dict_analysis=block_analyzer(max_blocks)
         blocks_with_overlap=dict_analysis["blocks_with_overlap"]
         inter_between_blocks=dict_analysis["inter_between_blocks"]
-        t = time.time()-ti  
-
+        
         # log values
         mv_blocks()
-        # except:
-        #     pass
-            # n_cols, n_seqs, n_unique_seqs, n_max_blocks, blocks_with_overlap, inter_between_blocks = None, None, None, None, None, None
-       
         
 
 # --- Decompose blocks

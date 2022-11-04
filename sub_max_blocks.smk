@@ -39,7 +39,7 @@ def path_msa_from_name(name_msa):
 # read msas to process
 list_msa = read_stats_msa(path_stats=PATH_STATS, randomize=RANDOMIZE, max_msas=MAX_MSAS)
 print(list_msa[0])
-NAMES=[Path(path).stem for path in list_msa[:5]] # msas names
+NAMES=[Path(path).stem for path in list_msa] # msas names
 
 rule all: 
     input:
@@ -64,12 +64,9 @@ rule compute_blocks:
     output:
         "out-sub/blocks/{name_msa}.json"
     run:
-
+        ti = time.time() # time until max blocks are computed
         # load MSA, count seqs and columns
         path_msa = path_msa_from_name(f"{wildcards.name_msa}")
-
-        ti = time.time()
-
         align  = AlignIO.read(path_msa, "fasta")
         n_cols = align.get_alignment_length()
         n_seqs = len(align)
@@ -91,6 +88,7 @@ rule compute_blocks:
                 pos_sub_msas.append((start,end))
         
         # compute max blocks and count them
+        # TODO: run in parallel
         max_blocks = []
         if len(pos_sub_msas)>0:
             for start_sub_msa, end_sub_msa in pos_sub_msas:
@@ -100,7 +98,7 @@ rule compute_blocks:
                 n_max_blocks_sub_msa=len(max_blocks_sub_msa)
 
                 max_blocks.extend(max_blocks_sub_msa)
-        
+        t = time.time()-ti
         n_max_blocks = len(max_blocks)
         path_blocks=f"out-sub/blocks/{wildcards.name_msa}.json"
         with open(path_blocks,"w") as fp:
@@ -111,6 +109,6 @@ rule compute_blocks:
             dict_analysis=block_analyzer(max_blocks)
             blocks_with_overlap=dict_analysis["blocks_with_overlap"]
             inter_between_blocks=dict_analysis["inter_between_blocks"]
-        t = time.time()-ti  
+         
 
         mv_blocks()

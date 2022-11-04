@@ -1,8 +1,0 @@
-timestamp	path_msa	path_blocks	n_seqs	n_unique_seqs	n_cols	n_max_blocks	t	blocks_with_overlap	inter_between_blocks
-Fri Nov  4 16:43:52 2022	/data/msas/msas/Cluster_14540.fa	out-sub/blocks/Cluster_14540.json	11	3	31	None	0.2900121212005615	6	16	
-Fri Nov  4 16:46:46 2022	/data/msas/msas/Cluster_14540.fa	out-sub/blocks/Cluster_14540.json	11	3	31	8	0.28843188285827637	6	16	
-Fri Nov  4 16:50:36 2022	/data/msas/msas/Cluster_14540.fa	out-sub/blocks/Cluster_14540.json	11	3	31	8	0.2780125141143799	6	16	
-Fri Nov  4 16:50:37 2022	/data/msas/msas/Cluster_14452.fa	out-sub/blocks/Cluster_14452.json	11	2	32	0	0.035309791564941406	None	None	
-Fri Nov  4 16:50:39 2022	/data/msas/msas/Cluster_14365.fa	out-sub/blocks/Cluster_14365.json	157	4	33	9	0.3128659725189209	8	27	
-Fri Nov  4 16:50:40 2022	/data/msas/msas/Cluster_14280.fa	out-sub/blocks/Cluster_14280.json	135	6	34	24	0.573936939239502	23	176	
-Fri Nov  4 16:50:42 2022	/data/msas/msas/Cluster_14109.fa	out-sub/blocks/Cluster_14109.json	56	2	36	6	0.27251744270324707	0	0	
