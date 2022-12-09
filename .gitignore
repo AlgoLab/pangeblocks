@@ -1,6 +1,7 @@
 .snakemake/
 out/
 out-sub/
+output/
 # python env
 *env/
 

@@ -64,5 +64,6 @@ for (start, end) in block_boundaries:
     max_blocks.extend(max_blocks_sub_msa)
 
 n_max_blocks = len(max_blocks)
+Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 with open(args.output, "w") as fp:
     json.dump(max_blocks, fp)
