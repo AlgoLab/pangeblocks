@@ -28,7 +28,10 @@ def compute_max_blocks(seqs):
     tree = Tree({num: enumerate(seq) for num, seq in enumerate(seqs)})
     blocks = [path for (c, path) in tree.maximal_repeats()]
     decoded_blocks = [
-        (b[0][0], b[-2][0], [c[1] for c in b if type(c) == "tuple"]) for b in blocks
+        (b[0][0], 
+         b[-1][0], 
+        "".join([c[1] for c in b if type(c) == tuple])
+        ) for b in blocks
     ]
     return decoded_blocks
 
