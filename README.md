@@ -7,5 +7,5 @@ pip install -r requirements.txt
 Fix parameters in `params.yaml`
 ```bash
 snakemake -s eda.smk -c16         # compute stats for each MSA
-snakemake -s max_blocks.smk -c16 # compute max blocks for MSAs
+snakemake -s compute_blocks.smk -c16 # compute max blocks for MSAs
 ```
