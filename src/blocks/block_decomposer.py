@@ -15,11 +15,11 @@ class Decomposer(BlockAnalyzer):
         if path_blocks is not None:
             list_blocks = self._load_list_blocks(path_blocks)
 
-        # compute matrix with intersections
-        inter_blocks=self._matrix_inter_blocks(list_blocks) # FIXME: 
+        # compute list with (idx1,idx2) of intersected blocks
+        inter_blocks, sorted_blocks =self._list_inter_blocks(list_blocks, return_sorted_list=True) 
 
         # decompose blocks
-        decomposed_blocks=self.decomposition_from_inter_blocks(list_blocks, inter_blocks) # FIXME:
+        decomposed_blocks=self.decomposition_from_inter_blocks(sorted_blocks, inter_blocks) 
         
         if self.return_positional_strings is True:
             return [block.to_positional_string() for block in decomposed_blocks]        
@@ -31,10 +31,10 @@ class Decomposer(BlockAnalyzer):
         "Return a new list of blocks that arise from the decomposition of the intersections"
         decomposed_blocks=[]
 
-        rows, cols = np.where(inter_blocks>0) # FIXME:
-        for row, col in zip(rows, cols):
-            block1 = list_blocks[row]
-            block2 = list_blocks[col]
+        # decompose pairs of blocks with non-empty intersection
+        for pos1, pos2 in inter_blocks:
+            block1 = list_blocks[pos1]
+            block2 = list_blocks[pos2]
             # get new blocks (not maximal)
             blocks_from_inter = [block for block in block_decomposition(block1, block2) if block not in [block1,block2]]
             decomposed_blocks.extend(

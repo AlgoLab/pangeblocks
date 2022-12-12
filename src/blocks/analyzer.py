@@ -49,8 +49,7 @@ class BlockAnalyzer:
         return len(inter_blocks)
     
     @staticmethod
-    def _list_inter_blocks(list_blocks: list[Block], return_sorted_list: bool = False) -> np.ndarray:
-        # FIXME: sort blocks and avoid using the matrix fro all vs all comparison, change it for a list
+    def _list_inter_blocks(list_blocks: list[Block], return_sorted_list: bool = False) -> list[tuple]:
         "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
         blocks = sorted(list_blocks, key=lambda block: block.i)
         
