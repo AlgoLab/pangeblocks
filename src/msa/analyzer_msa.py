@@ -1,3 +1,10 @@
+"""
+Given an MSA saved in a fasta file, return
+number of columns
+number of sequences
+number of unique sequences (usually there are many duplicates)
+number of identical columns (those with one character in {A,C,G,T})
+"""
 from Bio import AlignIO #load MSA
 from typing import Union
 from pathlib import Path

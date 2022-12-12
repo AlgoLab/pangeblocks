@@ -4,6 +4,7 @@ from typing import Optional, Union
 from pathlib import Path
 from .block import Block
 
+# TODO: sort blocks and avoid using the matrix fro all vs all comparison change it for a list
 class BlockAnalyzer:
     """Compute some stats for a list of blocks"""
 
@@ -36,8 +37,10 @@ class BlockAnalyzer:
     @staticmethod
     def _blocks_with_overlap(inter_blocks: np.ndarray) -> int:
         "number of blocks that has at least one overlap"
-        blocks_with_overlap=(inter_blocks.max(axis=1)>0).sum()
-        return int(blocks_with_overlap)
+        blocks_rows, blocks_cols = np.where(inter_blocks>0)
+        blocks_with_overlap = set(blocks_rows).union(set(blocks_cols))
+        n_blocks_with_overlap = len(blocks_with_overlap)
+        return n_blocks_with_overlap
 
     @staticmethod
     def _inter_between_blocks(inter_blocks: np.ndarray) -> int:
