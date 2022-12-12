@@ -11,16 +11,16 @@ rule eda_msa:
     input: 
         path_msas=config["PATH_MSAS"]
     output:
-        "out/analysis-msa/stats_msas.tsv",
-        "out/analysis-msa/problematic_files.tsv"
+        "output/analysis-msa/stats_msas.tsv",
+        "output/analysis-msa/problematic_files.tsv"
     run:
         
         mv = MonitorValuesPlus(list_vars=["path_msa","n_seqs","n_unique_seqs","n_identical_cols","n_cols", "perc_identical_cols"],
-                                out_file="out/analysis-msa/stats_msas.tsv",
+                                out_file="output/analysis-msa/stats_msas.tsv",
                                 overwrite=True)
 
         mv_problems = MonitorValuesPlus(list_vars=["path_msa"],
-                                        out_file="out/analysis-msa/problematic_files.tsv",
+                                        out_file="output/analysis-msa/problematic_files.tsv",
                                         overwrite=True)
         
         analyzer = AnalyzerMSA()
@@ -34,7 +34,7 @@ rule eda_msa:
                 mv_problems()
 
         # list of (path to) msas
-        list_paths = list(Path(config["PATH_MSAS"]).rglob("*.fa"))[:1000]
+        list_paths = list(Path(config["PATH_MSAS"]).rglob("*.fa"))
 
         with ThreadPoolExecutor(max_workers=16) as pool:
             with tqdm(total=len(list_paths)) as progress:

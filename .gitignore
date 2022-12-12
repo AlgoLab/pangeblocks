@@ -3,6 +3,7 @@ out/
 out-sub/
 output/
 output-sub/
+output*/
 
 # python env
 *env/
