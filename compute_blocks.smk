@@ -2,11 +2,18 @@ configfile: "params.yaml"
 from pathlib import Path
 import pandas as pd
 
-# PATH_MSAS = Path(config["PATH_MSAS"]).rglob("*fa")
-# NAMES=[Path(path).stem for path in PATH_MSAS["path_msa"]] # msas names
-NAMES = ["GC00001810"]
+NAMES_MSA = config["NAMES_MSA"] # txt file with names of the MSAs
 PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
+
+# load names of MSAs to process
+with open(NAMES_MSA) as fp:
+    NAMES = []
+    for line in fp.readlines():
+        name_msa = line.replace("\n","")
+        NAMES.append(name_msa)
+
+# --- 
 
 rule all:
     input:

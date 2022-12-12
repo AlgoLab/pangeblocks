@@ -1,4 +1,3 @@
 PATH_MSAS: "../data/msas"
+NAMES_MSA: "names_msas.txt"
 PATH_OUTPUT: "output-exp"
-MAX_MSAS: 170
-RANDOMIZE: False
