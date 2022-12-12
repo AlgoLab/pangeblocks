@@ -4,7 +4,6 @@ from typing import Optional, Union
 from pathlib import Path
 from .block import Block
 
-# TODO: sort blocks and avoid using the matrix fro all vs all comparison change it for a list
 class BlockAnalyzer:
     """Compute some stats for a list of blocks"""
 
@@ -25,7 +24,7 @@ class BlockAnalyzer:
             list_blocks = self._load_list_blocks(path_blocks)
 
         # compute matrix with intersections
-        inter_blocks=self._matrix_inter_blocks(list_blocks)
+        inter_blocks=self._list_inter_blocks(list_blocks)
 
         # stats
         return dict(
@@ -37,33 +36,44 @@ class BlockAnalyzer:
     @staticmethod
     def _blocks_with_overlap(inter_blocks: np.ndarray) -> int:
         "number of blocks that has at least one overlap"
-        blocks_rows, blocks_cols = np.where(inter_blocks>0)
-        blocks_with_overlap = set(blocks_rows).union(set(blocks_cols))
-        n_blocks_with_overlap = len(blocks_with_overlap)
-        return n_blocks_with_overlap
+        overlapping_blocks = []
+        for idx_blocks in inter_blocks:
+            overlapping_blocks.extend(idx_blocks)
+        blocks_with_overlap = set(inter_blocks)
 
+        return len(blocks_with_overlap)
+        
     @staticmethod
     def _inter_between_blocks(inter_blocks: np.ndarray) -> int:
         "number of intersections between pairs of blocks"
-        inter_between_blocks=(inter_blocks).sum().sum()
-        return int(inter_between_blocks)
+        return len(inter_blocks)
     
     @staticmethod
-    def _matrix_inter_blocks(list_blocks: list[Block]) -> np.ndarray:
-        "matrix to count overlaps by pairs of blocks"
-        n_blocks=len(list_blocks)
-        inter_blocks=np.zeros((n_blocks, n_blocks))
+    def _list_inter_blocks(list_blocks: list[Block], return_sorted_list: bool = False) -> np.ndarray:
+        # FIXME: sort blocks and avoid using the matrix fro all vs all comparison, change it for a list
+        "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
+        blocks = sorted(list_blocks, key=lambda block: block.i)
+        
+        # save pairs of indexes for the sorted blocks that intersect
+        intersections = [] 
+        for pos1, block1 in enumerate(blocks[:-1]):
+            # compare against the next blocks in the sorted list 
+            for rel_pos, block2 in enumerate(blocks[pos1+1:]):
+                pos2 = rel_pos + pos1 + 1
+                block2 = blocks[pos2]
 
-        # overlap between blocks
-        for l,bl in enumerate(list_blocks[:-1]):
-            for m, bm in enumerate(list_blocks[l+1:]):
-                
-                if set(bl.K).intersection(set(bm.K)) and \
-                    set(range(bl.i,bl.j+1)).intersection(set(range(bm.i,bm.j+1))) and \
-                    bl != bm:
-                    inter_blocks[l, m+l+1] += 1
+                # check for not empty intersection
+                common_rows = list(set(block1.K).intersection(set(block2.K))) # intersection set K
+                common_cols = list(set(range(block1.i,block1.j+1)).intersection(set(range(block2.i,block2.j+1)))) # intersection columns [i,j]
 
-        return inter_blocks
+                if not (common_rows and common_cols):
+                    break
+
+                intersections.append((pos1,pos2))
+
+        if return_sorted_list is True:
+            return intersections, blocks
+        return intersections
 
     @staticmethod
     def _load_list_blocks(path_list_blocks: Union[str,Path]) -> list[Block]:
