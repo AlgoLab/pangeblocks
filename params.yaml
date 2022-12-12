@@ -1,3 +1,4 @@
-PATH_MSAS: "/home/avila/data"
+PATH_MSAS: "../data/msas"
+PATH_OUTPUT: "output-exp"
 MAX_MSAS: 170
 RANDOMIZE: False

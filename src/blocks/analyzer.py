@@ -39,7 +39,7 @@ class BlockAnalyzer:
         overlapping_blocks = []
         for idx_blocks in inter_blocks:
             overlapping_blocks.extend(idx_blocks)
-        blocks_with_overlap = set(inter_blocks)
+        blocks_with_overlap = set(overlapping_blocks)
 
         return len(blocks_with_overlap)
         
