@@ -11,16 +11,16 @@ rule eda_msa:
     input: 
         path_msas=config["PATH_MSAS"]
     output:
-        "output/analysis-msa/stats_msas.tsv",
-        "output/analysis-msa/problematic_files.tsv"
+        expand("{path_output}/analysis-msa/stats_msas.tsv", path_output=config["PATH_OUTPUT"]),
+        expand("{path_output}/analysis-msa/problematic_files.tsv", path_output=config["PATH_OUTPUT"])
     run:
-        
+        path_output=config["PATH_OUTPUT"]
         mv = MonitorValuesPlus(list_vars=["path_msa","n_seqs","n_unique_seqs","n_identical_cols","n_cols", "perc_identical_cols"],
-                                out_file="output/analysis-msa/stats_msas.tsv",
+                                out_file=f"{path_output}/analysis-msa/stats_msas.tsv",
                                 overwrite=True)
 
         mv_problems = MonitorValuesPlus(list_vars=["path_msa"],
-                                        out_file="output/analysis-msa/problematic_files.tsv",
+                                        out_file=f"{path_output}/analysis-msa/problematic_files.tsv",
                                         overwrite=True)
         
         analyzer = AnalyzerMSA()

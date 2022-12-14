@@ -2,16 +2,15 @@ configfile: "params.yaml"
 from pathlib import Path
 import pandas as pd
 
-NAMES_MSA = config["NAMES_MSA"] # txt file with names of the MSAs
 PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
 
-# load names of MSAs to process
-with open(NAMES_MSA) as fp:
-    NAMES = []
-    for line in fp.readlines():
-        name_msa = line.replace("\n","")
-        NAMES.append(name_msa)
+# load names of MSAs
+STATS_MSAS = pd.read_csv(
+                Path(PATH_OUTPUT).joinpath("analysis-msa/stats_msas.tsv"), 
+                index_col=False, sep="\t"
+                )
+NAMES = STATS_MSAS["path_msa"].apply(lambda path: Path(path).stem) # txt file with names of the MSAs
 
 # --- 
 

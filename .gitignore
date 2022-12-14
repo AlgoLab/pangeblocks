@@ -1,11 +1,9 @@
 .snakemake/
-out/
-out-sub/
-output/
-output-sub/
-output*/
-panels-pbwt-msa/
+out*/
+msas/
+panels*/
 
+*.txt
 # python env
 *env/
 

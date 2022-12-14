@@ -1,3 +1,2 @@
-PATH_MSAS: "../data/msas"
-NAMES_MSA: "names_msas.txt"
-PATH_OUTPUT: "output-exp"
+PATH_MSAS: "msas"
+PATH_OUTPUT: "experiment"
