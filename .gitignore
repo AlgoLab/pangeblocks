@@ -4,6 +4,7 @@ out-sub/
 output/
 output-sub/
 output*/
+panels-pbwt-msa/
 
 # python env
 *env/
