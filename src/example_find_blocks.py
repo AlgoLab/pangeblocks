@@ -10,7 +10,7 @@ from src.blocks.blocks_suffix_tree import (
     Block,
     map_coverage, 
     maximal_blocks_from, 
-    is_maximal_block, 
+    is_maximal_block,
 )
 
 from src.flow.graph_max_flow import (
