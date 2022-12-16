@@ -2,6 +2,7 @@
 out*/
 msas/
 panels*/
+experiment*/
 
 *.txt
 # python env

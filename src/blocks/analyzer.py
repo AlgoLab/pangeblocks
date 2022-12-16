@@ -65,10 +65,8 @@ class BlockAnalyzer:
                 common_rows = list(set(block1.K).intersection(set(block2.K))) # intersection set K
                 common_cols = list(set(range(block1.i,block1.j+1)).intersection(set(range(block2.i,block2.j+1)))) # intersection columns [i,j]
 
-                if not (common_rows and common_cols):
-                    break
-
-                intersections.append((pos1,pos2))
+                if (common_rows and common_cols):
+                    intersections.append((pos1,pos2))
 
         if return_sorted_list is True:
             return intersections, blocks
