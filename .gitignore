@@ -4,6 +4,9 @@ msas/
 panels*/
 experiment*/
 
+# pandora / make_prg
+make_prg_0.4.0
+
 *.txt
 # python env
 *env/
