@@ -23,7 +23,7 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
 2. `problematic_msas.tsv`: contains a list of MSAs that has no information
 
-After the previous pipeline has run, the computation of maximal blocks will be done only in the MSAs in `stats_msas.tsv` 
+After the previous pipeline has run, the computation of pangeblock graphs will be done only in the MSAs in `stats_msas.tsv` 
 ```bash
-snakemake -s compute_blocks.smk -c16 # compute max blocks for MSAs
+snakemake -s pangeblock.smk -c16 # variation graph as GFA
 ```
