@@ -27,3 +27,8 @@ After the previous pipeline has run, the computation of pangeblock graphs will b
 ```bash
 snakemake -s pangeblock.smk -c16 # variation graph as GFA
 ```
+
+___
+### Independent pipelines
+`make_prg.smk` will download version as indicated here https://github.com/iqbal-lab-org/make_prg#download (time accession: 19/12/2022)
+, run make_prg and extract the gfa outputs for the MSAs that are in `PATH_MSAS`
