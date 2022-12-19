@@ -17,7 +17,8 @@ NAMES = STATS_MSAS["path_msa"].apply(lambda path: Path(path).stem) # txt file wi
 rule all:
     input:
         expand("{path_output}/max_blocks/stats/{name_msa}.tsv", name_msa=NAMES, path_output=PATH_OUTPUT),
-        expand("{path_output}/block_decomposition/{name_msa}.json", name_msa=NAMES, path_output=PATH_OUTPUT)
+        expand("{path_output}/block_decomposition/{name_msa}.json", name_msa=NAMES, path_output=PATH_OUTPUT),
+        expand("{path_output}/gfa/{name_msa}.gfa", name_msa=NAMES, path_output=PATH_OUTPUT)
 
 rule compute_blocks:
     input:
@@ -43,3 +44,12 @@ rule decompose_blocks:
         expand("{path_output}/block_decomposition/stats/{{name_msa}}.tsv", path_output=PATH_OUTPUT)
     shell:
         "python decompose_blocks.py {input} --output {output[0]} --output-stats {output[1]}"
+
+rule pangeblock:
+    input:
+        path_blocks=expand("{path_output}/block_decomposition/{{name_msa}}.json", path_output=PATH_OUTPUT),
+        path_msa=expand("{path_msas}/{{name_msa}}.fa", path_msas=PATH_MSAS)
+    output: 
+        path_gfa=expand("{path_output}/gfa/{{name_msa}}.gfa", path_output=PATH_OUTPUT)
+    shell: 
+        "python pangeblock.py --path_blocks {input[0]} --path_msa {input[1]} --path_gfa {output[0]}"
