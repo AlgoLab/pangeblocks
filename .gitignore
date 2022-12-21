@@ -3,6 +3,8 @@ out*/
 msas/
 panels*/
 experiment*/
+msas-pggb/
+subsample-experiment/
 
 # pandora / make_prg
 make_prg_0.4.0
