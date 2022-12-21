@@ -1,2 +1,2 @@
-PATH_MSAS: "msas-pggb"
-PATH_OUTPUT: "subsample-experiment"
+PATH_MSAS: "msa-exp"
+PATH_OUTPUT: "experiment"

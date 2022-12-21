@@ -1,9 +1,23 @@
 import numpy as np
 from collections import defaultdict
-from ..blocks import Block
+from src.blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
+from itertools import cycle
+from PIL import Image
+
+COLORS = [
+    (255,0,0), # red
+    (0,255,0), # green 
+    (0,0,255), # blue
+    (255,255,0), # yellow
+    (0,255,255), # cyan
+    (255,0,255), # magenta
+    (255,125,0), # orange
+    (125,0,255), # blue-magenta
+    (255,0,125), # red-magenta
+]
 
 class InputBlockSet:
 
@@ -11,10 +25,10 @@ class InputBlockSet:
         
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
-        missing_blocks = self.get_missing_blocks(coverage_panel, msa)
+        # missing_blocks = self.get_missing_blocks(coverage_panel, msa)
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + blocks_one_char + [block for block in missing_blocks if block.j-block.i+1 > 1]
+        set_B = blocks + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
         return set_B
 
@@ -49,9 +63,9 @@ class InputBlockSet:
         for seq, cols in idx_missing_blocks_by_seq.items():
             consecutive_pos = self.get_list_consecutive_pos(cols)
             for pos in consecutive_pos: 
-                label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1]) #if pos[0]!=pos[-1] else align[seq,pos[0]]
+                label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1])
                 missing_blocks.append(
-                Block(K=(seq,), i=pos[0],j=pos[-1], label=label)
+                    Block(K=(seq,), i=pos[0],j=pos[-1], label=label)
                 )
 
         return missing_blocks
@@ -81,10 +95,15 @@ class InputBlockSet:
         "generate trivial blocks, one seq and one col"
         blocks_one_char = []
         for col in range(n_cols):
+            seq_by_char = defaultdict(list)
             for row in range(n_seqs):
+                seq_by_char[msa[row,col]].append(row)
+
+            for c, K in seq_by_char.items():
                 blocks_one_char.append(
-                    Block(K=(row,), i=col, j=col, label=msa[row,col])
+                        Block(K=K, i=col, j=col, label=c)
                 )
+
         return blocks_one_char
 
     def load_msa(self, path_msa):
@@ -95,3 +114,43 @@ class InputBlockSet:
         n_seqs = len(align)
 
         return align, n_seqs, n_cols
+
+    @staticmethod
+    def array2img(array):
+        "Array to PIL image"
+        m, M = array.min(), array.max()
+        # rescale to [0,1]
+        img_rescaled = (array - m) / (M-m)
+        
+        # invert colors black->white
+        img_array = np.ceil(255 - img_rescaled*255)
+        dtype = eval(f"np.int8")
+        img_array = np.array(img_array, dtype=dtype)
+        
+        # convert to Image 
+        img_pil = Image.fromarray(img_array,'L')
+        return img_pil
+
+    def save_img(self, array, path_save):
+        "Save image in grayscale for the FCGR provided as input"
+        Path(path_save).parent.mkdir(exist_ok=True, parents=True)
+        img_pil = self.array2img(array)
+        img_pil.save(path_save)
+
+
+    def get_coverage_color_panel(self, n_seqs, n_cols, blocks, colors):
+        """returns a matrix of size equal to msa (n_seq x n_cols) with 
+        the number of blocks in the list_blocks that covers each position"""
+        colors = iter(cycle(colors))
+        # coverage_by_pos = defaultdict(int)
+        coverage_panel = np.zeros((n_seqs, n_cols,3))
+        for block in blocks:
+            color = next(colors)
+            for r in block.K:
+                for c in range(block.i,block.j+1):
+                    coverage_panel[r,c,:] = color
+        return coverage_panel
+
+    def save_colored_img(self, array, path_save):
+        img_pil = Image.fromarray(array.astype("uint8"),"RGB")
+        img_pil.save(path_save)
