@@ -78,7 +78,7 @@ class CoverageMSA:
         the number of blocks in the list_blocks that covers each position"""
         colors = iter(cycle(colors))
         # coverage_by_pos = defaultdict(int)
-        coverage_panel = np.zeros((n_seqs, n_cols,3))
+        coverage_panel = 255*np.ones((n_seqs, n_cols,3))
         for block in blocks:
             color = next(colors)
             for r in block.K:
