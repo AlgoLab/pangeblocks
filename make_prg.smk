@@ -24,6 +24,8 @@ rule generate_prg:
         "make_prg_0.4.0"
     output:
         f"{PATH_OUTPUT}/output-pandora/.prg.gfa.zip"
+    benchmark:
+        f"{PATH_OUTPUT}/output-pandora/benchmarks/make_prg.benchmark.txt"
     shell:
         f"./make_prg_0.4.0 from_msa -i {PATH_MSAS} -o {PATH_OUTPUT}/output-pandora/ --output-type g"
 

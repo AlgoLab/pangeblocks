@@ -30,5 +30,28 @@ snakemake -s pangeblock.smk -c16 # variation graph as GFA
 
 ___
 ### Independent pipelines
+
+#### make_prg from Pandora
 `make_prg.smk` will download version as indicated here https://github.com/iqbal-lab-org/make_prg#download (time accession: 19/12/2022)
 , run make_prg and extract the gfa outputs for the MSAs that are in `PATH_MSAS`
+
+
+#### pggb 
+```bash
+mamba create --prefix $HOME/pggb-env -c conda-forge -c bioconda pggb
+```
+if an error occurs, try this first `sudo rm -rf /opt/mambaforge/pkgs/cache/` and run the above line again
+
+`pggb.smk` will generate GFA pangenome graphs using `pggb` tool
+
+samtools may be required to index the files `sudo apt install samtools` before running pggb
+
+```
+bgzip -@ 16 /path/to/msas/name_msa.fa
+samtools faidx /path/to/msas/name_msa.fa.gz
+./pggb -i /path/to/msas/name_msa.fa.gz -p 70 -s 500 -n 10 -t 16 -o path_output/experiment/output-pggb
+```
+
+TODO 
+- [ ] run pggb in a snakemake pipeline
+    - [ ] how to avoid overwriting .fa file when using bgzip

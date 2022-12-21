@@ -21,15 +21,15 @@ class Optimization:
 
     def __call__(self,):
         """Solve ILP formulation"""
+        id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.blocks) }
+        id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.blocks)}
+
         # write idx for blocks 
-        blocks = [(",".join([str(r) for r in b.K]), b.i, b.j) for b in self.blocks] # (K,i,j)
+        blocks = [(id_block, b.i, b.j) for id_block,b in enumerate(self.blocks)] # (K,i,j)
 
         # write idx for MSA positions (row, col)
         msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)] 
 
-        # dictionary to store the string of each block indexed as Gurobipy uses it
-        strings_ = { (",".join([str(_) for _ in b.K]), b.i, b.j): b.label for b in self.blocks}
-        
         # Create the model
         model = gp.Model("pangeblocks")
 
@@ -41,7 +41,7 @@ class Optimization:
         for r,c in msa_positions:
 
             # subset of blocks that covers the position [r,c]
-            subset_C = [ C[K,i,j] for K,i,j in blocks if str(r) in K.split(",") and i<=c<=j ]
+            subset_C = [ C[id_block,i,j] for id_block,i,j in blocks if str(r) in id_block_to_K[id_block].split(",") and i<=c<=j ]
 
             if len(subset_C)>0:                
                 ## 1. each position in the MSA is covered ONLY ONCE
@@ -66,8 +66,10 @@ class Optimization:
                         
                         # check for not empty intersection, otherwise, skip to the next block  
                         # note: set K is a string with the rows concatenated by a "," (due to Gurobi requirements to index the variables)
-                        block1_K = block1[0].split(",")
-                        block2_K = block2[0].split(",")
+                        id_block1 = block1[0]
+                        id_block2 = block2[0]
+                        block1_K = id_block_to_K[id_block1].split(",")
+                        block2_K = id_block_to_K[id_block2].split(",")
 
                         # check for not empty intersection, otherwise skip to the next block1 in the list
                         common_rows = list(set(block1_K).intersection(set(block2_K))) # intersection set K
@@ -99,10 +101,12 @@ class Optimization:
         # filter optimal coverage of blocks for the MSA
         optimal_coverage = []
         for k,v in solution_C.items(): 
-            K,i,j=k
+            id_block,i,j=k 
             if v > 0:
+                K = id_block_to_K[id_block]
+                label = id_block_to_labels[id_block]
                 optimal_coverage.append(
-                    Block(eval(f"({K},)"),i,j, strings_[K,i,j])
+                    Block(K,i,j,label)
                 )
 
         return optimal_coverage
