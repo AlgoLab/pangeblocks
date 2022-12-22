@@ -38,11 +38,14 @@ class Optimization:
 
         # blocks covering each position
         covering_by_position=defaultdict(list)
-        for idx,block in enumerate(self.blocks):
-            for r in block.K:
-                for c in range(block.i,block.j+1):
-                    covering_by_position[(r,c)]
-        
+        for block in blocks:
+            id_block,i,j = block
+            K = [int(r) for r in id_block_to_K[id_block].split(",")]
+            for r in K:
+                
+                for c in range(block[1],block[2]+1):
+                    covering_by_position[(r,c)].append(id_block)
+
         # write idx for MSA positions (row, col)
         msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)] 
         tf=time.time()
@@ -59,10 +62,16 @@ class Optimization:
         # Constraints
         for r,c in tqdm(msa_positions):
 
-            id_blocks = covering_by_position[(r,c)]
-            subset_C = [block_by_id[block_id] for block_id in id_blocks]
-
-            if len(subset_C)>0:                
+            blocks_rc = covering_by_position[(r,c)]
+            subset_C=[]
+            for block_id in blocks_rc:
+                b=block_by_id[block_id]
+                subset_C.append(
+                    C[b[0],b[1],b[2]]
+                )
+            
+            if len(subset_C)>0:
+                # import pdb; pdb.set_trace()
                 ## 1. each position in the MSA is covered ONLY ONCE
                 model.addConstr( U[r,c] <= sum(subset_C), name=f"constraint1({r},{c})")
                 
@@ -109,10 +118,13 @@ class Optimization:
         tf=time.time()
         times["constraint3"] = round(tf-ti,3)
 
+        ti=time.time()
         # Objective function
         model.setObjective(C.sum('*','*','*'), GRB.MINIMIZE)
 
         model.optimize()
+        tf=time.time()
+        times["optimization"] = round(tf-ti,3)
 
         if self.path_save_ilp: 
             Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
@@ -124,6 +136,7 @@ class Optimization:
             raise("No solution")
         
         # filter optimal coverage of blocks for the MSA
+        ti = time.time()
         optimal_coverage = []
         for k,v in solution_C.items(): 
             id_block,i,j=k 
@@ -133,6 +146,8 @@ class Optimization:
                 optimal_coverage.append(
                     Block(K,i,j,label)
                 )
+        tf=time.time()
+        times["solution as blocks"] = round(tf-ti,3)
 
         if return_times is True:
             return optimal_coverage, times

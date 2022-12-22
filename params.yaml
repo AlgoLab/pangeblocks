@@ -1,2 +1,2 @@
-PATH_MSAS: "msas"
-PATH_OUTPUT: "experiment-newcode"
+PATH_MSAS: "ilp-msas"
+PATH_OUTPUT: "ilp-experiment"

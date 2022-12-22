@@ -59,7 +59,7 @@ def main():
         fp.write(f"time_input: {t_input}\n")
         fp.write(f"time_ilp: {t_ilp}\n")
         for t_name, t in times.items():
-            fp.write(f"time_ilp - {t_name},{t}\n")
+            fp.write(f"time_ilp - {t_name}: {t}\n")
         fp.write(f"time_gfa: {t_gfa}\n")
 
 if __name__=="__main__":
