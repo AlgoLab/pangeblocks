@@ -12,7 +12,7 @@ from pathlib import Path
 from ..blocks import Block
 from tqdm import tqdm 
 from collections import defaultdict
-from time import time
+import time
 
 class Optimization:
     
@@ -25,8 +25,10 @@ class Optimization:
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
 
-    def __call__(self,):
+    def __call__(self,return_times: bool=False):
         "Solve ILP formulation"
+        times=dict()
+        ti=time.time()
         id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.blocks) }
         id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.blocks)}
 
@@ -43,8 +45,11 @@ class Optimization:
         
         # write idx for MSA positions (row, col)
         msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)] 
+        tf=time.time()
+        times["init"] = round(tf-ti,3)
 
         # Create the model
+        ti=time.time()
         model = gp.Model("pangeblocks")
 
         # define variables
@@ -64,8 +69,12 @@ class Optimization:
                 ## 2. each position of the MSA is covered AT LEAST by one block
                 model.addConstr( U[r,c] >= 1, name=f"constraint2({r},{c})")
 
+        tf=time.time()
+        times["constraints1-2"] = round(tf-ti,3)
+
         ## 3. overlapping blocks cannot be chosen
-        # sort all blocks, 
+        # sort all blocks,
+        ti=time.time() 
         blocks = sorted(blocks, key=lambda b: b[1]) # sort blocks by the starting position (K,start,end)
 
         # and analyze the intersections while update the constraints
@@ -87,7 +96,6 @@ class Optimization:
 
                 # check for not empty intersection, otherwise skip to the next block1 in the list
                 common_rows = list(set(block1_K).intersection(set(block2_K))) # intersection set K
-                # common_cols = list(set(range(block1[1],block1[2]+1)).intersection(set(range(block2[1],block2[2]+1)))) # intersection columns [i,j]
                 common_cols = self.get_common_cols(block1,block2)
 
                 if (common_rows and common_cols):
@@ -98,6 +106,8 @@ class Optimization:
                     name_constraint=f"constraint3({K1},{i1},{j1})-({K2},{i2},{j2})"
                     model.addConstr(C[block1] + C[block2] <= 1 , name=name_constraint)
                     names_constraint3.append(name_constraint)
+        tf=time.time()
+        times["constraint3"] = round(tf-ti,3)
 
         # Objective function
         model.setObjective(C.sum('*','*','*'), GRB.MINIMIZE)
