@@ -11,6 +11,7 @@ from Bio import AlignIO
 from pathlib import Path
 from ..blocks import Block
 from tqdm import tqdm 
+from collections import defaultdict
 
 class Optimization:
     
@@ -24,13 +25,21 @@ class Optimization:
         self.path_save_ilp = path_save_ilp
 
     def __call__(self,):
-        """Solve ILP formulation"""
+        "Solve ILP formulation"
         id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.blocks) }
         id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.blocks)}
 
         # write idx for blocks 
         blocks = [(id_block, b.i, b.j) for id_block,b in enumerate(self.blocks)] # (K,i,j)
+        block_by_id = {j: b for j,b in enumerate(blocks)}
 
+        # blocks covering each position
+        covering_by_position=defaultdict(list)
+        for idx,block in enumerate(self.blocks):
+            for r in block.K:
+                for c in range(block.i,block.j+1):
+                    covering_by_position[(r,c)]
+        
         # write idx for MSA positions (row, col)
         msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)] 
 
@@ -41,11 +50,14 @@ class Optimization:
         C = model.addVars(blocks, vtype=GRB.BINARY, name="C")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
 
-        # Constraints:
+        # Constraints
         for r,c in tqdm(msa_positions):
 
             # subset of blocks that covers the position [r,c]
-            subset_C = [ C[id_block,i,j] for id_block,i,j in blocks if str(r) in id_block_to_K[id_block].split(",") and i<=c<=j ]
+            # subset_C = [ C[id_block,i,j] for id_block,i,j in blocks 
+            #                 if str(r) in id_block_to_K[id_block].split(",") and i<=c<=j ]
+            id_blocks = covering_by_position[(r,c)]
+            subset_C = [block_by_id[block_id] for block_id in id_blocks]
 
             if len(subset_C)>0:                
                 ## 1. each position in the MSA is covered ONLY ONCE

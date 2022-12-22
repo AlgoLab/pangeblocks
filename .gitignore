@@ -1,6 +1,7 @@
 .snakemake/
 out*/
 msa*/
+*msas/
 panels*/
 experiment*/
 *experiment/
