@@ -21,7 +21,7 @@ COLORS = [
 
 class InputBlockSet:
 
-    def __call__(self, path_msa: Union[str,Path], blocks: list[Block]):
+    def __call__(self, path_msa: Union[str,Path], blocks: list[Block]) -> list[Block]:
         
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)

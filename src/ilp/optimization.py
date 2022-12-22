@@ -4,7 +4,7 @@ Find a non-overlapping set the blocks covering the entire MSA
 # """
 # from logging import Logger
 # log = Logger(name="opt", level="DEBUG")
-
+from src.blocks.analyzer import BlockAnalyzer
 import gurobipy as gp
 from gurobipy import GRB
 from Bio import AlignIO
@@ -18,7 +18,7 @@ class Optimization:
     
     def __init__(self, blocks, path_msa, path_save_ilp=None):
 
-        self.blocks = blocks
+        self.input_blocks = blocks
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         self.msa = msa
         self.n_seqs = n_seqs
@@ -29,11 +29,11 @@ class Optimization:
         "Solve ILP formulation"
         times=dict()
         ti=time.time()
-        id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.blocks) }
-        id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.blocks)}
+        id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.input_blocks) }
+        id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.input_blocks)}
 
         # write idx for blocks 
-        blocks = [(id_block, b.i, b.j) for id_block,b in enumerate(self.blocks)] # (K,i,j)
+        blocks = [(id_block, b.i, b.j) for id_block,b in enumerate(self.input_blocks)] # (K,i,j)
         block_by_id = {j: b for j,b in enumerate(blocks)}
 
         # blocks covering each position
@@ -62,7 +62,7 @@ class Optimization:
         # Constraints
         for r,c in tqdm(msa_positions):
 
-            blocks_rc = covering_by_position[(r,c)]
+            blocks_rc = covering_by_position[(r,c)] # TODO: save name of variables in covering by position 
             subset_C=[]
             for block_id in blocks_rc:
                 b=block_by_id[block_id]
@@ -84,37 +84,54 @@ class Optimization:
         ## 3. overlapping blocks cannot be chosen
         # sort all blocks,
         ti=time.time() 
-        blocks = sorted(blocks, key=lambda b: b[1]) # sort blocks by the starting position (K,start,end)
+
+        intersection = self._list_inter_blocks(self.input_blocks)
+
+        for pos1,pos2 in tqdm(intersection):
+            # if the blocks intersect, then create the restriction 
+            block1=blocks[pos1]
+            block2=blocks[pos2]
+            K1,i1,j1=block1
+            K2,i2,j2=block2
+            name_constraint=f"constraint3({K1},{i1},{j1})-({K2},{i2},{j2})"
+            model.addConstr(C[block1] + C[block2] <= 1 , name=name_constraint)
+
+        # FIXME:
+        # model.addConstrs(
+        #     C[blocks[idx1]] + C[blocks[idx2]] for idx1, idx2 in intersection
+        # )
+        
+        # blocks = sorted(blocks, key=lambda b: b[1]) # sort blocks by the starting position (K,start,end)
 
         # and analyze the intersections while update the constraints
-        names_constraint3=[]
-        for pos1,block1 in enumerate(blocks[:-1]):
-            # compare against the next blocks in the sorted list
-            for rel_pos, block2 in enumerate(blocks[pos1+1:]):
-                pos2 = rel_pos + pos1 + 1
-                if block1[2] < block2[1]: 
-                    break # no intersection is possible 
-                block2 = blocks[pos2]
+        # names_constraint3=[]
+        # for pos1,block1 in enumerate(blocks[:-1]):
+        #     # compare against the next blocks in the sorted list
+        #     for rel_pos, block2 in enumerate(blocks[pos1+1:]):
+        #         pos2 = rel_pos + pos1 + 1
+        #         if block1[2] < block2[1]: 
+        #             break # no intersection is possible 
+        #         block2 = blocks[pos2]
                 
-                # check for not empty intersection, otherwise, skip to the next block  
-                # note: set K is a string with the rows concatenated by a "," (due to Gurobi requirements to index the variables)
-                id_block1 = block1[0]
-                id_block2 = block2[0]
-                block1_K = id_block_to_K[id_block1].split(",")
-                block2_K = id_block_to_K[id_block2].split(",")
+        #         # check for not empty intersection, otherwise, skip to the next block  
+        #         # note: set K is a string with the rows concatenated by a "," (due to Gurobi requirements to index the variables)
+        #         id_block1 = block1[0]
+        #         id_block2 = block2[0]
+        #         block1_K = id_block_to_K[id_block1].split(",")
+        #         block2_K = id_block_to_K[id_block2].split(",")
 
-                # check for not empty intersection, otherwise skip to the next block1 in the list
-                common_rows = list(set(block1_K).intersection(set(block2_K))) # intersection set K
-                common_cols = self.get_common_cols(block1,block2)
+        #         # check for not empty intersection, otherwise skip to the next block1 in the list
+        #         common_rows = list(set(block1_K).intersection(set(block2_K))) # intersection set K
+        #         common_cols = self.get_common_cols(block1,block2)
 
-                if (common_rows and common_cols):
+        #         if (common_rows and common_cols):
                     
-                    # if the blocks intersect, then create the restriction 
-                    K1,i1,j1=block1
-                    K2,i2,j2=block2
-                    name_constraint=f"constraint3({K1},{i1},{j1})-({K2},{i2},{j2})"
-                    model.addConstr(C[block1] + C[block2] <= 1 , name=name_constraint)
-                    names_constraint3.append(name_constraint)
+        #             # if the blocks intersect, then create the restriction 
+        #             K1,i1,j1=block1
+        #             K2,i2,j2=block2
+        #             name_constraint=f"constraint3({K1},{i1},{j1})-({K2},{i2},{j2})"
+        #             model.addConstr(C[block1] + C[block2] <= 1 , name=name_constraint)
+        #             names_constraint3.append(name_constraint)
         tf=time.time()
         times["constraint3"] = round(tf-ti,3)
 
@@ -164,12 +181,45 @@ class Optimization:
         return align, n_seqs, n_cols
 
     def get_common_cols(self, block1,block2):
-        if block1[2] < block2[1]:
+        if block1.j < block2.i:
             return []
-        intervals = [(block1[1],block1[2]),(block2[1],block2[2])]
+        intervals = [(block1.i,block1.j),(block2.i,block2.j)]
         start, end = intervals.pop()
         while intervals:
             start_temp, end_temp = intervals.pop()
             start = max(start, start_temp)
             end = min(end, end_temp)
         return [start, end]
+
+    def _list_inter_blocks(self, list_blocks: list[Block]) -> list[tuple]:
+        """returns a list of tuples(idx_block1, idx_block2) with all pairs
+        of blocks that intersects"""
+        # "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
+        
+        # sort blocks by starting position and save the order in the original list 
+        blocks = [(idx,block) for idx,block in sorted(enumerate(list_blocks), key=lambda block: block[1].i)]
+        
+        # save pairs of indexes for the sorted blocks that intersect
+        # (pos1,pos2): positions in the sorted list
+        # (orig_pos1, orig_pos2): positions in the order of the input list
+        intersections = [] 
+        for pos1, pos_block1 in enumerate(blocks[:-1]):
+            idx1, block1 = pos_block1
+            orig_pos1 = idx1 
+                        
+            # compare against the next blocks in the sorted list 
+            for rel_pos, pos_block2 in enumerate(blocks[pos1+1:]):
+                idx2, block2 = pos_block2
+                orig_pos2 = idx2
+                pos2 = rel_pos + pos1 + 1
+                
+                if block1.j < block2.i: break # no intersection is possible
+                
+                # check for not empty intersection
+                common_rows = list(set(block1.K).intersection(set(block2.K))) # intersection set K
+                common_cols = self.get_common_cols(block1,block2) # intersection columns [i,j]
+
+                if (common_rows and common_cols):
+                    intersections.append((orig_pos1,orig_pos2))
+
+        return intersections

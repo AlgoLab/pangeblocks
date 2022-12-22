@@ -56,11 +56,11 @@ def main():
     # import pdb; pdb.set_trace()
     # times = [round(t,3) for t in times]
     with open(path_time.joinpath(name_msa + ".txt"), "w") as fp:
-        fp.write(f"time_input: {t_input}\n")
-        fp.write(f"time_ilp: {t_ilp}\n")
+        fp.write(f"time_input\t{t_input}\n")
+        fp.write(f"time_ilp\t{t_ilp}\n")
         for t_name, t in times.items():
-            fp.write(f"time_ilp - {t_name}: {t}\n")
-        fp.write(f"time_gfa: {t_gfa}\n")
+            fp.write(f"time_ilp-{t_name}\t{t}\n")
+        fp.write(f"time_gfa\t{t_gfa}\n")
 
 if __name__=="__main__":
     # import cProfile, pstats
