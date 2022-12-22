@@ -12,6 +12,7 @@ from pathlib import Path
 from ..blocks import Block
 from tqdm import tqdm 
 from collections import defaultdict
+from time import time
 
 class Optimization:
     
@@ -53,9 +54,6 @@ class Optimization:
         # Constraints
         for r,c in tqdm(msa_positions):
 
-            # subset of blocks that covers the position [r,c]
-            # subset_C = [ C[id_block,i,j] for id_block,i,j in blocks 
-            #                 if str(r) in id_block_to_K[id_block].split(",") and i<=c<=j ]
             id_blocks = covering_by_position[(r,c)]
             subset_C = [block_by_id[block_id] for block_id in id_blocks]
 
@@ -126,6 +124,8 @@ class Optimization:
                     Block(K,i,j,label)
                 )
 
+        if return_times is True:
+            return optimal_coverage, times
         return optimal_coverage
 
 

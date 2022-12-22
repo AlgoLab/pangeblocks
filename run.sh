@@ -5,7 +5,11 @@
 # -t 16 \  # number of threads
 # -p 10 \  # minimum average nucleotide identity for segments       
 # pggb -i msas-pggb/GC00002971_r1_r1_1.fa.gz -p 70 -s 500 -n 10 -t 16 -o subsample-experiment/output-pggb
-NAME_MSA="GC00004575"
-python -i  compute_gfa.py --path_blocks /home/avila/pangeblocks/subsample-experiment/block_decomposition/$NAME_MSA.json \
- --path_msa ilp-msas/$NAME_MSA.fa \
- --path_gfa ilp-experiments/gfa/$NAME_MSA-2.gfa
+# NAME_MSA="GC00004575"
+# python -i  compute_gfa.py --path_blocks /home/avila/pangeblocks/subsample-experiment/block_decomposition/$NAME_MSA.json \
+#  --path_msa ilp-msas/$NAME_MSA.fa \
+#  --path_gfa ilp-experiments/gfa/$NAME_MSA-2.gfa
+
+python compute_gfa.py --path_blocks ilp-experiment/block_decomposition/GC00002971_r1_r1_1.json \
+--path_msa msa-exp/GC00002971_r1_r1_1.fa \
+--path_gfa experiment/gfa/GC00002971_r1_r1_1.gfa
