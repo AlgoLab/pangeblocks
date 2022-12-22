@@ -73,7 +73,7 @@ class Optimization:
             if len(subset_C)>0:
                 # import pdb; pdb.set_trace()
                 ## 1. each position in the MSA is covered ONLY ONCE
-                model.addConstr( U[r,c] <= sum(subset_C), name=f"constraint1({r},{c})")
+                model.addConstr( U[r,c] <= gp.quicksum(subset_C), name=f"constraint1({r},{c})")
                 
                 ## 2. each position of the MSA is covered AT LEAST by one block
                 model.addConstr( U[r,c] >= 1, name=f"constraint2({r},{c})")
