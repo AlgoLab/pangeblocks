@@ -16,8 +16,7 @@ logging.basicConfig(level=logging.ERROR)
 # log = Logger(name="opt", level="DEBUG")
 
 class Optimization:
-    
-    def __init__(self, blocks, path_msa, path_save_ilp=None):
+    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
 
         self.input_blocks = blocks
         msa, n_seqs, n_cols = self.load_msa(path_msa)

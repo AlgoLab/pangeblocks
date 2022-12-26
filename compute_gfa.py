@@ -18,6 +18,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--path_blocks", help="json file with blocks covering the MSA")
 parser.add_argument("--path_msa", help="path to MSA in .fa format")
 parser.add_argument("--path_gfa", help="path to save the output in GFA format")
+parser.add_argument(
+    "--path_ilp", help="path to save the ILP formulation", default=None)
 parser.add_argument("--log_level", default='ERROR', dest='log_level',
                     help='set log level (ERROR/WARNING/INFO/DEBUG')
 args = parser.parse_args()
@@ -41,7 +43,7 @@ def main():
 
     ti = time.time()
     opt = Optimization(blocks=inputset, path_msa=path_msa,
-                       log_level=args.log_level)
+                       log_level=args.log_level, path_save_ilp=args.path_ilp)
     opt_coverage, times = opt(return_times=True)
     tf = time.time()
     t_ilp = tf - ti
