@@ -103,17 +103,17 @@ class Optimization:
 
         ti = time.time()
         # Objective function
-        model.setObjective(C.sum('*','*','*'), GRB.MINIMIZE)
+        model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
 
         model.optimize()
         tf = time.time()
         times["optimization"] = round(tf - ti, 3)
 
-        if self.path_save_ilp: 
+        if self.path_save_ilp:
             Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
             model.write(self.path_save_ilp)
 
-        try:                
+        try:
             solution_C = model.getAttr("X", C)
         except:
             raise ("No solution")
@@ -122,16 +122,8 @@ class Optimization:
         # filter optimal coverage of blocks for the MSA
         ti = time.time()
         optimal_coverage = []
-        for k,v in solution_C.items(): 
-            id_block,i,j=k 
-            if v > 0:
-                K = (int(seq) for seq in id_block_to_K[id_block].split(","))
-                label = id_block_to_labels[id_block]
-                optimal_coverage.append(
-                    Block(K,i,j,label)
-                )
-        tf=time.time()
-        times["solution as blocks"] = round(tf-ti,3)
+        tf = time.time()
+        times["solution as blocks"] = round(tf - ti, 3)
 
         if return_times is True:
             return optimal_coverage, times
