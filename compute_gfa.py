@@ -30,7 +30,7 @@ def main():
     path_gfa = args.path_gfa
 
     with open(path_blocks) as fp:
-        blocks = [Block(*block) for block in json.load(fp)] 
+        blocks = [Block(*block) for block in json.load(fp)]
 
     ti = time.time()
     inputset_gen = InputBlockSet()
