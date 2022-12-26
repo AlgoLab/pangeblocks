@@ -15,7 +15,7 @@ class Block:
 
     @root_validator
     def check_len_label(cls, values):
-        "lenght of string must be equal to j-i+1"
+        "length of string must be equal to j-i+1"
         label = values.get("label")
         i = values.get("i")
         j = values.get("j")
