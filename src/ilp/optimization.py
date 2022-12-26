@@ -2,17 +2,18 @@
 Given an MSA, and a set of blocks such that the union of them covers all the MSA,
 Find a non-overlapping set the blocks covering the entire MSA
 # """
-# from logging import Logger
-# log = Logger(name="opt", level="DEBUG")
-from src.blocks.analyzer import BlockAnalyzer
-import gurobipy as gp
-from gurobipy import GRB
-from Bio import AlignIO
-from pathlib import Path
-from ..blocks import Block
-from tqdm import tqdm 
-from collections import defaultdict
 import time
+from collections import defaultdict
+from tqdm import tqdm
+from ..blocks import Block
+from pathlib import Path
+from Bio import AlignIO
+from gurobipy import GRB
+import gurobipy as gp
+from src.blocks.analyzer import BlockAnalyzer
+import logging
+logging.basicConfig(level=logging.ERROR)
+# log = Logger(name="opt", level="DEBUG")
 
 class Optimization:
     
@@ -24,6 +25,7 @@ class Optimization:
         self.n_seqs = n_seqs
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
+        logging.getLogger().setLevel(log_level)
 
     def __call__(self,return_times: bool=False):
         "Solve ILP formulation"
@@ -56,8 +58,12 @@ class Optimization:
         model = gp.Model("pangeblocks")
 
         # define variables
-        C = model.addVars(blocks, vtype=GRB.BINARY, name="C")
+        for block in range(len(self.input_blocks)):
+            logging.info(
+                f"variable:C({block}) = {self.input_blocks[block].str()}")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
+        for pos in msa_positions:
+            logging.info(f"variable:U({pos})")
 
         # Constraints
         for r,c in tqdm(msa_positions):

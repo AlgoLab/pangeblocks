@@ -11,13 +11,17 @@ from src.ilp.optimization import Optimization
 from src.ilp.variaton_graph_parser import asGFA
 
 from pathlib import Path
+import logging
 
 # Command line options
 parser = argparse.ArgumentParser()
 parser.add_argument("--path_blocks", help="json file with blocks covering the MSA")
 parser.add_argument("--path_msa", help="path to MSA in .fa format")
 parser.add_argument("--path_gfa", help="path to save the output in GFA format")
+parser.add_argument("--log_level", default='ERROR', dest='log_level',
+                    help='set log level (ERROR/WARNING/INFO/DEBUG')
 args = parser.parse_args()
+logging.basicConfig(level=args.log_level)
 
 def main():
     # Load set of decomposed blocks
@@ -36,7 +40,8 @@ def main():
     print(f"time inputblockset: {t_input:0.2}")
 
     ti = time.time()
-    opt = Optimization(blocks=inputset, path_msa=path_msa)
+    opt = Optimization(blocks=inputset, path_msa=path_msa,
+                       log_level=args.log_level)
     opt_coverage, times = opt(return_times=True)
     tf = time.time()
     t_ilp = tf - ti
