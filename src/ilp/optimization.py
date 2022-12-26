@@ -117,7 +117,8 @@ class Optimization:
             solution_C = model.getAttr("X", C)
         except:
             raise ("No solution")
-        
+
+        # TODO
         # filter optimal coverage of blocks for the MSA
         ti = time.time()
         optimal_coverage = []
