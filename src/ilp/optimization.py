@@ -27,12 +27,10 @@ class Optimization:
         self.path_save_ilp = path_save_ilp
         logging.getLogger().setLevel(log_level)
 
-    def __call__(self,return_times: bool=False):
+    def __call__(self, return_times: bool = False):
         "Solve ILP formulation"
-        times=dict()
-        ti=time.time()
-        id_block_to_K = {id_block: ",".join([str(r) for r in block.K]) for id_block, block in enumerate(self.input_blocks) }
-        id_block_to_labels = {id_block: b.label for id_block, b in enumerate(self.input_blocks)}
+        times = dict()
+        ti = time.time()
 
         # write idx for blocks 
         blocks = [(id_block, b.i, b.j) for id_block,b in enumerate(self.input_blocks)] # (K,i,j)
@@ -49,12 +47,11 @@ class Optimization:
                     covering_by_position[(r,c)].append(id_block)
 
         # write idx for MSA positions (row, col)
-        msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)] 
-        tf=time.time()
-        times["init"] = round(tf-ti,3)
+        tf = time.time()
+        times["init"] = round(tf - ti, 3)
 
         # Create the model
-        ti=time.time()
+        ti = time.time()
         model = gp.Model("pangeblocks")
 
         # define variables
@@ -81,15 +78,15 @@ class Optimization:
                 ## 1. each position in the MSA is covered ONLY ONCE
                 model.addConstr( U[r,c] <= gp.quicksum(subset_C), name=f"constraint1({r},{c})")
                 
-                ## 2. each position of the MSA is covered AT LEAST by one block
-                model.addConstr( U[r,c] >= 1, name=f"constraint2({r},{c})")
+        tf = time.time()
+        times["constraints1-2"] = round(tf - ti, 3)
 
         tf=time.time()
         times["constraints1-2"] = round(tf-ti,3)
 
         ## 3. overlapping blocks cannot be chosen
         # sort all blocks,
-        ti=time.time() 
+        ti = time.time()
 
         intersection = self._list_inter_blocks(self.input_blocks)
 
@@ -146,8 +143,8 @@ class Optimization:
         model.setObjective(C.sum('*','*','*'), GRB.MINIMIZE)
 
         model.optimize()
-        tf=time.time()
-        times["optimization"] = round(tf-ti,3)
+        tf = time.time()
+        times["optimization"] = round(tf - ti, 3)
 
         if self.path_save_ilp: 
             Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
@@ -156,7 +153,7 @@ class Optimization:
         try:                
             solution_C = model.getAttr("X", C)
         except:
-            raise("No solution")
+            raise ("No solution")
         
         # filter optimal coverage of blocks for the MSA
         ti = time.time()
@@ -176,20 +173,19 @@ class Optimization:
             return optimal_coverage, times
         return optimal_coverage
 
-
     def load_msa(self, path_msa):
         "return alignment, number of sequences and columns"
         # load MSA
-        align=AlignIO.read(path_msa, "fasta")
+        align = AlignIO.read(path_msa, "fasta")
         n_cols = align.get_alignment_length()
         n_seqs = len(align)
 
         return align, n_seqs, n_cols
 
-    def get_common_cols(self, block1,block2):
+    def get_common_cols(self, block1, block2):
         if block1.j < block2.i:
             return []
-        intervals = [(block1.i,block1.j),(block2.i,block2.j)]
+        intervals = [(block1.i, block1.j), (block2.i, block2.j)]
         start, end = intervals.pop()
         while intervals:
             start_temp, end_temp = intervals.pop()
