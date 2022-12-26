@@ -19,6 +19,10 @@ class Optimization:
     def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
 
         self.input_blocks = blocks
+        # Each block is a tuple (K, i, j, label) where
+        # K is a tuple of rows,
+        # i and j are the first and last column
+        # label is the string of the block
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         self.msa = msa
         self.n_seqs = n_seqs
@@ -118,7 +122,6 @@ class Optimization:
         except:
             raise ("No solution")
 
-        # TODO
         # filter optimal coverage of blocks for the MSA
         ti = time.time()
         optimal_coverage = []
