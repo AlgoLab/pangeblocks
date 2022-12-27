@@ -10,6 +10,9 @@
 #  --path_msa ilp-msas/$NAME_MSA.fa \
 #  --path_gfa ilp-experiments/gfa/$NAME_MSA-2.gfa
 
-python compute_gfa.py --path_blocks ilp-experiment/block_decomposition/GC00002971_r1_r1_1.json \
---path_msa msa-exp/GC00002971_r1_r1_1.fa \
---path_gfa experiment/gfa/GC00002971_r1_r1_1.gfa
+# python compute_gfa.py --path_blocks ilp-experiment/block_decomposition/GC00002971_r1_r1_1.json \
+# --path_msa msa-exp/GC00002971_r1_r1_1.fa \
+# --path_gfa experiment/gfa/GC00002971_r1_r1_1.gfa
+
+python src/check_sequence_in_msa.py --source 90 --sink 100 --path-msa msas-didelot/toyexample.fa --path-gfa experiment-didelot/gfa/toyexample.gfa
+python src/check_sequence_in_msa.py --source 0 --sink 975 --path-msa msas-didelot/coli27-86.fa --path-gfa output-didelot/output-pandora/coli27-86.gfa
