@@ -1,2 +1,2 @@
-PATH_MSAS: "msas"
-PATH_OUTPUT: "experiment-newcode"
+PATH_MSAS: "test"
+PATH_OUTPUT: "output"

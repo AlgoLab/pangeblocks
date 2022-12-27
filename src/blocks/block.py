@@ -10,12 +10,15 @@ class Block:
     j: int
     label: str
 
-    def to_positional_string(self,) -> PositionalString: 
+    def to_positional_string(self,) -> PositionalString:
         return PositionalString(self.label, self.i, self.j)
+
+    def str(self):
+        return f"{self.K},{self.i},{self.j},{self.label}"
 
     @root_validator
     def check_len_label(cls, values):
-        "lenght of string must be equal to j-i+1"
+        "length of string must be equal to j-i+1"
         label = values.get("label")
         i = values.get("i")
         j = values.get("j")
