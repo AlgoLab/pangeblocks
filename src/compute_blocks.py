@@ -21,9 +21,15 @@ args = parser.parse_args()
 align = AlignIO.read(args.filename, "fasta")
 n_cols = align.get_alignment_length()
 n_seqs = len(align)
-all_seqs = [str(record.seq) for record in align]
-seqs = list(set(all_seqs)) # removing duplicates
-n_unique_seqs = len(seqs)
+
+seq_by_string = defaultdict(list)
+all_seqs = []
+for seq, record in enumerate(align):
+    str_seq = str(record.seq)
+    seq_by_string[str_seq].append(seq)
+    all_seqs.append(str_seq)
+n_unique_seqs = len(seq_by_string)
+seqs = seq_by_string.keys()
 
 def timer(func):
     "returns output and execution time of 'func'"

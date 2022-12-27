@@ -101,37 +101,6 @@ class Optimization:
         #     C[blocks[idx1]] + C[blocks[idx2]] for idx1, idx2 in intersection
         # )
         
-        # blocks = sorted(blocks, key=lambda b: b[1]) # sort blocks by the starting position (K,start,end)
-
-        # and analyze the intersections while update the constraints
-        # names_constraint3=[]
-        # for pos1,block1 in enumerate(blocks[:-1]):
-        #     # compare against the next blocks in the sorted list
-        #     for rel_pos, block2 in enumerate(blocks[pos1+1:]):
-        #         pos2 = rel_pos + pos1 + 1
-        #         if block1[2] < block2[1]: 
-        #             break # no intersection is possible 
-        #         block2 = blocks[pos2]
-                
-        #         # check for not empty intersection, otherwise, skip to the next block  
-        #         # note: set K is a string with the rows concatenated by a "," (due to Gurobi requirements to index the variables)
-        #         id_block1 = block1[0]
-        #         id_block2 = block2[0]
-        #         block1_K = id_block_to_K[id_block1].split(",")
-        #         block2_K = id_block_to_K[id_block2].split(",")
-
-        #         # check for not empty intersection, otherwise skip to the next block1 in the list
-        #         common_rows = list(set(block1_K).intersection(set(block2_K))) # intersection set K
-        #         common_cols = self.get_common_cols(block1,block2)
-
-        #         if (common_rows and common_cols):
-                    
-        #             # if the blocks intersect, then create the restriction 
-        #             K1,i1,j1=block1
-        #             K2,i2,j2=block2
-        #             name_constraint=f"constraint3({K1},{i1},{j1})-({K2},{i2},{j2})"
-        #             model.addConstr(C[block1] + C[block2] <= 1 , name=name_constraint)
-        #             names_constraint3.append(name_constraint)
         tf=time.time()
         times["constraint3"] = round(tf-ti,3)
 
