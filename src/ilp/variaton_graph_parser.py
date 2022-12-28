@@ -4,7 +4,7 @@ from dataclasses import astuple
 from collections import defaultdict
 from ..graph import nodes_edges_from_blocks
 from pathlib import Path
-
+from ..blocks.block import Block
 class asGFA:
 
     def __call__(self, optimal_coverage, path_gfa, header="pangeblock"):
@@ -14,8 +14,17 @@ class asGFA:
     def create_graph(self, optimal_coverage):
         list_nodes = []
         list_edges = []
+
+        # TODO: add source and sink nodes 
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.i )
         for pos1, block1 in enumerate(sorted_solution[:-1]):
+
+            # # source node
+            # if block1.i == 0: 
+            #     list_nodes.append(Block([],-1,-1,"*"))
+            # elif block1.j == len_msa: # sink node
+            #      list_nodes.append(Block([],-1,-1,"*"))
+
             for rel_pos, block2 in enumerate(sorted_solution[pos1+1:]):
                 pos2 = rel_pos + pos1 + 1
 

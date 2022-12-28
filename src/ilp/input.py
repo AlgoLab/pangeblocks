@@ -25,10 +25,10 @@ class InputBlockSet:
         
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
-        # missing_blocks = self.get_missing_blocks(coverage_panel, msa)
+        missing_blocks = self.get_missing_blocks(coverage_panel, msa)
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
+        set_B = blocks + missing_blocks# + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
         return set_B
 

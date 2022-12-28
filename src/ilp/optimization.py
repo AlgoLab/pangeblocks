@@ -124,9 +124,12 @@ class Optimization:
         # filter optimal coverage of blocks for the MSA
         ti = time.time()
         optimal_coverage = []
-        # for k, v in solution_C.items():
-        #     id_block, i, j = k
-        #     if v > 0:
+        for k, v in solution_C.items():
+            
+            # id_block, i, j = k
+            if v > 0:
+                logging.info(f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
+                optimal_coverage.append(self.input_blocks[k])
         #         K = (int(seq) for seq in id_block_to_K[id_block].split(","))
         #         label = id_block_to_labels[id_block]
         #         optimal_coverage.append(Block(K, i, j, label))

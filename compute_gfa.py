@@ -60,8 +60,8 @@ def main():
     path_time = Path(path_gfa).parent
     path_time.mkdir(exist_ok=True, parents=True)
     name_msa = Path(path_msa).stem
-    # import pdb; pdb.set_trace()
-    # times = [round(t,3) for t in times]
+
+
     with open(path_time.joinpath(name_msa + ".txt"), "w") as fp:
         fp.write(f"time_input\t{t_input}\n")
         fp.write(f"time_ilp\t{t_ilp}\n")
