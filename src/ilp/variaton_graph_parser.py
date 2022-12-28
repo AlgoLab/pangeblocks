@@ -1,29 +1,30 @@
 """Parse solution of the ILP formulation as a variation graph"""
 
 from dataclasses import astuple 
+from Bio import AlignIO
 from collections import defaultdict
 from ..graph import nodes_edges_from_blocks
 from pathlib import Path
 from ..blocks.block import Block
 class asGFA:
 
-    def __call__(self, optimal_coverage, path_gfa, header="pangeblock"):
-        list_nodes, list_edges = self.create_graph(optimal_coverage)
+    def __call__(self, optimal_coverage, path_gfa, path_msa, header="pangeblock"):
+        
+        list_nodes, list_edges = self.create_graph(optimal_coverage, path_msa)
         self.parse(list_nodes, list_edges, path_gfa, header)
 
-    def create_graph(self, optimal_coverage):
+    def create_graph(self, optimal_coverage, path_msa):
         list_nodes = []
         list_edges = []
+
+        _, n_seqs, n_cols= self.load_msa(path_msa)
+        optimal_coverage.append(Block((r for r in range(n_seqs)), -1,-1,"s")) # source node
+        optimal_coverage.append(Block((r for r in range(n_seqs)), n_cols,n_cols,"S")) # sink node
+        
 
         # TODO: add source and sink nodes 
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.i )
         for pos1, block1 in enumerate(sorted_solution[:-1]):
-
-            # # source node
-            # if block1.i == 0: 
-            #     list_nodes.append(Block([],-1,-1,"*"))
-            # elif block1.j == len_msa: # sink node
-            #      list_nodes.append(Block([],-1,-1,"*"))
 
             for rel_pos, block2 in enumerate(sorted_solution[pos1+1:]):
                 pos2 = rel_pos + pos1 + 1
@@ -98,3 +99,11 @@ class asGFA:
             for line in lines_gfa:
                 fp.write(line + "\n")
 
+    def load_msa(self, path_msa):
+        "return alignment, number of sequences and columns"
+        # load MSA
+        align = AlignIO.read(path_msa, "fasta")
+        n_cols = align.get_alignment_length()
+        n_seqs = len(align)
+
+        return align, n_seqs, n_cols

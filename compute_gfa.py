@@ -51,7 +51,7 @@ def main():
 
     ti = time.time()
     parser=asGFA()
-    parser(opt_coverage,path_gfa)
+    parser(opt_coverage, path_gfa, path_msa)
     tf = time.time()
     t_gfa = tf - ti
     print(f"time GFA: {t_gfa:0.2}")
