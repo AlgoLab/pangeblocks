@@ -14,7 +14,8 @@ from typing import Tuple, List, Union
 parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="MSA_filename")
 parser.add_argument("--output", help="output file")
-parser.add_argument("--multi", help="split alignment into regions", action="store_true")
+parser.add_argument(
+    "--multi", help="split alignment into regions", action="store_true")
 args = parser.parse_args()
 
 
@@ -31,6 +32,7 @@ for seq, record in enumerate(align):
 n_unique_seqs = len(seq_by_string)
 seqs = seq_by_string.keys()
 
+
 def timer(func):
     "returns output and execution time of 'func'"
     def wrap_func(*args, **kwargs):
@@ -38,8 +40,9 @@ def timer(func):
         result = func(*args, **kwargs)
         t2 = time.time()
         print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
-        return result, round(t2-t1,4)
+        return result, round(t2-t1, 4)
     return wrap_func
+
 
 @timer
 def compute_pos_strings(seqs):
@@ -48,31 +51,34 @@ def compute_pos_strings(seqs):
     blocks = [path for (c, path) in tree.maximal_repeats()]
     decoded_blocks = [
         (b[0][0],
-        "".join([c[1] for c in b if type(c) == tuple])
-        ) for b in blocks
+         "".join([c[1] for c in b if type(c) == tuple][:len(b)])
+         ) for b in blocks
     ]
     return decoded_blocks
+
 
 def set_K_from_pos_string(pos_string, seqs):
     """
     recover set of sequences in the MSA given a positional string (decoded_block)
     seqs: list of sequences in order like in the MSA
     """
-    start, label=pos_string
+    start, label = pos_string
     end = start + len(label) - 1
-    K = [row for row,seq in enumerate(seqs) if seq[start:end+1]==label]
+    K = [row for row, seq in enumerate(seqs) if seq[start:end+1] == label]
     return K, (start, end, label)
+
 
 @timer
 def maximal_blocks_from_pos_strings(pos_strings: list, seqs: list):
     "generate the set of sequences K that each positional string match and return it as a block"
     max_blocks = []
     for ps in pos_strings:
-        K, extended_ps = set_K_from_pos_string(ps,seqs)
+        K, extended_ps = set_K_from_pos_string(ps, seqs)
         max_blocks.append(
-            (K,*extended_ps)
-            )
+            (K, *extended_ps)
+        )
     return max_blocks
+
 
 # block_end is a boolean list that is true iff the corresponding column consists
 # of a single character (excluding indels)
@@ -102,7 +108,8 @@ for (start, end) in block_boundaries:
 # to create the blocks from positional strings, we match the string in
 # the positional string to all the rows in the original (without removing duplicates)
 # MSA
-max_blocks, t_max_blocks = maximal_blocks_from_pos_strings(pos_strings, all_seqs)
+max_blocks, t_max_blocks = maximal_blocks_from_pos_strings(
+    pos_strings, all_seqs)
 
 # Save maximal blocks
 n_max_blocks = len(max_blocks)
@@ -112,6 +119,6 @@ with open(args.output, "w") as fp:
 
 # save times
 path_time = Path(args.output).parent / (Path(args.output).stem + ".txt")
-with open(path_time,"w") as fp:
+with open(path_time, "w") as fp:
     fp.write(f"t_pos_string\t{t_pos_strings}\n")
     fp.write(f"t_max_blocks\t{t_max_blocks}\n")
