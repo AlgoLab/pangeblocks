@@ -55,7 +55,7 @@ rule pangeblock:
     output: 
         path_gfa=expand("{path_output}/gfa/{{name_msa}}.gfa", path_output=PATH_OUTPUT)
     shell: 
-        "python compute_gfa.py --path_blocks {input[0]} --path_msa {input[1]} --path_gfa {output[0]}"
+        "python compute_gfa.py --path_blocks {input[0]} --path_msa {input[1]} --path_gfa {output[0]} --log_level=DEBUG"
 
 rule bandage_labels:
     input: 

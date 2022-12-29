@@ -28,7 +28,17 @@ class Optimization:
         self.n_seqs = n_seqs
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
-        logging.getLogger().setLevel(log_level)
+
+        logger = logging.getLogger()
+        logger.setLevel(log_level)
+        Path("tmp").mkdir(exist_ok=True)
+        name_msa = Path(path_msa).stem
+        f_handler = logging.FileHandler(f"tmp/{name_msa}.log")
+        f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        f_handler.setLevel(log_level)
+        f_handler.setFormatter(f_format)
+        logger.addHandler(f_handler)
+
 
     def __call__(self, return_times: bool = False):
         "Solve ILP formulation"
@@ -43,8 +53,8 @@ class Optimization:
         covering_by_position = defaultdict(list)
         for idx, block in enumerate(self.input_blocks):
             for r in block.K:
-                logging.debug(f"block: {block.str()}/{set(block.K)}")
                 for c in range(block.i, block.j + 1):
+                    logging.debug(f"position {(r,c)} covered by block: {block.str()}/{set(block.K)}")
                     covering_by_position[(r, c)].append(idx)
 
         # write idx for MSA positions (row, col)
@@ -58,7 +68,7 @@ class Optimization:
         model = gp.Model("pangeblocks")
 
         # Threads
-        model.setParam(GRB.Param.Threads, 8)
+        # model.setParam(GRB.Param.Threads, 8)
 
         # define variables
         # C(b) = 1 if block b is selected
@@ -73,6 +83,7 @@ class Optimization:
             logging.info(f"variable:U({pos})")
 
         # Constraints
+        logging.info(f"Number of msa positions: {len(msa_positions)}")
         for r, c in tqdm(msa_positions):
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
@@ -94,6 +105,7 @@ class Optimization:
         ti = time.time()
 
         intersection = self._list_inter_blocks(self.input_blocks)
+        logging.info(f"Number of intersections by pairs: {len(intersection)}")
 
         for idx1, idx2 in tqdm(intersection):
             # if the blocks intersect, then create the restriction

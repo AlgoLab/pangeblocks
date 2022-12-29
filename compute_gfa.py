@@ -36,7 +36,7 @@ def main():
 
     ti = time.time()
     inputset_gen = InputBlockSet()
-    inputset = inputset_gen(path_msa, blocks)
+    inputset = inputset_gen(path_msa, blocks, log_level=args.log_level)
     tf = time.time()
     t_input = tf - ti
     print(f"time inputblockset: {t_input:0.2}")

@@ -4,36 +4,37 @@ from src.blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
-from itertools import cycle
-from PIL import Image
 
-COLORS = [
-    (255,0,0), # red
-    (0,255,0), # green 
-    (0,0,255), # blue
-    (255,255,0), # yellow
-    (0,255,255), # cyan
-    (255,0,255), # magenta
-    (255,125,0), # orange
-    (125,0,255), # blue-magenta
-    (255,0,125), # red-magenta
-]
+import logging
+logging.basicConfig(level=logging.ERROR)
+
 
 class InputBlockSet:
-
-    def __call__(self, path_msa: Union[str,Path], blocks: list[Block]) -> list[Block]:
         
+    def __call__(self, path_msa: Union[str,Path], blocks: list[Block], log_level=logging.ERROR) -> list[Block]:
+        self.set_logger(path_msa,log_level)
+        for block in blocks:
+            logging.info(f"input block: {block.str()}")
+
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
         missing_blocks = self.get_missing_blocks(coverage_panel, msa)
 
+        for block in missing_blocks:
+            logging.info(f"missing blocks: {block.str()}")
+
         # glue missing blocks of one character in the same column
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
 
-        blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
+        for block in missing_blocks:
+            logging.info(f"glued missing blocks: {block.str()}")
+
+        # blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
         set_B = blocks + missing_blocks# + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
+        for block in set_B:
+            logging.info(f"input ILP: {block.str()}")
         return set_B
     
     def glue_vertical_blocks(self,list_blocks,):
@@ -134,3 +135,14 @@ class InputBlockSet:
         n_seqs = len(align)
 
         return align, n_seqs, n_cols
+
+    def set_logger(self, path_msa, log_level=logging.ERROR):
+        logger = logging.getLogger()
+        logger.setLevel(log_level)
+        Path("tmp").mkdir(exist_ok=True)
+        name_msa = Path(path_msa).stem
+        f_handler = logging.FileHandler(f"tmp/input-{name_msa}.log")
+        f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        f_handler.setLevel(log_level)
+        f_handler.setFormatter(f_format)
+        logger.addHandler(f_handler)
