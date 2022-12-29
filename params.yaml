@@ -1,2 +1,2 @@
-PATH_MSAS: "test"
-PATH_OUTPUT: "output-test"
+PATH_MSAS: "msas"
+PATH_OUTPUT: "output-msas"
