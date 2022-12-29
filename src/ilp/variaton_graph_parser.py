@@ -21,8 +21,6 @@ class asGFA:
         optimal_coverage.append(Block((r for r in range(n_seqs)), -1,-1,"s")) # source node
         optimal_coverage.append(Block((r for r in range(n_seqs)), n_cols,n_cols,"S")) # sink node
         
-
-        # TODO: add source and sink nodes 
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.i )
         for pos1, block1 in enumerate(sorted_solution[:-1]):
 

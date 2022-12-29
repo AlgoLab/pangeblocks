@@ -26,11 +26,31 @@ class InputBlockSet:
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
         missing_blocks = self.get_missing_blocks(coverage_panel, msa)
+
+        # glue missing blocks of one character in the same column
+        missing_blocks = self.glue_vertical_blocks(missing_blocks)
+
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
         set_B = blocks + missing_blocks# + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
         return set_B
+    
+    def glue_vertical_blocks(self,list_blocks,):
+        "Glue blocks of length 1 that shares column"
+        new_blocks = []
+        blocks_by_start = defaultdict(list)
+        for block in list_blocks:
+            if len(block.label) == 1: # only one character blocks
+                blocks_by_start[(block.i,block.label)].extend(list(block.K))
+            else: 
+                new_blocks.append(block)
+        
+        for i_label,K in blocks_by_start.items():
+            i, label = i_label
+            new_blocks.append(Block(K,i,i,label))
+
+        return new_blocks
 
     @staticmethod
     def get_coverage_panel(n_seqs, n_cols, blocks):
@@ -52,7 +72,7 @@ class InputBlockSet:
         """
         rows, cols=np.where(coverage_panel == 0)
         missing_blocks = [(r,c) for r,c in zip(rows,cols)]
-        # missing_blocks = get_missing_blocks(coverage_panel)
+        
         missing_blocks = sorted(missing_blocks, key= lambda d: (d[0],d[1]))
         idx_missing_blocks_by_seq = defaultdict(list)
         for pos in missing_blocks: 

@@ -57,6 +57,9 @@ class Optimization:
         ti = time.time()
         model = gp.Model("pangeblocks")
 
+        # Threads
+        model.setParam(GRB.Param.Threads, 8)
+
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
