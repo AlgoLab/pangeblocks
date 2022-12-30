@@ -94,8 +94,8 @@ class Optimization:
         # block to all the positions it covers
         covering_by_position = defaultdict(list)
         for idx, block in enumerate(self.input_blocks):
+            logging.debug(f"block: {block.str()}/{set(block.K)}")
             for r in block.K:
-                logging.debug(f"block: {block.str()}/{set(block.K)}")
                 for c in range(block.i, block.j + 1):
                     covering_by_position[(r, c)].append(idx)
 
@@ -145,9 +145,7 @@ class Optimization:
         # sort all blocks,
         ti = time.time()
 
-        intersection = self._list_inter_blocks(self.input_blocks)
-
-        for idx1, idx2 in tqdm(intersection):
+        for idx1, idx2 in (self._list_inter_blocks(self.input_blocks)):
             # if the blocks intersect, then create the restriction
             block1 = self.input_blocks[idx1]
             block2 = self.input_blocks[idx2]
@@ -231,15 +229,19 @@ class Optimization:
         # (pos1,pos2): positions in the sorted list
         # (orig_pos1, orig_pos2): positions in the order of the input list
         intersections = []
-        visited_blocks = defaultdict(set)
+        visited_blocks = set()
         current_block_idx = 0
         blocks_ending = defaultdict(set)
 
         # For each column, we will compute the index of blocks that
         # start in that column, and store those indices in blocks_by_start
         block_by_start = defaultdict(list)
+        block_by_end = defaultdict(list)
         for idx, block in sorted_blocks:
             block_by_start[block.i].append(idx)
+            block_by_end[block.j].append(idx)
+        for column in block_by_end.keys():
+            blocks_ending[column] = set(block_by_end[column])
         del sorted_blocks
         # We will iterate over the columns of the MSA.
         # For each column, we will
@@ -248,11 +250,10 @@ class Optimization:
         # (2) remove from visited_blocks the blocks that end in the current column
         for column in range(self.n_cols):
             logging.debug(f"current column: {column}")
-            logging.debug(f"visited blocks: {visited_blocks}")
             # notice that in block_by_start[column] we have the blocks that
             # start in the current column.
             # We are going to save them in the current_blocks set
-            current_blocks = dict([(idx, self.input_blocks[idx])
+            current_blocks = set([(idx, self.input_blocks[idx])
                                   for idx in block_by_start[column]])
             logging.debug(f"current blocks: {current_blocks}")
 
@@ -260,10 +261,10 @@ class Optimization:
             # blocks in visited_blocks
             # Notice that all visited blocks span the current column, so
             # there is no need to check if they intersect in the current column
-            for idx1, block1 in current_blocks.items():
+            for idx1, block1 in current_blocks:
                 k1 = set(block1.K)
                 logging.debug(f"current block: {idx1}, {block1.str()}")
-                for idx2, block2 in visited_blocks.items():
+                for idx2, block2 in visited_blocks:
                     logging.debug(f"first block: {idx1}, {block1.str()}")
                     logging.debug(f"second block: {idx2}, {block2.str()}")
                     logging.debug(f"sets: {k1}, {set(block2.K)}")
@@ -271,7 +272,7 @@ class Optimization:
                         intersections.append((idx1, idx2))
                         logging.info(
                             f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()} (size: {len(intersections)})")
-            print(f"Column: {column}")
+            logging.info(f"Column: {column}")
             logging.debug(
                 f"Size intersection: {total_size(intersections):_}, len: {len(intersections)}")
             logging.debug(
@@ -281,14 +282,9 @@ class Optimization:
             logging.debug(
                 f"Size block_by_start: {total_size(block_by_start):_}, len: {len(block_by_start)}")
             # Add all blocks in current_blocks to the set of visited blocks
-            visited_blocks = visited_blocks | current_blocks
-            for idx1, current_block in current_blocks.items():
-                blocks_ending[current_block.j].add(idx1)
-
+            visited_blocks |= current_blocks
             #  Now that we have processed all the blocks that start in the
             #  current column, we can remove the blocks that end in the current
             #  column from the list of visited blocks
-            for idx in blocks_ending[column]:
-                del visited_blocks[idx]
-            del blocks_ending[column]
+            visited_blocks -= blocks_ending[column]
         return intersections
