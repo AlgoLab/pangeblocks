@@ -269,7 +269,7 @@ class Optimization:
                     logging.debug(f"second block: {idx2}, {block2.str()}")
                     logging.debug(f"sets: {k1}, {set(block2.K)}")
                     if not k1.isdisjoint(set(block2.K)):
-                        intersections.append((idx1, idx2))
+                        yield (idx1, idx2)
                         logging.info(
                             f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()} (size: {len(intersections)})")
             logging.info(f"Column: {column}")
@@ -287,4 +287,3 @@ class Optimization:
             #  current column, we can remove the blocks that end in the current
             #  column from the list of visited blocks
             visited_blocks -= blocks_ending[column]
-        return intersections
