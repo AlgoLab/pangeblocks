@@ -40,8 +40,21 @@ class Optimization:
         #
         # to speed up the process, we iterate over the blocks and append the
         # block to all the positions it covers
+        
+        # save vertical blocks and their covered positions in the MSA
+        vertical_blocks = []
+        covered_positions = defaultdict(list)
+
+        # save positions not covered by vertical blocks separatedly
+        msa_positions = []
         covering_by_position = defaultdict(list)
         for idx, block in enumerate(self.input_blocks):
+            
+            # vertical blocks: will be chosen in the optimal solution
+            if len(block.K) == self.n_seqs: 
+                vertical_blocks.append(idx)
+            
+            # all other blocks
             for r in block.K:
                 logging.debug(f"block: {block.str()}/{set(block.K)}")
                 for c in range(block.i, block.j + 1):
@@ -50,6 +63,8 @@ class Optimization:
         # write idx for MSA positions (row, col)
         msa_positions = [(r, c) for r in range(self.n_seqs)
                          for c in range(self.n_cols)]
+
+
         tf = time.time()
         times["init"] = round(tf - ti, 3)
 
@@ -68,13 +83,15 @@ class Optimization:
         for block in range(len(self.input_blocks)):
             logging.info(
                 f"variable:C({block}) = {self.input_blocks[block].str()}")
-        U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.info(f"variable:U({pos})")
+        U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
 
         # Constraints
         for r, c in tqdm(msa_positions):
+
             blocks_rc = covering_by_position[(r, c)]
+            
             if len(blocks_rc) > 0:
                 # 1. each position in the MSA is covered ONLY ONCE
                 model.addConstr(
@@ -106,6 +123,13 @@ class Optimization:
 
         tf = time.time()
         times["constraint3"] = round(tf - ti, 3)
+        
+        # constraint 4: vertical blocks are part of the solution
+        for idx in vertical_blocks:
+            model.addConstr(C[idx] >= 1)
+            logging.info(
+                f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
+            )
 
         ti = time.time()
         # Objective function
