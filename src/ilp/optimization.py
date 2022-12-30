@@ -15,6 +15,7 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 # log = Logger(name="opt", level="DEBUG")
 
+
 class Optimization:
     def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
 
@@ -110,8 +111,10 @@ class Optimization:
         ti = time.time()
         # Objective function
         model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+        logging.info("Begin ILP")
 
         model.optimize()
+        logging.info("End ILP")
         tf = time.time()
         times["optimization"] = round(tf - ti, 3)
 
@@ -128,10 +131,11 @@ class Optimization:
         ti = time.time()
         optimal_coverage = []
         for k, v in solution_C.items():
-            
+
             # id_block, i, j = k
             if v > 0:
-                logging.info(f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
+                logging.info(
+                    f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
                 optimal_coverage.append(self.input_blocks[k])
         #         K = (int(seq) for seq in id_block_to_K[id_block].split(","))
         #         label = id_block_to_labels[id_block]
@@ -214,7 +218,7 @@ class Optimization:
                     logging.debug(f"sets: {k1}, {set(block2.K)}")
                     if not k1.isdisjoint(set(block2.K)):
                         intersections.append((idx1, idx2))
-                        logging.debug(
+                        logging.info(
                             f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()}")
 
             # Add all blocks in current_blocks to the set of visited blocks
