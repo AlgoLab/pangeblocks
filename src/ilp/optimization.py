@@ -2,6 +2,9 @@
 Given an MSA, and a set of blocks such that the union of them covers all the MSA,
 Find a non-overlapping set the blocks covering the entire MSA
 # """
+from collections import deque
+from itertools import chain
+from sys import getsizeof, stderr
 import time
 from collections import defaultdict
 from tqdm import tqdm
@@ -14,6 +17,54 @@ from src.blocks.analyzer import BlockAnalyzer
 import logging
 logging.basicConfig(level=logging.ERROR)
 # log = Logger(name="opt", level="DEBUG")
+
+try:
+    from reprlib import repr
+except ImportError:
+    pass
+
+
+def total_size(o, handlers={}, verbose=False):
+    """ Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, deque, dict, set and frozenset.
+    To search other containers, add handlers to iterate over their contents:
+
+        handlers = {SomeContainerClass: iter,
+                    OtherContainerClass: OtherContainerClass.get_elements}
+
+    """
+    def dict_handler(d): return chain.from_iterable(d.items())
+    all_handlers = {tuple: iter,
+                    list: iter,
+                    deque: iter,
+                    dict: dict_handler,
+                    set: iter,
+                    frozenset: iter,
+                    }
+    all_handlers.update(handlers)     # user handlers take precedence
+    seen = set()                      # track which object id's have already been seen
+    # estimate sizeof object without __sizeof__
+    default_size = getsizeof(0)
+
+    def sizeof(o):
+        if id(o) in seen:       # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = getsizeof(o, default_size)
+
+        if verbose:
+            print(s, type(o), repr(o), file=stderr)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)
+
 
 
 class Optimization:
@@ -189,7 +240,7 @@ class Optimization:
         block_by_start = defaultdict(list)
         for idx, block in sorted_blocks:
             block_by_start[block.i].append(idx)
-
+        del sorted_blocks
         # We will iterate over the columns of the MSA.
         # For each column, we will
         # (1) compute the intersections between blocks starting in that column
@@ -219,8 +270,16 @@ class Optimization:
                     if not k1.isdisjoint(set(block2.K)):
                         intersections.append((idx1, idx2))
                         logging.info(
-                            f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()}")
-
+                            f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()} (size: {len(intersections)})")
+            print(f"Column: {column}")
+            logging.debug(
+                f"Size intersection: {total_size(intersections):_}, len: {len(intersections)}")
+            logging.debug(
+                f"Size visited_blocks: {total_size(visited_blocks):_}, len: {len(visited_blocks)}")
+            logging.debug(
+                f"Size blocks_ending: {total_size(blocks_ending):_}, len: {len(blocks_ending)}")
+            logging.debug(
+                f"Size block_by_start: {total_size(block_by_start):_}, len: {len(block_by_start)}")
             # Add all blocks in current_blocks to the set of visited blocks
             visited_blocks = visited_blocks | current_blocks
             for idx1, current_block in current_blocks.items():
@@ -231,5 +290,5 @@ class Optimization:
             #  column from the list of visited blocks
             for idx in blocks_ending[column]:
                 del visited_blocks[idx]
-
+            del blocks_ending[column]
         return intersections
