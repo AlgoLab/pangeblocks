@@ -132,11 +132,11 @@ class Optimization:
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
-                logging.info(f"constraint1({r},{c}) covered by {blocks_rc}")
+                logging.debug(f"constraint1({r},{c}) covered by {blocks_rc}")
 
                 # 2. each position of the MSA is covered AT LEAST by one block
                 model.addConstr(U[r, c] >= 1, name=f"constraint2({r},{c})")
-                logging.info(f"constraint2({r},{c})")
+                logging.debug(f"constraint2({r},{c})")
 
         tf = time.time()
         times["constraints1-2"] = round(tf - ti, 3)
@@ -145,13 +145,14 @@ class Optimization:
         # sort all blocks,
         ti = time.time()
 
+        logging.info("Constraints 2")
         for idx1, idx2 in (self._list_inter_blocks(self.input_blocks)):
             # if the blocks intersect, then create the restriction
             block1 = self.input_blocks[idx1]
             block2 = self.input_blocks[idx2]
             name_constraint = f"constraint3({idx1})-({idx2})"
             model.addConstr(C[idx1] + C[idx2] <= 1, name=name_constraint)
-            logging.info(
+            logging.debug(
                 f"constraint3({idx1})-({idx2}), {block1.str()} - {block2.str()}")
 
         tf = time.time()
@@ -181,14 +182,10 @@ class Optimization:
         optimal_coverage = []
         for k, v in solution_C.items():
 
-            # id_block, i, j = k
             if v > 0:
                 logging.info(
                     f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
                 optimal_coverage.append(self.input_blocks[k])
-        #         K = (int(seq) for seq in id_block_to_K[id_block].split(","))
-        #         label = id_block_to_labels[id_block]
-        #         optimal_coverage.append(Block(K, i, j, label))
         tf = time.time()
         times["solution as blocks"] = round(tf - ti, 3)
 
@@ -205,51 +202,36 @@ class Optimization:
 
         return align, n_seqs, n_cols
 
-    def get_common_cols(self, block1, block2):
-        if block1.j < block2.i:
-            return []
-        intervals = [(block1.i, block1.j), (block2.i, block2.j)]
-        start, end = intervals.pop()
-        while intervals:
-            start_temp, end_temp = intervals.pop()
-            start = max(start, start_temp)
-            end = min(end, end_temp)
-        return [start, end]
-
     def _list_inter_blocks(self, list_blocks: list[Block]) -> list[tuple]:
-        """returns a list of tuples(idx_block1, idx_block2) with all pairs
-        of blocks that intersects"""
-        # "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
+        """returns a the tuples(idx_block1, idx_block2) for each pair
+        of blocks that intersects.
+        It is implemented as a generator, since the list might grow too much."""
 
-        # sort blocks by starting position and save the order in the original list
-        sorted_blocks = sorted(enumerate(self.input_blocks),
-                               key=lambda block: block[1].i)
 
-        # save pairs of indexes for the sorted blocks that intersect
-        # (pos1,pos2): positions in the sorted list
-        # (orig_pos1, orig_pos2): positions in the order of the input list
-        intersections = []
-        visited_blocks = set()
-        current_block_idx = 0
+        # We organize the blocks in two dictionaries:
+        # blocks_ending: for each column, the blocks that end in that column
+        # block_by_start: for each column, the blocks that start in that column
         blocks_ending = defaultdict(set)
-
-        # For each column, we will compute the index of blocks that
-        # start in that column, and store those indices in blocks_by_start
         block_by_start = defaultdict(list)
         block_by_end = defaultdict(list)
-        for idx, block in sorted_blocks:
+        for idx, block in self.input_blocks:
             block_by_start[block.i].append(idx)
             block_by_end[block.j].append(idx)
         for column in block_by_end.keys():
             blocks_ending[column] = set(block_by_end[column])
-        del sorted_blocks
+
         # We will iterate over the columns of the MSA.
+        # We maintain a set of blocks that span the current column
+        # (current_blocks) and a set of blocks that have been visited previously
+        # (visited_blocks) and that span the current column.
         # For each column, we will
         # (1) compute the intersections between blocks starting in that column
         # and the blocks in visited_blocks
-        # (2) remove from visited_blocks the blocks that end in the current column
+        # (2) remove from visited_blocks the blocks that end in the current
+        # column (so that the next iteration will not consider them)
+        visited_blocks = set()
         for column in range(self.n_cols):
-            logging.debug(f"current column: {column}")
+            logging.info(f"current column: {column}")
             # notice that in block_by_start[column] we have the blocks that
             # start in the current column.
             # We are going to save them in the current_blocks set
@@ -270,11 +252,8 @@ class Optimization:
                     logging.debug(f"sets: {k1}, {set(block2.K)}")
                     if not k1.isdisjoint(set(block2.K)):
                         yield (idx1, idx2)
-                        logging.info(
-                            f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()} (size: {len(intersections)})")
-            logging.info(f"Column: {column}")
-            logging.debug(
-                f"Size intersection: {total_size(intersections):_}, len: {len(intersections)}")
+                        logging.debug(
+                            f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()}")
             logging.debug(
                 f"Size visited_blocks: {total_size(visited_blocks):_}, len: {len(visited_blocks)}")
             logging.debug(
