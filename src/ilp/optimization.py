@@ -128,9 +128,13 @@ class Optimization:
         for r, c in tqdm(msa_positions):
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
-                # 1. each position in the MSA is covered ONLY ONCE
+                # U[r,c] = 1 implies that at least one block covers the position
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
+                )
+                # 1. each position in the MSA is covered by at most one block
+                model.addConstr(
+                    1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
                 logging.debug(f"constraint1({r},{c}) covered by {blocks_rc}")
 
@@ -142,7 +146,6 @@ class Optimization:
         times["constraints1-2"] = round(tf - ti, 3)
 
         # 3. overlapping blocks cannot be chosen
-        # sort all blocks,
         ti = time.time()
 
         logging.info("Constraints 2")
@@ -207,14 +210,13 @@ class Optimization:
         of blocks that intersects.
         It is implemented as a generator, since the list might grow too much."""
 
-
         # We organize the blocks in two dictionaries:
         # blocks_ending: for each column, the blocks that end in that column
         # block_by_start: for each column, the blocks that start in that column
         blocks_ending = defaultdict(set)
         block_by_start = defaultdict(list)
         block_by_end = defaultdict(list)
-        for idx, block in self.input_blocks:
+        for idx, block in enumerate(self.input_blocks):
             block_by_start[block.i].append(idx)
             block_by_end[block.j].append(idx)
         for column in block_by_end.keys():
