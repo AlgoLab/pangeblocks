@@ -85,6 +85,13 @@ class Optimization:
         times = dict()
         ti = time.time()
 
+        # all blocks we receive involve at least two sequences, but we need to
+        # add dummy blocks for the cell of the MSA.
+        # This allows to guarantee that the ILP always has a feasible solution
+        # TODO: replace * with the correct character
+        dummy_blocks = [Block((r,), c, c, '*') for r in range(self.n_seqs)
+                        for c in range(self.n_cols)]
+        all_blocks = self.input_blocks + dummy_blocks
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
         #
@@ -99,7 +106,7 @@ class Optimization:
         #    end column
         # 2. we do a second scan of vertical blocks and, for each end
         #    column, we keep the block with the smallest beginning column
-        for idx, block in enumerate(self.input_blocks):
+        for idx, block in enumerate(all_blocks):
             logging.debug(f"input block: {block.str()}")
             if len(block.K) == self.n_seqs:
                 if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
@@ -116,7 +123,7 @@ class Optimization:
         # corresponding covering constraints
         covered_by_vertical_block = set()
         for begin, item in vertical_blocks.items():
-            block = self.input_blocks[item['idx']]
+            block = all_blocks[item['idx']]
             logging.info(
                 f"Vertical block: {block.str()}")
             for col in range(block.i, block.j + 1):
@@ -132,7 +139,7 @@ class Optimization:
         # ILP correspond to the blocks that are disjoint from vertical blocks or
         # are vertical blocks themselves.
         disjoint_vertical = set()
-        for idx, block in enumerate(self.input_blocks):
+        for idx, block in enumerate(all_blocks):
             if block.i in covered_by_vertical_block or block.j in covered_by_vertical_block:
                 pass
             if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
@@ -151,7 +158,7 @@ class Optimization:
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
         for idx in c_variables:
-            block = self.input_blocks[idx]
+            block = all_blocks[idx]
             logging.debug(f"block: {block.str()}")
             for r in block.K:
                 for c in range(block.i, block.j + 1):
@@ -170,11 +177,12 @@ class Optimization:
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
+        # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
         for block in c_variables:
             logging.info(
-                f"variable:C({block}) = {self.input_blocks[block].str()}")
+                f"variable:C({block}) = {all_blocks[block].str()}")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.info(f"variable:U({pos})")
@@ -232,8 +240,8 @@ class Optimization:
 
             if v > 0:
                 logging.info(
-                    f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
-                optimal_coverage.append(self.input_blocks[k])
+                    f"Optimal Solution: {k}, {all_blocks[k].str()}")
+                optimal_coverage.append(all_blocks[k])
         tf = time.time()
         times["solution as blocks"] = round(tf - ti, 3)
 
@@ -249,4 +257,3 @@ class Optimization:
         n_seqs = len(align)
 
         return align, n_seqs, n_cols
-

@@ -1,0 +1,40 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.formatOnType": true
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+
+      {
+        "name": "Python: Current File (Integrated Terminal)",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "args": [
+          "test/test.fa",
+          "--output",
+          "output-test/max_blocks/test.json"
+        ],
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Python: Current File (External Terminal)",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "args": [
+          "test/test.fa",
+          "--output",
+          "output-test/max_blocks/test.json"
+        ],
+        "console": "externalTerminal"
+      }
+    ]
+  }
+}
