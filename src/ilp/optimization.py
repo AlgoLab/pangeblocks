@@ -102,24 +102,21 @@ class Optimization:
         vertical_blocks = []
         covered_positions = defaultdict(list)
 
-        # save positions not covered by vertical blocks separatedly
-        msa_positions = []
-        covering_by_position = defaultdict(list)
-        for idx, block in enumerate(self.input_blocks):
-            
-            # vertical blocks: will be chosen in the optimal solution
-            if len(block.K) == self.n_seqs: 
-                vertical_blocks.append(idx)
-            
-            # all other blocks
+        # msa_positions is a list of all positions (r,c) that are required to be
+        # covered. We exclude the positions covered by vertical blocks, since
+        # they will be guaranteed to be covered, as an effect of the fact that
+        # the corresponding C variables will be set to 1
+        msa_positions = [(r, c) for r in range(self.n_seqs)
+                         for c in set(range(self.n_cols)) - covered_by_vertical_block]
+
+        # covering_by_position is a dictionary with key (r,c) and value the list
+        # of indices of the blocks that cover the position (r,c)
+        for idx in c_variables:
+            block = all_blocks[idx]
+            logging.debug(f"block: {block.str()}")
             for r in block.K:
                 for c in range(block.i, block.j + 1):
                     covering_by_position[(r, c)].append(idx)
-
-        # write idx for MSA positions (row, col)
-        msa_positions = [(r, c) for r in range(self.n_seqs)
-                         for c in range(self.n_cols)]
-
 
         tf = time.time()
         times["init"] = round(tf - ti, 3)
