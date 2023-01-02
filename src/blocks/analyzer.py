@@ -54,6 +54,32 @@ class BlockAnalyzer:
         return len(inter_blocks)
 
     @staticmethod
+    def _list_inter_blocks(list_blocks: list[Block], return_sorted_list: bool = False) -> list[tuple]:
+        "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
+        blocks = sorted(list_blocks, key=lambda block: block.i)
+
+        # save pairs of indexes for the sorted blocks that intersect
+        intersections = []
+        for pos1, block1 in enumerate(blocks[:-1]):
+            # compare against the next blocks in the sorted list
+            for rel_pos, block2 in enumerate(blocks[pos1+1:]):
+                pos2 = rel_pos + pos1 + 1
+                block2 = blocks[pos2]
+
+                # check for not empty intersection
+                common_rows = list(set(block1.K).intersection(
+                    set(block2.K)))  # intersection set K
+                common_cols = list(set(range(block1.i, block1.j+1)).intersection(
+                    set(range(block2.i, block2.j+1))))  # intersection columns [i,j]
+
+                if (common_rows and common_cols):
+                    intersections.append((pos1, pos2))
+
+        if return_sorted_list is True:
+            return intersections, blocks
+        return intersections
+
+    @staticmethod
     def _load_list_blocks(path_list_blocks: Union[str,Path]) -> list[Block]:
         "load blocks in a list from a json file"
         with open(path_list_blocks,"r") as fp:
