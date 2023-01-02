@@ -177,14 +177,15 @@ class Optimization:
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
-        C = model.addVars(range(len(self.input_blocks)),
+        # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
+        C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
-        for block in range(len(self.input_blocks)):
+        for block in c_variables:
             logging.info(
-                f"variable:C({block}) = {self.input_blocks[block].str()}")
+                f"variable:C({block}) = {all_blocks[block].str()}")
+        U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.info(f"variable:U({pos})")
-        U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
 
         # Constraints
         for r, c in tqdm(msa_positions):
