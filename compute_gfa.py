@@ -15,7 +15,8 @@ import logging
 
 # Command line options
 parser = argparse.ArgumentParser()
-parser.add_argument("--path_blocks", help="json file with blocks covering the MSA")
+parser.add_argument(
+    "--path_blocks", help="json file with blocks covering the MSA")
 parser.add_argument("--path_msa", help="path to MSA in .fa format")
 parser.add_argument("--path_gfa", help="path to save the output in GFA format")
 parser.add_argument(
@@ -26,9 +27,10 @@ args = parser.parse_args()
 logging.basicConfig(level=args.log_level)
 
 def main():
+
     # Load set of decomposed blocks
-    path_blocks = args.path_blocks #f"../experiment/block_decomposition/{NAME_MSA}.json"
-    path_msa= args.path_msa#f"../msas/{NAME_MSA}.fa"
+    path_blocks = args.path_blocks
+    path_msa = args.path_msa
     path_gfa = args.path_gfa
 
     with open(path_blocks) as fp:
@@ -50,17 +52,15 @@ def main():
     print(f"time optimization: {t_ilp:0.2}")
 
     ti = time.time()
-    parser=asGFA()
+    parser = asGFA()
     parser(opt_coverage, path_gfa, path_msa)
     tf = time.time()
     t_gfa = tf - ti
     print(f"time GFA: {t_gfa:0.2}")
 
-
     path_time = Path(path_gfa).parent
     path_time.mkdir(exist_ok=True, parents=True)
     name_msa = Path(path_msa).stem
-
 
     with open(path_time.joinpath(name_msa + ".txt"), "w") as fp:
         fp.write(f"time_input\t{t_input}\n")
@@ -69,7 +69,8 @@ def main():
             fp.write(f"time_ilp-{t_name}\t{t}\n")
         fp.write(f"time_gfa\t{t_gfa}\n")
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     # import cProfile, pstats
     # profiler = cProfile.Profile()
     # profiler.enable()

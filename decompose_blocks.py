@@ -9,27 +9,6 @@ from src.blocks import BlockAnalyzer, Block, block_decomposition, Decomposer
 from src.utils import MonitorValuesPlus
 import logging
 
-# Command line options
-parser = argparse.ArgumentParser()
-parser.add_argument("filename", help="max blocks filename")
-parser.add_argument("--output", help="output file")
-parser.add_argument("--output-stats", help="output file stats")
-parser.add_argument("--log_level", default='ERROR', dest='log_level',
-                    help='set log level (ERROR/WARNING/INFO/DEBUG')
-args = parser.parse_args()
-logging.basicConfig(level=args.log_level,
-                    format='%(asctime)s. %(message)s',
-                    datefmt='%Y-%m-%d@%H:%M:%S')
-
-mv_decomposed_blocks = MonitorValuesPlus(
-    list_vars=[
-        "filename", "total_blocks"
-    ],
-    out_file=args.output_stats,
-    overwrite=False
-)
-
-
 def list_intersecting_blocks(list_blocks: list[Block]) -> list[tuple]:
     """returns a the tuples(idx_block1, idx_block2) for each pair
     of blocks that intersects.
@@ -88,28 +67,60 @@ def list_intersecting_blocks(list_blocks: list[Block]) -> list[tuple]:
         #  column from the list of visited blocks
         visited_blocks -= blocks_ending[column]
 
+def main():
+    # Command line options
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", help="max blocks filename")
+    parser.add_argument("--output", help="output file")
+    parser.add_argument("--output-stats", help="output file stats")
+    parser.add_argument("--log_level", default='ERROR', dest='log_level',
+                        help='set log level (ERROR/WARNING/INFO/DEBUG')
+    args = parser.parse_args()
+    logging.basicConfig(level=args.log_level,
+                        format='%(asctime)s. %(message)s',
+                        datefmt='%Y-%m-%d@%H:%M:%S')
 
-block_analyzer = BlockAnalyzer()
-list_blocks = block_analyzer._load_list_blocks(args.filename)
-logging.debug(f"len(list_blocks)={len(list_blocks)}, {list_blocks}")
-# decompose blocks
+    mv_decomposed_blocks = MonitorValuesPlus(
+        list_vars=[
+            "filename", "total_blocks"
+        ],
+        out_file=args.output_stats,
+        overwrite=False
+    )
 
-decomposed_blocks = set(list_blocks)
-for (idx1, idx2) in list_intersecting_blocks(list_blocks):
-    for block in block_decomposition(list_blocks[idx1], list_blocks[idx2]):
-        decomposed_blocks.add(block)
-
-logging.debug(
-    f"len(decomposed_blocks)={len(decomposed_blocks)}, {decomposed_blocks}")
+    logging.info(f"Reading blocks from {args.filename}")
 
 
-Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-print(args.output)
-with open(args.output, "w") as fp:
-    json.dump([astuple(block) for block in decomposed_blocks], fp)
+    block_analyzer = BlockAnalyzer()
+    list_blocks = block_analyzer._load_list_blocks(args.filename)
+    logging.debug(f"len(list_blocks)={len(list_blocks)}, {list_blocks}")
+    # decompose blocks
 
-# stats for decomposed blocks
-if len(decomposed_blocks) > 0:
-    filename = args.output  # filename of decomposed blocks
-    total_blocks = len(decomposed_blocks)
-    mv_decomposed_blocks()
+    decomposed_blocks = set(list_blocks)
+    for (idx1, idx2) in list_intersecting_blocks(list_blocks):
+        for block in block_decomposition(list_blocks[idx1], list_blocks[idx2]):
+            decomposed_blocks.add(block)
+
+    logging.debug(
+        f"len(decomposed_blocks)={len(decomposed_blocks)}, {decomposed_blocks}")
+
+
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    print(args.output)
+    with open(args.output, "w") as fp:
+        json.dump([astuple(block) for block in decomposed_blocks], fp)
+
+    # stats for decomposed blocks
+    if len(decomposed_blocks) > 0:
+        filename = args.output  # filename of decomposed blocks
+        total_blocks = len(decomposed_blocks)
+        mv_decomposed_blocks()
+
+if __name__=="__main__":
+    # import cProfile, pstats
+    # profiler = cProfile.Profile()
+    # profiler.enable()
+    main()
+    # profiler.disable()
+    # stats = pstats.Stats(profiler).sort_stats('ncalls')
+    # stats.print_stats()
