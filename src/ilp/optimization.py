@@ -97,11 +97,57 @@ class Optimization:
         #
         # to speed up the process, we iterate over the blocks and append the
         # block to all the positions it covers
-        
-        # save vertical blocks and their covered positions in the MSA
-        vertical_blocks = []
-        covered_positions = defaultdict(list)
+        covering_by_position = defaultdict(list)
+        left_maximal_vertical_blocks = {}
 
+        # We keep only maximal vertical blocks and we achieve that in two
+        # phases:
+        # 1. for each beginning column, we keep the block with the largest
+        #    end column
+        # 2. we do a second scan of vertical blocks and, for each end
+        #    column, we keep the block with the smallest beginning column
+        for idx, block in enumerate(all_blocks):
+            logging.debug(f"input block: {block.str()}")
+            if len(block.K) == self.n_seqs:
+                if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
+                    left_maximal_vertical_blocks[block.i] = {
+                        "idx": idx, "end": block.j}
+        vertical_blocks = {}
+        for begin, block in left_maximal_vertical_blocks.items():
+            if not block["end"] in vertical_blocks or begin < vertical_blocks[block["end"]]["begin"]:
+                vertical_blocks[block["end"]] = {
+                    "idx": block["idx"], "begin": begin}
+        #
+        # We keep a set of all columns that are covered by a vertical block:
+        # those columns will not be involved in the U[r,c] variables and in the
+        # corresponding covering constraints
+        covered_by_vertical_block = set()
+        for begin, item in vertical_blocks.items():
+            block = all_blocks[item['idx']]
+            logging.info(
+                f"Vertical block: {block.str()}")
+            for col in range(block.i, block.j + 1):
+                covered_by_vertical_block.add(col)
+        logging.info(
+            f"Covered by vertical blocks: {covered_by_vertical_block}")
+        logging.info(
+            f"No. covered by vertical blocks: {len(covered_by_vertical_block)} out of {self.n_cols}")
+
+        # We compute the set disjoint_vertical, corresponding to the
+        # blocks that are disjoint from vertical blocks.
+        # The blocks that we will encode with a C variable in the
+        # ILP correspond to the blocks that are disjoint from vertical blocks or
+        # are vertical blocks themselves.
+        disjoint_vertical = set()
+        for idx, block in enumerate(all_blocks):
+            if block.i in covered_by_vertical_block or block.j in covered_by_vertical_block:
+                pass
+            if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
+                disjoint_vertical.add(idx)
+                logging.debug(f"disjoint vertical block: {block.str()}")
+
+        c_variables = list(disjoint_vertical) + [item["idx"]
+                                                 for item in vertical_blocks.values()]
         # msa_positions is a list of all positions (r,c) that are required to be
         # covered. We exclude the positions covered by vertical blocks, since
         # they will be guaranteed to be covered, as an effect of the fact that
