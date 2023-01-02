@@ -1,2 +1,2 @@
-PATH_MSAS: "msas"
-PATH_OUTPUT: "output-msas"
+PATH_MSAS: "msas-didelot"
+PATH_OUTPUT: "experiment-didelot-vert-block"

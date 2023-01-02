@@ -32,7 +32,7 @@ class InputBlockSet:
 
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + missing_blocks# + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
+        set_B = blocks + missing_blocks + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
         return set_B
     
@@ -120,9 +120,11 @@ class InputBlockSet:
                 seq_by_char[msa[row,col]].append(row)
 
             for c, K in seq_by_char.items():
-                blocks_one_char.append(
-                        Block(K=K, i=col, j=col, label=c)
-                )
+                # ommit vertical blocks, they will be part of a maximal one
+                if len(K) < n_seqs:
+                    blocks_one_char.append(
+                            Block(K=K, i=col, j=col, label=c)
+                    )
 
         return blocks_one_char
 
