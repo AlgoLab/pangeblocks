@@ -2,12 +2,12 @@
 create edges and nodes for DAG"""
 
 from collections import namedtuple
-from ..blocks import Block
+# from ...blocks import Block
 
 Node = namedtuple("Node",["K","i","j","label"]) # is a block
 Edge = namedtuple("Edge",["node1","node2","seqs"])
 
-def nodes_edges_from_blocks(block1: Block, block2: Block):
+def nodes_edges_from_blocks(block1, block2):
     b1, b2 = block1, block2
     nodes = []
     edges = []

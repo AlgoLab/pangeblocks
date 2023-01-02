@@ -1,5 +1,7 @@
+import argparse
 from pathlib import Path
 from collections import namedtuple
+
 
 
 def bandage_labels(path_gfa: str, path_save_labels= str):
@@ -33,3 +35,10 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
         fp.write(colnames)
         for label in info_labels:
             fp.write(f"{label.node_name},{label.first_base},{label.last_base},{label.seq}\n")
+
+if __name__ == "__main__":
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--path_gfa")
+    parser.add_argument("--path_save")
+    args = parser.parse_args()
+    bandage_labels(args.path_gfa, args.path_save)

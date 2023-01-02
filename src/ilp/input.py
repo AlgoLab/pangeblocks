@@ -1,22 +1,56 @@
 import numpy as np
 from collections import defaultdict
-from ..blocks import Block
+from src.blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
+from itertools import cycle
+from PIL import Image
+
+COLORS = [
+    (255,0,0), # red
+    (0,255,0), # green 
+    (0,0,255), # blue
+    (255,255,0), # yellow
+    (0,255,255), # cyan
+    (255,0,255), # magenta
+    (255,125,0), # orange
+    (125,0,255), # blue-magenta
+    (255,0,125), # red-magenta
+]
 
 class InputBlockSet:
 
-    def __call__(self, path_msa: Union[str,Path], blocks: list[Block]):
+    def __call__(self, path_msa: Union[str,Path], blocks: list[Block]) -> list[Block]:
         
         msa, n_seqs, n_cols = self.load_msa(path_msa)
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
         missing_blocks = self.get_missing_blocks(coverage_panel, msa)
+
+        # glue missing blocks of one character in the same column
+        missing_blocks = self.glue_vertical_blocks(missing_blocks)
+
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + blocks_one_char + [block for block in missing_blocks if block.j-block.i+1 > 1]
+        set_B = blocks + missing_blocks# + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
 
         return set_B
+    
+    def glue_vertical_blocks(self,list_blocks,):
+        "Glue blocks of length 1 that shares column"
+        new_blocks = []
+        blocks_by_start = defaultdict(list)
+        for block in list_blocks:
+            if len(block.label) == 1: # only one character blocks
+                blocks_by_start[(block.i,block.label)].extend(list(block.K))
+            else: 
+                new_blocks.append(block)
+        
+        for i_label,K in blocks_by_start.items():
+            i, label = i_label
+            new_blocks.append(Block(K,i,i,label))
+
+        return new_blocks
 
     @staticmethod
     def get_coverage_panel(n_seqs, n_cols, blocks):
@@ -38,7 +72,7 @@ class InputBlockSet:
         """
         rows, cols=np.where(coverage_panel == 0)
         missing_blocks = [(r,c) for r,c in zip(rows,cols)]
-        # missing_blocks = get_missing_blocks(coverage_panel)
+        
         missing_blocks = sorted(missing_blocks, key= lambda d: (d[0],d[1]))
         idx_missing_blocks_by_seq = defaultdict(list)
         for pos in missing_blocks: 
@@ -49,9 +83,9 @@ class InputBlockSet:
         for seq, cols in idx_missing_blocks_by_seq.items():
             consecutive_pos = self.get_list_consecutive_pos(cols)
             for pos in consecutive_pos: 
-                label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1]) #if pos[0]!=pos[-1] else align[seq,pos[0]]
+                label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1])
                 missing_blocks.append(
-                Block(K=(seq,), i=pos[0],j=pos[-1], label=label)
+                    Block(K=(seq,), i=pos[0],j=pos[-1], label=label)
                 )
 
         return missing_blocks
@@ -81,10 +115,15 @@ class InputBlockSet:
         "generate trivial blocks, one seq and one col"
         blocks_one_char = []
         for col in range(n_cols):
+            seq_by_char = defaultdict(list)
             for row in range(n_seqs):
+                seq_by_char[msa[row,col]].append(row)
+
+            for c, K in seq_by_char.items():
                 blocks_one_char.append(
-                    Block(K=(row,), i=col, j=col, label=msa[row,col])
+                        Block(K=K, i=col, j=col, label=c)
                 )
+
         return blocks_one_char
 
     def load_msa(self, path_msa):
