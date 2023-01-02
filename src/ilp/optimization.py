@@ -7,7 +7,6 @@ from itertools import chain
 from sys import getsizeof, stderr
 import time
 from collections import defaultdict
-from tqdm import tqdm
 from ..blocks import Block
 from pathlib import Path
 from Bio import AlignIO
@@ -15,9 +14,9 @@ from gurobipy import GRB
 import gurobipy as gp
 from src.blocks.analyzer import BlockAnalyzer
 import logging
-logging.basicConfig(level=logging.ERROR)
-# log = Logger(name="opt", level="DEBUG")
-
+logging.basicConfig(level=logging.ERROR,
+                    format='%(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
 try:
     from reprlib import repr
 except ImportError:
@@ -66,7 +65,6 @@ def total_size(o, handlers={}, verbose=False):
     return sizeof(o)
 
 
-
 class Optimization:
     def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
 
@@ -93,15 +91,72 @@ class Optimization:
         # to speed up the process, we iterate over the blocks and append the
         # block to all the positions it covers
         covering_by_position = defaultdict(list)
+        left_maximal_vertical_blocks = {}
+
+        # We keep only maximal vertical blocks and we achieve that in two
+        # phases:
+        # 1. for each beginning column, we keep the block with the largest
+        #    end column
+        # 2. we do a second scan of vertical blocks and, for each end
+        #    column, we keep the block with the smallest beginning column
         for idx, block in enumerate(self.input_blocks):
-            logging.debug(f"block: {block.str()}/{set(block.K)}")
+            logging.debug(f"input block: {block.str()}")
+            if len(block.K) == self.n_seqs:
+                if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
+                    left_maximal_vertical_blocks[block.i] = {
+                        "idx": idx, "end": block.j}
+        vertical_blocks = {}
+        for begin, block in left_maximal_vertical_blocks.items():
+            if not block["end"] in vertical_blocks or begin < vertical_blocks[block["end"]]["begin"]:
+                vertical_blocks[block["end"]] = {
+                    "idx": block["idx"], "begin": begin}
+        #
+        # We keep a set of all columns that are covered by a vertical block:
+        # those columns will not be involved in the U[r,c] variables and in the
+        # corresponding covering constraints
+        covered_by_vertical_block = set()
+        for begin, item in vertical_blocks.items():
+            block = self.input_blocks[item['idx']]
+            logging.info(
+                f"Vertical block: {block.str()}")
+            for col in range(block.i, block.j + 1):
+                covered_by_vertical_block.add(col)
+        logging.info(
+            f"Covered by vertical blocks: {covered_by_vertical_block}")
+        logging.info(
+            f"No. covered by vertical blocks: {len(covered_by_vertical_block)} out of {self.n_cols}")
+
+        # We compute the set disjoint_vertical, corresponding to the
+        # blocks that are disjoint from vertical blocks.
+        # The blocks that we will encode with a C variable in the
+        # ILP correspond to the blocks that are disjoint from vertical blocks or
+        # are vertical blocks themselves.
+        disjoint_vertical = set()
+        for idx, block in enumerate(self.input_blocks):
+            if block.i in covered_by_vertical_block or block.j in covered_by_vertical_block:
+                pass
+            if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
+                disjoint_vertical.add(idx)
+                logging.debug(f"disjoint vertical block: {block.str()}")
+
+        c_variables = list(disjoint_vertical) + [item["idx"]
+                                                 for item in vertical_blocks.values()]
+        # msa_positions is a list of all positions (r,c) that are required to be
+        # covered. We exclude the positions covered by vertical blocks, since
+        # they will be guaranteed to be covered, as an effect of the fact that
+        # the corresponding C variables will be set to 1
+        msa_positions = [(r, c) for r in range(self.n_seqs)
+                         for c in set(range(self.n_cols)) - covered_by_vertical_block]
+
+        # covering_by_position is a dictionary with key (r,c) and value the list
+        # of indices of the blocks that cover the position (r,c)
+        for idx in c_variables:
+            block = self.input_blocks[idx]
+            logging.debug(f"block: {block.str()}")
             for r in block.K:
                 for c in range(block.i, block.j + 1):
                     covering_by_position[(r, c)].append(idx)
 
-        # write idx for MSA positions (row, col)
-        msa_positions = [(r, c) for r in range(self.n_seqs)
-                         for c in range(self.n_cols)]
         tf = time.time()
         times["init"] = round(tf - ti, 3)
 
@@ -115,9 +170,9 @@ class Optimization:
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
-        C = model.addVars(range(len(self.input_blocks)),
+        C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
-        for block in range(len(self.input_blocks)):
+        for block in c_variables:
             logging.info(
                 f"variable:C({block}) = {self.input_blocks[block].str()}")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
@@ -125,7 +180,12 @@ class Optimization:
             logging.info(f"variable:U({pos})")
 
         # Constraints
-        for r, c in tqdm(msa_positions):
+        # All C(b) variables corresponding to vertical blocks are set to 1
+        for end, item in vertical_blocks.items():
+            model.addConstr(C[item["idx"]] == 1,
+                            name=f"vertical_constraint({item['idx']})")
+
+        for r, c in msa_positions:
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
                 # U[r,c] = 1 implies that at least one block covers the position
@@ -148,21 +208,6 @@ class Optimization:
         # 3. overlapping blocks cannot be chosen
         ti = time.time()
 
-        logging.info("Constraints 2")
-        for idx1, idx2 in (self._list_inter_blocks(self.input_blocks)):
-            # if the blocks intersect, then create the restriction
-            block1 = self.input_blocks[idx1]
-            block2 = self.input_blocks[idx2]
-            name_constraint = f"constraint3({idx1})-({idx2})"
-            model.addConstr(C[idx1] + C[idx2] <= 1, name=name_constraint)
-            logging.debug(
-                f"constraint3({idx1})-({idx2}), {block1.str()} - {block2.str()}")
-
-        tf = time.time()
-        times["constraint3"] = round(tf - ti, 3)
-
-        ti = time.time()
-        # Objective function
         model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
         logging.info("Begin ILP")
 
@@ -205,66 +250,3 @@ class Optimization:
 
         return align, n_seqs, n_cols
 
-    def _list_inter_blocks(self, list_blocks: list[Block]) -> list[tuple]:
-        """returns a the tuples(idx_block1, idx_block2) for each pair
-        of blocks that intersects.
-        It is implemented as a generator, since the list might grow too much."""
-
-        # We organize the blocks in two dictionaries:
-        # blocks_ending: for each column, the blocks that end in that column
-        # block_by_start: for each column, the blocks that start in that column
-        blocks_ending = defaultdict(set)
-        block_by_start = defaultdict(list)
-        block_by_end = defaultdict(list)
-        for idx, block in enumerate(self.input_blocks):
-            block_by_start[block.i].append(idx)
-            block_by_end[block.j].append(idx)
-        for column in block_by_end.keys():
-            blocks_ending[column] = set(block_by_end[column])
-
-        # We will iterate over the columns of the MSA.
-        # We maintain a set of blocks that span the current column
-        # (current_blocks) and a set of blocks that have been visited previously
-        # (visited_blocks) and that span the current column.
-        # For each column, we will
-        # (1) compute the intersections between blocks starting in that column
-        # and the blocks in visited_blocks
-        # (2) remove from visited_blocks the blocks that end in the current
-        # column (so that the next iteration will not consider them)
-        visited_blocks = set()
-        for column in range(self.n_cols):
-            logging.info(f"current column: {column}")
-            # notice that in block_by_start[column] we have the blocks that
-            # start in the current column.
-            # We are going to save them in the current_blocks set
-            current_blocks = set([(idx, self.input_blocks[idx])
-                                  for idx in block_by_start[column]])
-            logging.debug(f"current blocks: {current_blocks}")
-
-            # (1) compute the intersections between blocks in block_by_start[column] and
-            # blocks in visited_blocks
-            # Notice that all visited blocks span the current column, so
-            # there is no need to check if they intersect in the current column
-            for idx1, block1 in current_blocks:
-                k1 = set(block1.K)
-                logging.debug(f"current block: {idx1}, {block1.str()}")
-                for idx2, block2 in visited_blocks:
-                    logging.debug(f"first block: {idx1}, {block1.str()}")
-                    logging.debug(f"second block: {idx2}, {block2.str()}")
-                    logging.debug(f"sets: {k1}, {set(block2.K)}")
-                    if not k1.isdisjoint(set(block2.K)):
-                        yield (idx1, idx2)
-                        logging.debug(
-                            f"intersect: {idx1}, {block1.str()}, {idx2}, {block2.str()}")
-            logging.debug(
-                f"Size visited_blocks: {total_size(visited_blocks):_}, len: {len(visited_blocks)}")
-            logging.debug(
-                f"Size blocks_ending: {total_size(blocks_ending):_}, len: {len(blocks_ending)}")
-            logging.debug(
-                f"Size block_by_start: {total_size(block_by_start):_}, len: {len(block_by_start)}")
-            # Add all blocks in current_blocks to the set of visited blocks
-            visited_blocks |= current_blocks
-            #  Now that we have processed all the blocks that start in the
-            #  current column, we can remove the blocks that end in the current
-            #  column from the list of visited blocks
-            visited_blocks -= blocks_ending[column]
