@@ -7,7 +7,6 @@ from itertools import chain
 from sys import getsizeof, stderr
 import time
 from collections import defaultdict
-from tqdm import tqdm
 from ..blocks import Block
 from pathlib import Path
 from Bio import AlignIO
@@ -15,9 +14,9 @@ from gurobipy import GRB
 import gurobipy as gp
 from src.blocks.analyzer import BlockAnalyzer
 import logging
-logging.basicConfig(level=logging.ERROR)
-# log = Logger(name="opt", level="DEBUG")
-
+logging.basicConfig(level=logging.ERROR,
+                    format='%(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
 try:
     from reprlib import repr
 except ImportError:
@@ -64,7 +63,6 @@ def total_size(o, handlers={}, verbose=False):
         return s
 
     return sizeof(o)
-
 
 
 class Optimization:
@@ -142,9 +140,8 @@ class Optimization:
         for r, c in tqdm(msa_positions):
 
             blocks_rc = covering_by_position[(r, c)]
-            
             if len(blocks_rc) > 0:
-                # 1. each position in the MSA is covered ONLY ONCE
+                # U[r,c] = 1 implies that at least one block covers the position
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
