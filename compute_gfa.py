@@ -24,7 +24,9 @@ parser.add_argument(
 parser.add_argument("--log_level", default='ERROR', dest='log_level',
                     help='set log level (ERROR/WARNING/INFO/DEBUG')
 args = parser.parse_args()
-logging.basicConfig(level=args.log_level)
+logging.basicConfig(level=args.log_level.upper(),
+                    choices=logging._nameToLevel.keys())
+
 
 def main():
 
