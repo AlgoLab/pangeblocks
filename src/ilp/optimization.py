@@ -22,49 +22,6 @@ try:
 except ImportError:
     pass
 
-
-def total_size(o, handlers={}, verbose=False):
-    """ Returns the approximate memory footprint an object and all of its contents.
-
-    Automatically finds the contents of the following builtin containers and
-    their subclasses:  tuple, list, deque, dict, set and frozenset.
-    To search other containers, add handlers to iterate over their contents:
-
-        handlers = {SomeContainerClass: iter,
-                    OtherContainerClass: OtherContainerClass.get_elements}
-
-    """
-    def dict_handler(d): return chain.from_iterable(d.items())
-    all_handlers = {tuple: iter,
-                    list: iter,
-                    deque: iter,
-                    dict: dict_handler,
-                    set: iter,
-                    frozenset: iter,
-                    }
-    all_handlers.update(handlers)     # user handlers take precedence
-    seen = set()                      # track which object id's have already been seen
-    # estimate sizeof object without __sizeof__
-    default_size = getsizeof(0)
-
-    def sizeof(o):
-        if id(o) in seen:       # do not double count the same object
-            return 0
-        seen.add(id(o))
-        s = getsizeof(o, default_size)
-
-        if verbose:
-            print(s, type(o), repr(o), file=stderr)
-
-        for typ, handler in all_handlers.items():
-            if isinstance(o, typ):
-                s += sum(map(sizeof, handler(o)))
-                break
-        return s
-
-    return sizeof(o)
-
-
 class Optimization:
     def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
 
@@ -139,14 +96,42 @@ class Optimization:
         # are vertical blocks themselves.
         disjoint_vertical = set()
         for idx, block in enumerate(all_blocks):
-            if block.i in covered_by_vertical_block or block.j in covered_by_vertical_block:
-                pass
             if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
+                # The current block is disjoint from vertical blocks
                 disjoint_vertical.add(idx)
                 logging.debug(f"disjoint vertical block: {block.str()}")
+            else:
+                # The current block is not disjoint from vertical blocks
+                # We need to check if the block intersects with at least two
+                # vertical blocks: in that case we need to manually decompose
+                # it.
+                private_cols = set(range(block.i, block.j + 1)) - covered_by_vertical_block
+                sorted_cols = sorted(private_cols)
+                private_regions = []
+                private_blocks = []
+                begin = -1
+                for idx, col in enumerate(sorted_cols):
+                    if begin < 0:
+                        begin = col
+                    if idx == len(sorted_cols) - 1 or col < sorted_cols[idx + 1] - 1:
+                        private_regions.append((begin, col))
+                        begin = -1
+
+                if len(private_regions) >= 2:
+                    logging.debug(
+                        f"block {block.str()} intersects with at least two vertical blocks")
+                    logging.debug(f"sorted_cols: {sorted_cols}")
+                    logging.debug(f"private_regions: {private_regions}")
+                    for begin, end in private_regions:
+                        label = "".join([self.msa[block.K[0], i] for i in range(begin, end + 1)])
+                        new_block = Block(block.K, begin, end, label)
+                        private_blocks.append(new_block)
+                        logging.debug(f"Adding private block: {new_block.str()} to {private_blocks}")
+        first_private_block = len(all_blocks)
+        all_blocks += enumerate(private_blocks, first_private_block)
 
         c_variables = list(disjoint_vertical) + [item["idx"]
-                                                 for item in vertical_blocks.values()]
+                                                 for item in vertical_blocks.values()] + list(range(first_private_block, len(all_blocks)))
         # msa_positions is a list of all positions (r,c) that are required to be
         # covered. We exclude the positions covered by vertical blocks, since
         # they will be guaranteed to be covered, as an effect of the fact that
