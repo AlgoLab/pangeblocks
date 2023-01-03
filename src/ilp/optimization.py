@@ -42,12 +42,7 @@ class Optimization:
         times = dict()
         ti = time.time()
 
-        # all blocks we receive involve at least two sequences, but we need to
-        # add dummy blocks for the cell of the MSA.
-        # This allows to guarantee that the ILP always has a feasible solution
-        dummy_blocks = [Block((r,), c, c, self.msa[r,c]) for r in range(self.n_seqs)
-                        for c in range(self.n_cols)]
-        all_blocks = self.input_blocks + dummy_blocks
+        all_blocks = self.input_blocks
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
         #
