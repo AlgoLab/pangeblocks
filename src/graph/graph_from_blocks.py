@@ -13,11 +13,11 @@ def nodes_edges_from_blocks(block1, block2):
     edges = []
     # not empty intersection
     common_rows = set(b1.K).intersection(set(b2.K))
-    K = len(common_rows)# number of seqs that can traverse the edge
+    # K = len(common_rows)# number of seqs that can traverse the edge
     K = list(common_rows)
     K.sort()
 
-    if b1.j == b2.i-1:
+    if b1.j == b2.i-1 and len(K)>0:
         # print("Condicion- consecutive blocks")
         node1 = Node(b1.K, b1.i, b1.j, b1.label)
         node2 = Node(b2.K, b2.i, b2.j, b2.label)
