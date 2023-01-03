@@ -42,7 +42,7 @@ def check_sequence(seq, source, sink):
             label = nodes[node_id]["label"].upper() # string node
             subseq = str(seq[current_pos_seq:current_pos_seq+len(label)]).upper() # string sequence
 
-            if label == "*": # case make_prg
+            if label in ["*","s"]: # case make_prg
                 # _current_pos_seq[node_id] = current_pos_seq
                 nodes_to_visit.append(node_id)
                 _current_pos_seq[node_id] = current_pos_seq
