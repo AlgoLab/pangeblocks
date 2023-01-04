@@ -123,7 +123,8 @@ class Optimization:
                         private_blocks.append(new_block)
                         logging.debug(f"Adding private block: {new_block.str()} to {private_blocks}")
         first_private_block = len(all_blocks)
-        all_blocks += enumerate(private_blocks, first_private_block)
+        # all_blocks += enumerate(private_blocks, first_private_block)
+        all_blocks += private_blocks
 
         c_variables = list(disjoint_vertical) + [item["idx"]
                                                  for item in vertical_blocks.values()] + list(range(first_private_block, len(all_blocks)))
