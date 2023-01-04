@@ -25,7 +25,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
             
             if line.startswith("P"):
                 split_line = line.split("\t")
-                seq_id = split_line[1]
+                seq_id = int(split_line[1].replace("seq",""))
                 path   = split_line[-1].replace("+","")
                 nodes_path = [int(node_id) for node_id in path.split(",")]
                 for node_id in nodes_path:
@@ -42,7 +42,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
         for label in info_labels:
             list_seqs = seqs_by_node[int(label.node_name)]
             list_seqs.sort()
-            list_seqs = "-".join(list_seqs)
+            list_seqs = "-".join([str(s) for s in list_seqs])
             fp.write(f"{label.node_name},{label.first_base},{label.last_base},{label.seq},{list_seqs}\n")
 
 if __name__ == "__main__":
