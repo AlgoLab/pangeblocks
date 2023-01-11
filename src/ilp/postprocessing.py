@@ -98,5 +98,12 @@ def postprocessing(path_gfa):
                 new_path.append(idx)
         # from pdb import set_trace
         # set_trace()
-        new_path = ",".join([idx+"+" for idx in new_path])
-        print("P", seq_id, new_path, sep="\t")
+        # FIXME: remove duplicates (should not be necessary)
+        clean_path = []
+        for idx in new_path:
+            if idx not in clean_path:
+                clean_path.append(idx)
+
+        clean_path = ",".join([idx+"+" for idx in clean_path])
+        clean_path = clean_path.strip()
+        print("P", seq_id, clean_path, sep="\t")
