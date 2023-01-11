@@ -1,52 +1,102 @@
-"""Postprocessing of optimal solution
-Glue blocks that are consecutive and shares the same rows
-
-- In the optimal solution, two blocks sharing the same set of sequences
-are either consecutive or disjoint
+"""Postprocessing of GFA
+modification of 
+https://github.com/AlgoLab/RecGraph-exps/blob/main/scripts/clean_gfa_from_ast.py
 """
 from collections import defaultdict
-from ..blocks import Block
 
-def postprocessing(list_blocks: list[Block]) -> list[Block]: 
+def postprocessing(path_gfa): 
+    """
+    remove nodes with '-'
+    remove '-' in the labels of nodes
+    """
+    to_remove = []
+    predecessors = defaultdict(list)
+    successors = defaultdict(list)
 
-    new_blocks = []
-    blocks_by_setK = defaultdict(list)
-    
-    for idx, block in enumerate(list_blocks):
-        blocks_by_setK[block.K].append(idx)
+    # segments (nodes)
+    for line in open(path_gfa):
+        if not line.startswith("S"):
+            continue
+        
+        _, idx, seq = line.split("\t")
+        seq = seq.replace("\n","")
+        
+        if set(seq) == set("-"):
+            # nodes labeled with "-" will be removed
+            to_remove.append(idx)
+            predecessors[idx] = []
+            successors[idx] = []
+        elif "-" in seq:
+            # remove "-" from the label
+            seq = seq.replace("-","")
+            print("S", idx, seq, sep="\t") 
+        else:
+            # otherwise, keep the node
+            print(line, end="")
 
-    # glue consecutive blocks
-    for setK, idx_blocks in blocks_by_setK.items():
-    
-        blocks = [(idx,list_blocks[idx]) for idx in idx_blocks]
-        blocks = sorted(blocks, key=lambda b: b[1].i)
+    # links (edges)
+    for line in open(path_gfa):
+        if not line.startswith("L"):
+            continue
+        
+        _, idx1, _, idx2, _, _ = line.split("\t")
+        if idx1 in to_remove:
+            successors[idx1].append(idx2)
+        elif idx2 in to_remove:
+            predecessors[idx2].append(idx1)
+        else:
+            print(line, end="")
 
-        consecutive_blocks = [] # temporary list to collect consecutive blocks
-        for _, block in blocks: 
-            print(block)
-            if consecutive_blocks: # not empty
-                last_block = consecutive_blocks[-1]
 
-                # check if new block is consecutive to the last block in the list
-                # blocks are sorted by starting position
-                if last_block.j == block.i - 1:
-                    consecutive_blocks.append(block)
-                else: 
-                    start = consecutive_blocks[0].i
-                    end   = consecutive_blocks[-1].j
-                    label = "".join([b.label for b in consecutive_blocks])
-                    new_blocks.append(
-                        Block(setK, start, end, label)
-                    )
-            else:
-                consecutive_blocks.append(block)
+    for idx in successors:
+        while any([x in to_remove for x in successors[idx]]):
+            new_successors = []
+            for sidx in successors[idx]:
+                if sidx in to_remove:
+                    new_successors.extend(successors[sidx])
+                else:
+                    new_successors.append(sidx)
+            successors[idx] = new_successors
 
-        # after last block
-        start = consecutive_blocks[0].i
-        end   = consecutive_blocks[-1].j
-        label = "".join([b.label for b in consecutive_blocks])
-        new_blocks.append(
-            Block(setK, start, end, label)
-        )
+    for idx in predecessors:
+        while any([x in to_remove for x in predecessors[idx]]):
+            new_predecessors = []
+            for sidx in predecessors[idx]:
+                if sidx in to_remove:
+                    new_predecessors.extend(predecessors[sidx])
+                else:
+                    new_predecessors.append(sidx)
+            predecessors[idx] = new_predecessors
 
-    return new_blocks
+    # adds new edges
+    for idx in to_remove:
+        if len(predecessors[idx]) == 0 or len(successors[idx]) == 0:
+            continue
+        for p in predecessors[idx]:
+            for s in successors[idx]:
+                print("L", p, "+", s, "+", "0M", sep="\t")
+
+    # modify paths
+    for line in open(path_gfa):
+        if not line.startswith("P"):
+            continue
+
+        _, seq_id, path = line.split("\t")
+        
+        path     = path.replace("\n","").replace("+","")
+        idx_path = path.split(",")
+        
+        new_path = []
+        for idx in idx_path:
+            if idx in to_remove:
+                # find predecessor and successor in the path
+                # there should be only one predecessor and one successor
+                predecessor = [pred for pred in predecessors[idx] if pred in idx_path][0] 
+                successor   = [suc  for suc  in successors[idx] if suc in idx_path][0]
+                new_path.extend([predecessor, successor])
+            else: 
+                new_path.append(idx)
+        # from pdb import set_trace
+        # set_trace()
+        new_path = ",".join([idx+"+" for idx in new_path])
+        print("P", seq_id, new_path, sep="\t")

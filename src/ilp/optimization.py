@@ -170,8 +170,28 @@ class Optimization:
             )
 
         ti = time.time()
+        # TODO: include input to decide which objective function to use
         # Objective function
-        model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+        # minimize the number of blocks (nodes)
+        # model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+        
+        # minimize the total length of the graph (number of characters)
+        # model.setObjective(
+        #     sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 
+        #     GRB.MINIMIZE
+        # )
+
+        # minimize the number of blocks penalizing shorter blocks
+        MIN_LEN = 2 # penalize blocks with label less than MIN_LEN
+        PENALIZATION = 3 # costly than the other ones
+        model.setObjective(
+            sum( 
+                (PENALIZATION if len(block.label)<MIN_LEN else 1)*C[idx] 
+                for idx, block in enumerate(self.input_blocks)
+                ), 
+            GRB.MINIMIZE
+        )
+
         logging.info("Begin ILP")
 
         model.optimize()

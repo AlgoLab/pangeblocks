@@ -84,7 +84,7 @@ class asGFA:
             id_nodes = [node2id[node] for node in sorted(nodes_seq, key=lambda node: node[1])]
             paths[seq] = ",".join([str(id_node)+"+" for id_node in id_nodes])
             lines_paths.append(
-                f"P\tseq{seq}\t\t{paths[seq]}"
+                f"P\tseq{seq}\t{paths[seq]}"
             )
         lines_gfa.append(HEADER)
         lines_gfa.extend(list(set(lines_segments)))

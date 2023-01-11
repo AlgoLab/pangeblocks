@@ -9,8 +9,9 @@ from src.blocks import Block
 from src.ilp.input import InputBlockSet
 from src.ilp.optimization import Optimization
 from src.ilp.variaton_graph_parser import asGFA
-
+from src.ilp.postprocessing import postprocessing
 from pathlib import Path
+from dataclasses import astuple
 import logging
 
 # Command line options
@@ -48,8 +49,18 @@ def main():
     tf = time.time()
     t_ilp = tf - ti
     print(f"time optimization: {t_ilp:0.2}")
+    
+    # # save optimal coverage
+    # for block in opt_coverage:
+    #     print(block, astuple(block))
+
+    name_msa = Path(path_msa).stem
+    # with open(Path(path_gfa).parent.joinpath(name_msa + "-opt_cov.json"),"w") as fp:
+    #     json.dump([astuple(block) for block in opt_coverage], fp)
+
 
     ti = time.time()
+    # opt_coverage = postprocessing(opt_coverage)
     parser=asGFA()
     parser(opt_coverage, path_gfa, path_msa)
     tf = time.time()
@@ -59,8 +70,7 @@ def main():
 
     path_time = Path(path_gfa).parent
     path_time.mkdir(exist_ok=True, parents=True)
-    name_msa = Path(path_msa).stem
-
+    
 
     with open(path_time.joinpath(name_msa + ".txt"), "w") as fp:
         fp.write(f"time_input\t{t_input}\n")
