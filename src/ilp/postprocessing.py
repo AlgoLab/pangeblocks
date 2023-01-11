@@ -9,6 +9,7 @@ def postprocessing(path_gfa, path_save):
     remove nodes with '-'
     remove '-' in the labels of nodes
     """
+    HEADER = ""
     lines_new_gfa = []
 
     to_remove = []
@@ -17,6 +18,8 @@ def postprocessing(path_gfa, path_save):
 
     # segments (nodes)
     for line in open(path_gfa):
+        if line.startswith("H"):
+            HEADER = line
         if not line.startswith("S"):
             continue
         
@@ -94,7 +97,7 @@ def postprocessing(path_gfa, path_save):
         if not line.startswith("P"):
             continue
 
-        _, seq_id, path = line.split("\t")
+        _, seq_id, path, _ = line.split("\t")
         
         path     = path.replace("\n","").replace("+","")
         idx_path = path.split(",")
@@ -120,10 +123,11 @@ def postprocessing(path_gfa, path_save):
         clean_path = clean_path.strip()
         print("P", seq_id, clean_path, sep="\t")
         lines_new_gfa.append( 
-                "\t".join(["P", seq_id, clean_path]) + "\n"
+                "\t".join(["P", seq_id, clean_path, "*"]) + "\n"
             )
 
         # save new gfa
         with open(path_save, "w") as fp:
-            fp.write("H\tpangeblocks\n")
+            if HEADER:
+                fp.write(HEADER)
             fp.writelines(lines_new_gfa)     
