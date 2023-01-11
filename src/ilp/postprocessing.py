@@ -4,11 +4,13 @@ https://github.com/AlgoLab/RecGraph-exps/blob/main/scripts/clean_gfa_from_ast.py
 """
 from collections import defaultdict
 
-def postprocessing(path_gfa): 
+def postprocessing(path_gfa, path_save): 
     """
     remove nodes with '-'
     remove '-' in the labels of nodes
     """
+    lines_new_gfa = []
+
     to_remove = []
     predecessors = defaultdict(list)
     successors = defaultdict(list)
@@ -30,9 +32,15 @@ def postprocessing(path_gfa):
             # remove "-" from the label
             seq = seq.replace("-","")
             print("S", idx, seq, sep="\t") 
+            lines_new_gfa.append( 
+                "\t".join(["S", idx, seq]) + "\n"
+            )
         else:
             # otherwise, keep the node
             print(line, end="")
+            lines_new_gfa.append( 
+                line
+            )
 
     # links (edges)
     for line in open(path_gfa):
@@ -46,7 +54,9 @@ def postprocessing(path_gfa):
             predecessors[idx2].append(idx1)
         else:
             print(line, end="")
-
+            lines_new_gfa.append( 
+                line
+            )
 
     for idx in successors:
         while any([x in to_remove for x in successors[idx]]):
@@ -75,6 +85,9 @@ def postprocessing(path_gfa):
         for p in predecessors[idx]:
             for s in successors[idx]:
                 print("L", p, "+", s, "+", "0M", sep="\t")
+                lines_new_gfa.append( 
+                    "\t".join(["L", p, "+", s, "+", "0M"]) + "\n"
+                )
 
     # modify paths
     for line in open(path_gfa):
@@ -96,8 +109,7 @@ def postprocessing(path_gfa):
                 new_path.extend([predecessor, successor])
             else: 
                 new_path.append(idx)
-        # from pdb import set_trace
-        # set_trace()
+
         # FIXME: remove duplicates (should not be necessary)
         clean_path = []
         for idx in new_path:
@@ -107,3 +119,11 @@ def postprocessing(path_gfa):
         clean_path = ",".join([idx+"+" for idx in clean_path])
         clean_path = clean_path.strip()
         print("P", seq_id, clean_path, sep="\t")
+        lines_new_gfa.append( 
+                "\t".join(["P", seq_id, clean_path]) + "\n"
+            )
+
+        # save new gfa
+        with open(path_save, "w") as fp:
+            fp.write("H\tpangeblocks\n")
+            fp.writelines(lines_new_gfa)     
