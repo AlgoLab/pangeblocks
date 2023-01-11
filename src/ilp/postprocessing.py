@@ -2,22 +2,27 @@
 modification of 
 https://github.com/AlgoLab/RecGraph-exps/blob/main/scripts/clean_gfa_from_ast.py
 """
+from pathlib import Path
 from collections import defaultdict
+import logging
+logging.basicConfig(level=logging.INFO)
+logging.getLogger()
 
 def postprocessing(path_gfa, path_save): 
     """
     remove nodes with '-'
-    remove '-' in the labels of nodes
+    remove '-' in node labels
     """
     HEADER = ""
     lines_new_gfa = []
 
     to_remove = []
-    predecessors = defaultdict(list)
-    successors = defaultdict(list)
+    predecessors = defaultdict(list) # new predecessors of nodes
+    successors = defaultdict(list)   # new successors of nodes
 
     # segments (nodes)
     for line in open(path_gfa):
+        # if header exists, we save it to include it in the new GFA
         if line.startswith("H"):
             HEADER = line
         if not line.startswith("S"):
@@ -29,21 +34,26 @@ def postprocessing(path_gfa, path_save):
         if set(seq) == set("-"):
             # nodes labeled with "-" will be removed
             to_remove.append(idx)
-            predecessors[idx] = []
-            successors[idx] = []
+            # predecessors[idx] = []
+            # successors[idx] = []
         elif "-" in seq:
             # remove "-" from the label
             seq = seq.replace("-","")
-            print("S", idx, seq, sep="\t") 
+            # print("S", idx, seq, sep="\t") 
             lines_new_gfa.append( 
                 "\t".join(["S", idx, seq]) + "\n"
             )
         else:
             # otherwise, keep the node
-            print(line, end="")
+            # print(line, end="")
             lines_new_gfa.append( 
                 line
             )
+
+    for idx in to_remove:
+        logging.info(
+            f"to remove {idx}"
+        )
 
     # links (edges)
     for line in open(path_gfa):
@@ -56,7 +66,7 @@ def postprocessing(path_gfa, path_save):
         elif idx2 in to_remove:
             predecessors[idx2].append(idx1)
         else:
-            print(line, end="")
+            # print(line, end="")
             lines_new_gfa.append( 
                 line
             )
@@ -87,7 +97,7 @@ def postprocessing(path_gfa, path_save):
             continue
         for p in predecessors[idx]:
             for s in successors[idx]:
-                print("L", p, "+", s, "+", "0M", sep="\t")
+                # print("L", p, "+", s, "+", "0M", sep="\t")
                 lines_new_gfa.append( 
                     "\t".join(["L", p, "+", s, "+", "0M"]) + "\n"
                 )
@@ -104,13 +114,7 @@ def postprocessing(path_gfa, path_save):
         
         new_path = []
         for idx in idx_path:
-            if idx in to_remove:
-                # find predecessor and successor in the path
-                # there should be only one predecessor and one successor
-                predecessor = [pred for pred in predecessors[idx] if pred in idx_path][0] 
-                successor   = [suc  for suc  in successors[idx] if suc in idx_path][0]
-                new_path.extend([predecessor, successor])
-            else: 
+            if idx not in to_remove:
                 new_path.append(idx)
 
         # FIXME: remove duplicates (should not be necessary)
@@ -121,12 +125,13 @@ def postprocessing(path_gfa, path_save):
 
         clean_path = ",".join([idx+"+" for idx in clean_path])
         clean_path = clean_path.strip()
-        print("P", seq_id, clean_path, sep="\t")
+        # print("P", seq_id, clean_path, sep="\t")
         lines_new_gfa.append( 
                 "\t".join(["P", seq_id, clean_path, "*"]) + "\n"
             )
 
         # save new gfa
+        Path(path_save).parent.mkdir(exist_ok=True, parents=True)
         with open(path_save, "w") as fp:
             if HEADER:
                 fp.write(HEADER)

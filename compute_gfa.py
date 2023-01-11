@@ -28,8 +28,8 @@ logging.basicConfig(level=args.log_level)
 
 def main():
     # Load set of decomposed blocks
-    path_blocks = args.path_blocks #f"../experiment/block_decomposition/{NAME_MSA}.json"
-    path_msa= args.path_msa#f"../msas/{NAME_MSA}.fa"
+    path_blocks = args.path_blocks
+    path_msa= args.path_msa
     path_gfa = args.path_gfa
 
     with open(path_blocks) as fp:
@@ -42,6 +42,7 @@ def main():
     t_input = tf - ti
     print(f"time inputblockset: {t_input:0.2}")
 
+    # find optimal coverage of the MSA by blocks
     ti = time.time()
     opt = Optimization(blocks=inputset, path_msa=path_msa,
                        log_level=args.log_level, path_save_ilp=args.path_ilp)
@@ -50,28 +51,18 @@ def main():
     t_ilp = tf - ti
     print(f"time optimization: {t_ilp:0.2}")
     
-    # # save optimal coverage
-    # for block in opt_coverage:
-    #     print(block, astuple(block))
-
     name_msa = Path(path_msa).stem
-    # with open(Path(path_gfa).parent.joinpath(name_msa + "-opt_cov.json"),"w") as fp:
-    #     json.dump([astuple(block) for block in opt_coverage], fp)
 
-
+    # parse optimal coverage as GFA
     ti = time.time()
-    # opt_coverage = postprocessing(opt_coverage)
     parser=asGFA()
     parser(opt_coverage, path_gfa, path_msa)
     tf = time.time()
     t_gfa = tf - ti
     print(f"time GFA: {t_gfa:0.2}")
 
-
     path_time = Path(path_gfa).parent
     path_time.mkdir(exist_ok=True, parents=True)
-    
-
     with open(path_time.joinpath(name_msa + ".txt"), "w") as fp:
         fp.write(f"time_input\t{t_input}\n")
         fp.write(f"time_ilp\t{t_ilp}\n")
@@ -80,10 +71,4 @@ def main():
         fp.write(f"time_gfa\t{t_gfa}\n")
 
 if __name__=="__main__":
-    # import cProfile, pstats
-    # profiler = cProfile.Profile()
-    # profiler.enable()
     main()
-    # profiler.disable()
-    # stats = pstats.Stats(profiler).sort_stats('ncalls')
-    # stats.print_stats()
