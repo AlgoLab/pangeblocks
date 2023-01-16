@@ -3,6 +3,7 @@ from pathlib import Path
 
 PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
+Path(PATH_OUTPUT).joinpath("output-pandora").mkdir(exist_ok=True, parents=True)
 
 NAMES = [path.stem for path in Path(PATH_MSAS).rglob("*.fa")]
 
