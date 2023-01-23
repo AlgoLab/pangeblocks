@@ -1,3 +1,3 @@
-PATH_MSAS: "msas"
-PATH_OUTPUT: "output"
+PATH_MSAS: "100msas"
+PATH_OUTPUT: "output-100msas"
 LOG_LEVEL: "ERROR"
