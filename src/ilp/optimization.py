@@ -68,7 +68,7 @@ def total_size(o, handlers={}, verbose=False):
 
 
 class Optimization:
-    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
+    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR, **kwargs):
 
         self.input_blocks = blocks
         # Each block is a tuple (K, i, j, label) where
@@ -80,6 +80,9 @@ class Optimization:
         self.n_seqs = n_seqs
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
+        self.obj_function = kwargs.get("obj_function","nodes")
+        self.penalization = kwargs.get("penalization",1)
+        self.min_len = kwargs.get("min_len",1)
         logging.getLogger().setLevel(log_level)
 
     def __call__(self, return_times: bool = False):
@@ -172,27 +175,31 @@ class Optimization:
         ti = time.time()
         # TODO: include input to decide which objective function to use
         # Objective function
-        # minimize the number of blocks (nodes)
-        # model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
-        
-        # minimize the total length of the graph (number of characters)
-        # model.setObjective(
-        #     sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 
-        #     GRB.MINIMIZE
-        # )
+        if self.obj_function == "nodes":
+            # minimize the number of blocks (nodes)
+            model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+        elif self.obj_function == "string":
+            # minimize the total length of the graph (number of characters)
+            model.setObjective(
+                sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 
+                GRB.MINIMIZE
+            )
+        elif self.obj_function == "weighted":
+            # minimize the number of blocks penalizing shorter blocks
+            MIN_LEN = self.min_len # penalize blocks with label less than MIN_LEN
+            PENALIZATION = self.penalization # costly than the other ones
+            model.setObjective(
+                sum( 
+                    (PENALIZATION if len(block.label)<MIN_LEN else 1)*C[idx] 
+                    for idx, block in enumerate(self.input_blocks)
+                    ), 
+                GRB.MINIMIZE
+            )
 
-        # minimize the number of blocks penalizing shorter blocks
-        MIN_LEN = 2 # penalize blocks with label less than MIN_LEN
-        PENALIZATION = 3 # costly than the other ones
-        model.setObjective(
-            sum( 
-                (PENALIZATION if len(block.label)<MIN_LEN else 1)*C[idx] 
-                for idx, block in enumerate(self.input_blocks)
-                ), 
-            GRB.MINIMIZE
-        )
-
-        logging.info("Begin ILP")
+        logging.info(f"Begin ILP with Objective function: {self.obj_function}")
+        if self.obj_function == "weighted":
+            logging.info(f"penalization: {self.penalization}")
+            logging.info(f"minimum length: {self.min_len}")
 
         model.optimize()
         logging.info("End ILP")

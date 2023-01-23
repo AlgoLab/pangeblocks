@@ -102,7 +102,7 @@ rule postprocessing_gfa:
         stderr=expand('{path_output}/logs/{{name_msa}}-rule-postprocessing_gfa.err.log', path_output=PATH_OUTPUT),
         stdout=expand('{path_output}/logs/{{name_msa}}-rule-postprocessing_gfa.out.log', path_output=PATH_OUTPUT)    
     shell:
-        "/usr/bin/time --verbose python src/postprocess_gfa.py --path_gfa {input} --path_save {output} 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python src/postprocess_gfa.py --path_gfa {input.path_gfa} 2> {log.stderr} > {output.path_post_gfa}"
 
 rule unchop_gfa:
     input:

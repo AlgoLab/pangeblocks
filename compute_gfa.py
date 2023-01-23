@@ -20,12 +20,22 @@ parser.add_argument("--path_blocks", help="json file with blocks covering the MS
 parser.add_argument("--path_msa", help="path to MSA in .fa format")
 parser.add_argument("--path_gfa", help="path to save the output in GFA format")
 parser.add_argument("--path_oc", help="path to save the optimal coverage in json format")
+parser.add_argument("--obj_function", help="objective function (nodes/strings/weighted)", dest="obj_function")
+parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted' as obj_function", dest="penalization")
+parser.add_argument("--min_len", help="minimum length of shorter blocks when using 'weighted' as obj_function to be penalized", dest="min_len")
+
 parser.add_argument(
     "--path_ilp", help="path to save the ILP formulation", default=None)
 parser.add_argument("--log_level", default='ERROR', dest='log_level',
                     help='set log level (ERROR/WARNING/INFO/DEBUG')
 args = parser.parse_args()
 logging.basicConfig(level=args.log_level, )
+
+kwargs_opt = dict(
+    obj_function=args.obj_function,
+    penalization=args.penalization,
+    min_len=args.min_len
+)
 
 def main():
     # Load set of decomposed blocks
@@ -52,7 +62,8 @@ def main():
     ti = time.time()
     logging.info("Starting optimization")
     opt = Optimization(blocks=inputset, path_msa=path_msa,
-                       log_level=args.log_level, path_save_ilp=args.path_ilp)
+                       log_level=args.log_level, path_save_ilp=args.path_ilp, **kwargs_opt
+                       )
     opt_coverage, times = opt(return_times=True)
     tf = time.time()
     t_ilp = tf - ti
