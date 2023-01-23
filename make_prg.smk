@@ -27,8 +27,10 @@ rule generate_prg:
         f"{PATH_OUTPUT}/output-pandora/.prg.gfa.zip"
     benchmark:
         f"{PATH_OUTPUT}/output-pandora/benchmarks/make_prg.benchmark.txt"
+    log:
+        f"{PATH_OUTPUT}/output-pandora/make_prg.log"
     shell:
-        f"./make_prg_0.4.0 from_msa -i {PATH_MSAS} -o {PATH_OUTPUT}/output-pandora/ --output-type g"
+        f" /usr/bin/time --verbose ./{{input}} from_msa -i {PATH_MSAS} -o {PATH_OUTPUT}/output-pandora/ --output-type g 2> {{log}}"
 
 rule extract_gfa: 
     input:
