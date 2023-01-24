@@ -1,7 +1,7 @@
 PATH_MSAS: "msa-difficile"
-PATH_OUTPUT: "output-msa-difficile-strings"
+PATH_OUTPUT: "output-msa-difficile-weighted"
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION: "strings" # nodes, strings, weighted
+  OBJECTIVE_FUNCTION: "weighted" # nodes, strings, weighted
   PENALIZATION: 3 # used only with "weighted"
   MIN_LEN: 2 # used only with "weighted"
-LOG_LEVEL: "ERROR"
+LOG_LEVEL: "INFO"

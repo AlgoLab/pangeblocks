@@ -69,8 +69,17 @@ rule pangeblock:
     log: 
         stderr=expand('{path_output}/logs/{{name_msa}}-rule-pangeblock.err.log', path_output=PATH_OUTPUT),
         stdout=expand('{path_output}/logs/{{name_msa}}-rule-pangeblock.out.log', path_output=PATH_OUTPUT)        
+    params: 
+        obj_function=config["OPTIMIZATION"]["OBJECTIVE_FUNCTION"],
+        penalization=config["OPTIMIZATION"]["PENALIZATION"],
+        min_len=config["OPTIMIZATION"]["MIN_LEN"],
+        log_level=config["LOG_LEVEL"]
     shell: 
-        f"/usr/bin/time --verbose python compute_gfa.py --path_blocks {{input.path_blocks}} --path_msa {{input.path_msa}} --path_gfa {{output.path_gfa}} --path_oc {{output.path_oc}} --log_level {LOG_LEVEL} > {{log.stdout}} 2> {{log.stderr}}"
+        """/usr/bin/time --verbose python compute_gfa.py --path_blocks {input.path_blocks} \
+        --path_msa {input.path_msa} --path_gfa {output.path_gfa} --path_oc {output.path_oc} \
+        --obj_function {params.obj_function} --penalization {params.penalization} --min_len {params.min_len} \
+        --log_level {params.log_level} > {log.stdout} 2> {log.stderr}
+        """
 
 rule bandage_labels:
     input: 
