@@ -90,20 +90,26 @@ class Optimization:
         # ILP correspond to the blocks that are disjoint from vertical blocks or
         # are vertical blocks themselves.
         disjoint_vertical = set()
+        private_blocks = []
         for idx, block in enumerate(all_blocks):
             if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
                 # The current block is disjoint from vertical blocks
                 disjoint_vertical.add(idx)
                 logging.debug(f"disjoint vertical block: {block.str()}")
-            else:
-                # The current block is not disjoint from vertical blocks
+            elif not set(range(block.i, block.j + 1)).issubset(covered_by_vertical_block):
+                # The current block overlaps the vertical blocks.
                 # We need to check if the block intersects with at least two
                 # vertical blocks: in that case we need to manually decompose
                 # it.
+
+                # private_cols is the set of columns of the current block that
+                # are not in any vertical blocks.
+                # We need to extract from those columns the regions with
+                # consecutive columns, so that we can decompose the current
+                # block into the sub-blocks divided by the vertical blocks.
                 private_cols = set(range(block.i, block.j + 1)) - covered_by_vertical_block
                 sorted_cols = sorted(private_cols)
                 private_regions = []
-                private_blocks = []
                 begin = -1
                 for idx, col in enumerate(sorted_cols):
                     if begin < 0:
@@ -112,7 +118,12 @@ class Optimization:
                         private_regions.append((begin, col))
                         begin = -1
 
-                if len(private_regions) >= 2:
+                num_intersecting_vertical = len(private_regions) - 1
+                if sorted_cols[0] in covered_by_vertical_block:
+                    num_intersecting_vertical += 1
+                if sorted_cols[-1] in covered_by_vertical_block:
+                    num_intersecting_vertical += 1
+                if num_intersecting_vertical >= 2:
                     logging.debug(
                         f"block {block.str()} intersects with at least two vertical blocks")
                     logging.debug(f"sorted_cols: {sorted_cols}")
