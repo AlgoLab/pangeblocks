@@ -26,7 +26,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
             if line.startswith("P"):
                 split_line = line.split("\t")
                 seq_id = int(split_line[1].replace("seq",""))
-                path   = split_line[-1].replace("+","")
+                path   = split_line[2].replace("+","")
                 nodes_path = [int(node_id) for node_id in path.split(",")]
                 for node_id in nodes_path:
                     seqs_by_node[node_id].append(seq_id)

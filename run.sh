@@ -1,11 +1,22 @@
-# python src/check_sequence_in_msa.py --source 90 --sink 100 --path-msa msas-didelot/toyexample.fa --path-gfa experiment-didelot/gfa/toyexample.gfa
-# python src/check_sequence_in_msa.py --source 0 --sink 975 --path-msa msas-didelot/coli27-86.fa --path-gfa output-didelot/output-pandora/coli27-86.gfa
+# cat info-all-msas/analysis-msa/filtered_msas.txt | shuf --random-source=<(yes 42) -n 100 > 100msas.txt
+# cat 100msas.txt | tr '\n' '\0' | xargs -0 -L1 -I '$' echo '$' > 100msas.txt
+# mkdir -p 100msas
+# cat 100msas.txt | xargs -I {} cp {} 100msas/
 
-# python compute_gfa.py --log_level=DEBUG --path_blocks output-msas/block_decomposition/Cluster_12313.json \
-# --path_msa msas/Cluster_12313.fa --path_gfa output-msas/gfa/Cluster_12313.gfa --path_ilp output-msas/tmp/ilp.lp 2> output-msas/tmp/log.txt
+path_gfa="output-msa-difficile-weighted/gfa/slpa-basis.mafft.gfa" 
 
-# python compute_gfa.py --log_level=DEBUG --path_blocks output-msas/block_decomposition/GC00004574.json \
-# --path_msa msas/GC00004574.fa --path_gfa output-msas/gfa/GC00004574.gfa --path_ilp output-msas/tmp/ilp.lp 2> output-msas/tmp/log.txt
+# Chop all nodes to 1 base, - are replaced by N
+../vg mod -X 1 $path_gfa > slpa-basis.mafft.chop1.gfa
 
-python compute_gfa.py --log_level=DEBUG --path_blocks output-test/block_decomposition/test.json \
---path_msa test/test.fa --path_gfa output-test/gfa/test.gfa --path_ilp output-test/tmp/ilp.lp 2> output-test/tmp/log.txt
+# Load to networkx to rm nodes with N, and let it do the hard work of nodes removal
+python src/ilp/gfanx.py slpa-basis.mafft.chop1.gfa > slpa-basis.mafft.chop1.noN.gfa
+
+# Unchop nodes
+../vg mod -u slpa-basis.mafft.chop1.noN.gfa > slpa-basis.mafft.unchop.noN.gfa
+
+# Generate bandaga labels
+python src/graph/bandage_labels_from_gfa.py --path_gfa slpa-basis.mafft.unchop.noN.gfa --path_save slpa-basis.mafft.unchop.noN.csv
+
+python src/graph/bandage_labels_from_gfa.py --path_gfa slpa-basis.mafft.chop1.gfa --path_save slpa-basis.mafft.chop1.csv
+
+python src/graph/bandage_labels_from_gfa.py --path_gfa slpa-basis.mafft.chop1.noN.gfa --path_save slpa-basis.mafft.chop1.noN.csv

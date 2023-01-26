@@ -8,7 +8,7 @@ from pathlib import Path
 from ..blocks.block import Block
 class asGFA:
 
-    def __call__(self, optimal_coverage, path_gfa, path_msa, header="pangeblock"):
+    def __call__(self, optimal_coverage, path_gfa, path_msa, header="VN:Z:1.0"):
         
         list_nodes, list_edges = self.create_graph(optimal_coverage, path_msa)
         self.parse(list_nodes, list_edges, path_gfa, header)
@@ -47,7 +47,7 @@ class asGFA:
 
         return list_nodes, list_edges
 
-    def parse(self, list_nodes, list_edges, path_gfa,header="pangeblock",):
+    def parse(self, list_nodes, list_edges, path_gfa,header="VN:Z:1.0",):
         
         # graph in GAF format
         lines_gfa = []
@@ -84,7 +84,7 @@ class asGFA:
             id_nodes = [node2id[node] for node in sorted(nodes_seq, key=lambda node: node[1])]
             paths[seq] = ",".join([str(id_node)+"+" for id_node in id_nodes])
             lines_paths.append(
-                f"P\tseq{seq}\t\t{paths[seq]}"
+                f"P\tseq{seq}\t{paths[seq]}\t*"
             )
         lines_gfa.append(HEADER)
         lines_gfa.extend(list(set(lines_segments)))

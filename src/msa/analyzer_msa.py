@@ -44,15 +44,16 @@ class AnalyzerMSA:
         return seqs
 
     def is_one_character(self, column) -> bool:
-        "Return True if a column (list) contain only one character ('-' are ommited)"
-        chars = list(set(column)-set("-"))
+        "Return True if a column (list) contain only one character" # ('-' are not ommited)"
+        # chars = list(set(column)-set("-"))
+        chars = set(column)
         if len(chars)==1:
             return True
         return False
 
     def check_identical_columns(self, seqs, n_cols) -> list[bool]:
-        """evaluate each column and verify if it contains only one character 
-        (indels are not taken into consideration)"""
+        """evaluate each column and verify if it contains only one character """
+        # (indels are taken into consideration)"""
         results = []
         for idx in range(n_cols):
             column = self.get_column(idx, seqs)

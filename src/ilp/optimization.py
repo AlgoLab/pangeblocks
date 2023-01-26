@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 class Optimization:
-    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR):
+    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR, **kwargs):
 
         self.input_blocks = blocks
         # Each block is a tuple (K, i, j, label) where
@@ -35,6 +35,9 @@ class Optimization:
         self.n_seqs = n_seqs
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
+        self.obj_function = kwargs.get("obj_function","nodes")
+        self.penalization = kwargs.get("penalization",1)
+        self.min_len = kwargs.get("min_len",1)
         logging.getLogger().setLevel(log_level)
 
     def __call__(self, return_times: bool = False):
@@ -187,28 +190,56 @@ class Optimization:
         for r, c in msa_positions:
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
-                # U[r,c] = 1 implies that at least one block covers the position
+                # 1. U[r,c] = 1 implies that at least one block covers the position
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
-                # 1. each position in the MSA is covered by at most one block
+                # 2. each position in the MSA is covered at most by one block
                 model.addConstr(
-                    1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
+                    1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
-                logging.debug(f"constraint1({r},{c}) covered by {blocks_rc}")
-
-                # 2. each position of the MSA is covered AT LEAST by one block
-                model.addConstr(U[r, c] >= 1, name=f"constraint2({r},{c})")
-                logging.debug(f"constraint2({r},{c})")
-
+                logging.debug(f"constraint2({r},{c}) covered by {blocks_rc}")
+                # 3. each position of the MSA is covered AT LEAST by one block
+                model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
+                logging.debug(f"constraint3({r},{c})")
         tf = time.time()
-        times["constraints1-2"] = round(tf - ti, 3)
+        times["constraints1-2-3"] = round(tf - ti, 3)
 
-        # 3. overlapping blocks cannot be chosen
+        # constraint 4: vertical blocks are part of the solution
+        for idx in vertical_blocks:
+            model.addConstr(C[idx] == 1)
+            logging.info(
+                f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
+            )
+
         ti = time.time()
+        # TODO: include input to decide which objective function to use
+        # Objective function
+        if self.obj_function == "nodes":
+            # minimize the number of blocks (nodes)
+            model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+        elif self.obj_function == "string":
+            # minimize the total length of the graph (number of characters)
+            model.setObjective(
+                sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 
+                GRB.MINIMIZE
+            )
+        elif self.obj_function == "weighted":
+            # minimize the number of blocks penalizing shorter blocks
+            MIN_LEN = self.min_len # penalize blocks with label less than MIN_LEN
+            PENALIZATION = self.penalization # costly than the other ones
+            model.setObjective(
+                sum( 
+                    (PENALIZATION if len(block.label)<MIN_LEN else 1)*C[idx] 
+                    for idx, block in enumerate(self.input_blocks)
+                    ), 
+                GRB.MINIMIZE
+            )
 
-        model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
-        logging.info("Begin ILP")
+        logging.info(f"Begin ILP with Objective function: {self.obj_function}")
+        if self.obj_function == "weighted":
+            logging.info(f"penalization: {self.penalization}")
+            logging.info(f"minimum length: {self.min_len}")
 
         model.optimize()
         logging.info("End ILP")
