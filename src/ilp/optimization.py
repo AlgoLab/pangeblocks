@@ -142,6 +142,9 @@ class Optimization:
 
         c_variables = list(disjoint_vertical) + [item["idx"]
                                                  for item in vertical_blocks.values()] + list(range(first_private_block, len(all_blocks)))
+        for idx, cvar in enumerate(c_variables):
+            logging.debug(f"c variables: idx {idx}, value {cvar}")
+        
         # msa_positions is a list of all positions (r,c) that are required to be
         # covered. We exclude the positions covered by vertical blocks, since
         # they will be guaranteed to be covered, as an effect of the fact that
@@ -205,12 +208,12 @@ class Optimization:
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
-        # constraint 4: vertical blocks are part of the solution
-        for idx in vertical_blocks:
-            model.addConstr(C[idx] == 1)
-            logging.info(
-                f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
-            )
+        # # constraint 4: vertical blocks are part of the solution
+        # for idx in vertical_blocks:
+        #     model.addConstr(C[idx] == 1)
+        #     logging.info(
+        #         f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
+        #     )
 
         ti = time.time()
         # TODO: include input to decide which objective function to use

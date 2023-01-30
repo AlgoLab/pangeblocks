@@ -34,7 +34,7 @@ rule eda_msa:
                 mv_problems()
 
         # list of (path to) msas
-        list_paths = list(Path(config["PATH_MSAS"]).rglob("*.fa"))
+        list_paths = list(Path(config["PATH_MSAS"]).rglob("*.[fa]*"))
 
         with ThreadPoolExecutor(max_workers=16) as pool:
             with tqdm(total=len(list_paths)) as progress:

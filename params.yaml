@@ -1,7 +1,7 @@
-PATH_MSAS: "msa-difficile"
-PATH_OUTPUT: "output-msa-difficile-weighted"
+PATH_MSAS: "/data/pangeblocks-experiments/data/msas-dna"
+PATH_OUTPUT: "/data/pangeblocks-experiments/output/gfa/pangeblocks-strings"
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION: "weighted" # nodes, strings, weighted
+  OBJECTIVE_FUNCTION: "strings" # nodes, strings, weighted
   PENALIZATION: 3 # used only with "weighted"
   MIN_LEN: 2 # used only with "weighted"
 LOG_LEVEL: "INFO"

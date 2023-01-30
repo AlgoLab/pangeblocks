@@ -11,7 +11,7 @@ STATS_MSAS = pd.read_csv(
                 index_col=False, sep="\t"
                 )
 NAMES = STATS_MSAS["path_msa"].apply(lambda path: Path(path).stem) # txt file with names of the MSAs
-
+NAMES = STATS_MSAS[["path_msa","n_seqs"]].query("n_seqs>1")["path_msa"].apply(lambda path: Path(path).stem)
 # --- 
 
 rule all:
@@ -27,7 +27,7 @@ rule all:
 
 rule compute_blocks:
     input:
-        expand("{path_msas}/{{name_msa}}.fa", path_msas=PATH_MSAS)
+        expand("{path_msas}/{{name_msa}}.fasta", path_msas=PATH_MSAS)
     output: 
         expand("{path_output}/max_blocks/{{name_msa}}.json", path_output=PATH_OUTPUT)
     log: 
@@ -62,7 +62,7 @@ rule decompose_blocks:
 rule pangeblock:
     input:
         path_blocks=expand("{path_output}/block_decomposition/{{name_msa}}.json", path_output=PATH_OUTPUT),
-        path_msa=expand("{path_msas}/{{name_msa}}.fa", path_msas=PATH_MSAS)
+        path_msa=expand("{path_msas}/{{name_msa}}.fasta", path_msas=PATH_MSAS)
     output: 
         path_gfa=expand("{path_output}/gfa/{{name_msa}}.gfa", path_output=PATH_OUTPUT),
         path_oc=expand("{path_output}/opt-coverage/{{name_msa}}.json", path_output=PATH_OUTPUT)
@@ -92,7 +92,7 @@ rule bandage_labels:
 rule coverage:
     input:
         path_blocks=expand("{path_output}/block_decomposition/{{name_msa}}.json", path_output=PATH_OUTPUT),
-        path_msa=expand("{path_msa}/{{name_msa}}.fa", path_msa=PATH_MSAS)
+        path_msa=expand("{path_msa}/{{name_msa}}.fasta", path_msa=PATH_MSAS)
     output:
         path_gray=expand("{path_output}/coverage/{{name_msa}}-gray.jpg", path_output=PATH_OUTPUT),
         path_color=expand("{path_output}/coverage/{{name_msa}}-color.jpg", path_output=PATH_OUTPUT)

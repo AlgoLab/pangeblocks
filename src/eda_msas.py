@@ -1,42 +1,53 @@
-import sys
-import time 
-
 from pathlib import Path
-from Bio import AlignIO #load MSA
-from utils.monitor_values import MonitorValues
-from rich.progress import track
+from concurrent.futures import ThreadPoolExecutor
+from src.utils import MonitorValuesPlus
+from src.msa import AnalyzerMSA
+from tqdm import tqdm
+import argparse
 
-def run(path_msas: str):
+def main(path_msas: str, path_output: str):
+
+    mv = MonitorValuesPlus(list_vars=["path_msa","n_seqs","n_unique_seqs","n_identical_cols","n_cols", "perc_identical_cols"],
+                            out_file=f"{path_output}/analysis-msa/stats_msas.tsv",
+                            overwrite=True)
+
+    mv_problems = MonitorValuesPlus(list_vars=["path_msa"],
+                                    out_file=f"{path_output}/analysis-msa/problematic_files.tsv",
+                                    overwrite=True)
     
-    out_file = Path("out/stats_msas.tsv")
-    out_file.parent.mkdir(exist_ok=True, parents=True)
-    problematic_out_file = Path("out/problematic_files.tsv")
-
-    # log values
-    mv_msas = MonitorValues(["path_msa","n_seqs","n_unique_seqs","n_cols"])
-    mv_msas_problems = MonitorValues(["path_msa"])
-
-    list_msa=list(Path(path_msas).rglob("*fa"))
-    for path_msa in track(list_msa, description="Working on MSAs"):
-
+    analyzer = AnalyzerMSA()
+    def run(path_msa):
+        "Function to run with ThreadPoolExecutor"
         try:
-            # load MSA, count seqs and columns
-            align=AlignIO.read(path_msa, "fasta")
-            n_cols = align.get_alignment_length()
-            n_seqs = len(align)
-            n_unique_seqs = len(set([str(record.seq) for record in align]))
+            n_cols, n_seqs, n_unique_seqs, n_identical_cols = analyzer(path_msa)
+            perc_identical_cols = round(100*n_identical_cols/n_cols, 2)
+            mv()
+        except:     
+            mv_problems()
 
-            mv_msas()
-        except:
-            mv_msas_problems()
+    # list of (path to) msas
+    list_paths = list(Path(path_msas).rglob("*.[fa]*"))
 
-    df = mv_msas.get_values_asdf()
-    df.sort_values(by=["n_cols","n_seqs"], inplace=True)
-    df.to_csv(out_file,sep="\t")
-    mv_msas_problems.get_values_asdf().to_csv(problematic_out_file, sep="\t")
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        with tqdm(total=len(list_paths)) as progress:
+            progress.set_description("Analyzing MSA")
+            futures=[]
+            for path_msa in list_paths:
+
+                future = pool.submit(run, path_msa)
+                future.add_done_callback(lambda p: progress.update())
+                futures.append(future)
+            
+            for future in futures:
+                future.result()
+
 
 if __name__ == "__main__":
 
-    # TODO: use argparse
-    path_msas = sys.argv[-1]
-    run(path_msas)
+    # Command line options
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path_msas", help="directory to MSAs")
+    parser.add_argument("path_output", help="output directory")
+    args = parser.parse_args()
+
+    main(args.path_msas, args.path_output)    
