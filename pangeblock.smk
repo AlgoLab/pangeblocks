@@ -1,4 +1,4 @@
-configfile: "params.yaml"
+configfile: "test/params.yaml"
 from pathlib import Path
 import pandas as pd
 

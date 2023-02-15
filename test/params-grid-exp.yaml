@@ -1,0 +1,15 @@
+PATH_MSAS: "msas"
+PATH_OUTPUT: "output"
+OPTIMIZATION:
+  OBJECTIVE_FUNCTION:
+    - "nodes"
+    - "strings"
+    - "weighted"
+  PENALIZATION: # used only with "weighted"
+    - 3
+    - 4 
+  MIN_LEN: # used only with "weighted"
+    - 2
+    - 3 
+  TIME_LIMIT: 10 # time limit to run the ILP (minutes)
+LOG_LEVEL: "INFO"

@@ -225,7 +225,9 @@ class Optimization:
         elif self.obj_function == "strings":
             # minimize the total length of the graph (number of characters)
             model.setObjective(
-                sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 
+                sum(
+                    len(all_blocks[idx].label)*C[idx] for idx in c_variables
+                    ), 
                 GRB.MINIMIZE
             )
         elif self.obj_function == "weighted":
@@ -234,9 +236,9 @@ class Optimization:
             PENALIZATION = self.penalization # costly than the other ones
             model.setObjective(
                 sum( 
-                    (PENALIZATION if len(block.label)<MIN_LEN else 1)*C[idx] 
-                    for idx, block in enumerate(self.input_blocks)
-                    ), 
+                    (PENALIZATION if len(all_blocks[idx].label)<MIN_LEN else 1)*C[idx] 
+                    for idx in c_variables
+                    ),
                 GRB.MINIMIZE
             )
 
