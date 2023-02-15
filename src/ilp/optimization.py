@@ -38,6 +38,7 @@ class Optimization:
         self.obj_function = kwargs.get("obj_function","nodes")
         self.penalization = kwargs.get("penalization",1)
         self.min_len = kwargs.get("min_len",1)
+        self.time_limit = kwargs.get("time_limit", 180)
         logging.getLogger().setLevel(log_level)
 
     def __call__(self, return_times: bool = False):
@@ -166,8 +167,11 @@ class Optimization:
         model = gp.Model("pangeblocks")
 
         # Threads
-        model.setParam(GRB.Param.Threads, 8)
+        model.setParam(GRB.Param.Threads, 16)
 
+        # Time Limit
+        model.setParam(GRB.Param.TimeLimit, float(60*self.time_limit))
+        
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
@@ -205,12 +209,12 @@ class Optimization:
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
-        # constraint 4: vertical blocks are part of the solution
-        for idx in vertical_blocks:
-            model.addConstr(C[idx] == 1)
-            logging.info(
-                f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
-            )
+        # # constraint 4: vertical blocks are part of the solution
+        # for idx in vertical_blocks:
+        #     model.addConstr(C[idx] == 1)
+        #     logging.info(
+        #         f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
+        #     )
 
         ti = time.time()
         # TODO: include input to decide which objective function to use
@@ -218,7 +222,7 @@ class Optimization:
         if self.obj_function == "nodes":
             # minimize the number of blocks (nodes)
             model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
-        elif self.obj_function == "string":
+        elif self.obj_function == "strings":
             # minimize the total length of the graph (number of characters)
             model.setObjective(
                 sum(len(block.label)*C[idx] for idx, block in enumerate(self.input_blocks)), 

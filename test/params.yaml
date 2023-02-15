@@ -1,7 +1,8 @@
-PATH_MSAS: "msa-difficile"
-PATH_OUTPUT: "output-msa-difficile-weighted"
+PATH_MSAS: "/data/pangeblocks-experiments/output/msas-dna"
+PATH_OUTPUT: "/data/pangeblocks-experiments/output/pangeblocks-strings"
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION: "weighted" # nodes, strings, weighted
+  OBJECTIVE_FUNCTION: "nodes" # nodes, strings, weighted
   PENALIZATION: 3 # used only with "weighted"
   MIN_LEN: 2 # used only with "weighted"
+  TIME_LIMIT: 10 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

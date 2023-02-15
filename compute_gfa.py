@@ -23,6 +23,7 @@ parser.add_argument("--path_oc", help="path to save the optimal coverage in json
 parser.add_argument("--obj_function", help="objective function (nodes/strings/weighted)", dest="obj_function")
 parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted' as obj_function", dest="penalization", type=int)
 parser.add_argument("--min_len", help="minimum length of shorter blocks when using 'weighted' as obj_function to be penalized", dest="min_len", type=int)
+parser.add_argument("--time_limit", help="time limit in minutes to run the ILP, after this the best solution so far will be returned", dest="time_limit", type=int)
 
 parser.add_argument(
     "--path_ilp", help="path to save the ILP formulation", default=None)
@@ -34,7 +35,8 @@ logging.basicConfig(level=args.log_level, )
 kwargs_opt = dict(
     obj_function=args.obj_function,
     penalization=args.penalization,
-    min_len=args.min_len
+    min_len=args.min_len,
+    time_limit=args.time_limit
 )
 
 def main():

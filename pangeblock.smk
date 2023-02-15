@@ -10,8 +10,9 @@ STATS_MSAS = pd.read_csv(
                 Path(PATH_OUTPUT).joinpath("analysis-msa/stats_msas.tsv"), 
                 index_col=False, sep="\t"
                 )
-NAMES = STATS_MSAS["path_msa"].apply(lambda path: Path(path).stem) # txt file with names of the MSAs
-
+# NAMES = STATS_MSAS["path_msa"].apply(lambda path: Path(path).stem)
+NAMES = STATS_MSAS[["path_msa","n_seqs"]].query("n_seqs>1")["path_msa"].apply(lambda path: Path(path).stem)
+EXT_MSA = Path(STATS_MSAS["path_msa"][0]).suffix 
 # --- 
 
 rule all:
@@ -27,7 +28,7 @@ rule all:
 
 rule compute_blocks:
     input:
-        expand("{path_msas}/{{name_msa}}.fa", path_msas=PATH_MSAS)
+        expand("{path_msas}/{{name_msa}}{ext_msa}", path_msas=PATH_MSAS, ext_msa=EXT_MSA)
     output: 
         expand("{path_output}/max_blocks/{{name_msa}}.json", path_output=PATH_OUTPUT)
     log: 
@@ -62,7 +63,7 @@ rule decompose_blocks:
 rule pangeblock:
     input:
         path_blocks=expand("{path_output}/block_decomposition/{{name_msa}}.json", path_output=PATH_OUTPUT),
-        path_msa=expand("{path_msas}/{{name_msa}}.fa", path_msas=PATH_MSAS)
+        path_msa=expand("{path_msas}/{{name_msa}}{ext_msa}", path_msas=PATH_MSAS, ext_msa=EXT_MSA)
     output: 
         path_gfa=expand("{path_output}/gfa/{{name_msa}}.gfa", path_output=PATH_OUTPUT),
         path_oc=expand("{path_output}/opt-coverage/{{name_msa}}.json", path_output=PATH_OUTPUT)
@@ -73,11 +74,13 @@ rule pangeblock:
         obj_function=config["OPTIMIZATION"]["OBJECTIVE_FUNCTION"],
         penalization=config["OPTIMIZATION"]["PENALIZATION"],
         min_len=config["OPTIMIZATION"]["MIN_LEN"],
-        log_level=config["LOG_LEVEL"]
+        log_level=config["LOG_LEVEL"],
+        time_limit=config["OPTIMIZATION"]["TIME_LIMIT"]
     shell: 
         """/usr/bin/time --verbose python compute_gfa.py --path_blocks {input.path_blocks} \
         --path_msa {input.path_msa} --path_gfa {output.path_gfa} --path_oc {output.path_oc} \
         --obj_function {params.obj_function} --penalization {params.penalization} --min_len {params.min_len} \
+        --time_limit {params.time_limit} \
         --log_level {params.log_level} > {log.stdout} 2> {log.stderr}
         """
 
@@ -92,7 +95,7 @@ rule bandage_labels:
 rule coverage:
     input:
         path_blocks=expand("{path_output}/block_decomposition/{{name_msa}}.json", path_output=PATH_OUTPUT),
-        path_msa=expand("{path_msa}/{{name_msa}}.fa", path_msa=PATH_MSAS)
+        path_msa=expand("{path_msa}/{{name_msa}}{ext_msa}", path_msa=PATH_MSAS, ext_msa=EXT_MSA)
     output:
         path_gray=expand("{path_output}/coverage/{{name_msa}}-gray.jpg", path_output=PATH_OUTPUT),
         path_color=expand("{path_output}/coverage/{{name_msa}}-color.jpg", path_output=PATH_OUTPUT)
