@@ -47,6 +47,8 @@ class Optimization:
         ti = time.time()
 
         all_blocks = self.input_blocks
+        n_blocks = len(all_blocks)
+        
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
         #
@@ -96,6 +98,7 @@ class Optimization:
         disjoint_vertical = set()
         private_blocks = []
         for idx, block in enumerate(all_blocks):
+            logging.info(f"analyzing {idx} out of {n_blocks}")
             if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
                 # The current block is disjoint from vertical blocks
                 disjoint_vertical.add(idx)
@@ -137,6 +140,7 @@ class Optimization:
                         new_block = Block(block.K, begin, end, label)
                         private_blocks.append(new_block)
                         logging.debug(f"Adding private block: {new_block.str()} to {private_blocks}")
+            
         first_private_block = len(all_blocks)
         # all_blocks += enumerate(private_blocks, first_private_block)
         all_blocks += private_blocks
