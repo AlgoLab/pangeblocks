@@ -1,4 +1,4 @@
-configfile: "params.yaml"
+configfile: "params-grid-exp.yaml"
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor

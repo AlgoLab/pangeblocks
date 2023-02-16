@@ -32,20 +32,20 @@ rule compute_blocks:
         pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA)
     output: 
         pjoin(PATH_OUTPUT, "max_blocks", "{name_msa}.json")
-    log: 
-        stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-compute_blocks.err.log"),
-        stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-compute_blocks.out.log")
+    # log: 
+    #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-compute_blocks.err.log"),
+    #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-compute_blocks.out.log")
     shell:
-        "/usr/bin/time --verbose python src/compute_blocks.py {input} --output {output} 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python src/compute_blocks.py {input} --output {output}" #2> {log.stderr} > {log.stdout}"
 
 rule analyze_blocks:
     input:
         pjoin(PATH_OUTPUT, "max_blocks", "{name_msa}.json")
     output:
         pjoin(PATH_OUTPUT, "max_blocks", "stats", "{name_msa}.tsv")
-    log: 
-        stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.err.log"),
-        stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.out.log")
+    # log: 
+    #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.err.log"),
+    #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.out.log")
     shell: 
         "/usr/bin/time --verbose python analyze_blocks.py {input} --output {output}" # 2> {log.stderr} > {log.stdout}"
 
@@ -55,11 +55,11 @@ rule decompose_blocks:
     output:
         path_blocks=pjoin(PATH_OUTPUT, "block_decomposition", "{name_msa}.json"),
         path_blocks_stats=pjoin(PATH_OUTPUT, "block_decomposition", "stats", "{name_msa}.tsv")
-    log:
-        stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.err.log"),
-        stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.out.log")
+    # log:
+    #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.err.log"),
+    #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.out.log")
     shell:
-        "/usr/bin/time --verbose python decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats} 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats}" # 2> {log.stderr} > {log.stdout}"
 
 rule pangeblock:
     input:
@@ -85,7 +85,7 @@ rule pangeblock:
         --obj_function {params.obj_function} --penalization {params.penalization} --min_len {params.min_len} \
         --time_limit {params.time_limit} \
         --log_level {params.log_level}  > {log.stdout} 2> {log.stderr}
-        python src/graph/bandage_labels_from_gfa.py --path_gfa {input.path_gfa} --path_save {output.path_labels}
+        python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_gfa} --path_save {output.path_labels}
         """
 
 rule postprocessing_gfa:
