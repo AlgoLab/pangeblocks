@@ -14,7 +14,7 @@ class Block:
         return PositionalString(self.label, self.i, self.j)
 
     def str(self):
-        return f"{self.K},{self.i},{self.j},{self.label}"
+        return f"%s,%s,%s,%s" % (self.K,self.i,self.j,self.label)
 
     @root_validator
     def check_len_label(cls, values):

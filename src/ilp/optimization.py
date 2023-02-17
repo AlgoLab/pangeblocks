@@ -48,6 +48,7 @@ class Optimization:
 
         all_blocks = self.input_blocks
         n_blocks = len(all_blocks)
+        logging.info("number of block %s", n_blocks)
         
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
@@ -64,7 +65,7 @@ class Optimization:
         # 2. we do a second scan of vertical blocks and, for each end
         #    column, we keep the block with the smallest beginning column
         for idx, block in enumerate(all_blocks):
-            logging.debug(f"input block: {block.str()}")
+            # logging.debug("input block: %s", block.str())
             if len(block.K) == self.n_seqs:
                 if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
                     left_maximal_vertical_blocks[block.i] = {
@@ -81,14 +82,13 @@ class Optimization:
         covered_by_vertical_block = set()
         for begin, item in vertical_blocks.items():
             block = all_blocks[item['idx']]
-            logging.info(
-                f"Vertical block: {block.str()}")
+            # logging.info("Vertical block: %s, block.str()")
             for col in range(block.i, block.j + 1):
                 covered_by_vertical_block.add(col)
         logging.info(
             f"Covered by vertical blocks: {covered_by_vertical_block}")
         logging.info(
-            f"No. covered by vertical blocks: {len(covered_by_vertical_block)} out of {self.n_cols}")
+            "No covered by vertical blocks: %s out of %s" % (len(covered_by_vertical_block),self.n_cols))
 
         # We compute the set disjoint_vertical, corresponding to the
         # blocks that are disjoint from vertical blocks.
@@ -98,11 +98,11 @@ class Optimization:
         disjoint_vertical = set()
         private_blocks = []
         for idx, block in enumerate(all_blocks):
-            logging.info(f"analyzing {idx} out of {n_blocks}")
+            # logging.info("analyzing %s out of %s", idx, n_blocks)
             if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
                 # The current block is disjoint from vertical blocks
                 disjoint_vertical.add(idx)
-                logging.debug(f"disjoint vertical block: {block.str()}")
+                # logging.debug("disjoint vertical block: %s", block.str())
             elif not set(range(block.i, block.j + 1)).issubset(covered_by_vertical_block):
                 # The current block overlaps the vertical blocks.
                 # We need to check if the block intersects with at least two
@@ -131,15 +131,15 @@ class Optimization:
                 if sorted_cols[-1] in covered_by_vertical_block:
                     num_intersecting_vertical += 1
                 if num_intersecting_vertical >= 2:
-                    logging.debug(
-                        f"block {block.str()} intersects with at least two vertical blocks")
-                    logging.debug(f"sorted_cols: {sorted_cols}")
-                    logging.debug(f"private_regions: {private_regions}")
+                    # logging.debug(
+                    #     "block %s intersects with at least two vertical blocks", block.str())
+                    # logging.debug("sorted_cols: %s", sorted_cols)
+                    # logging.debug("private_regions: %s", private_regions)
                     for begin, end in private_regions:
                         label = "".join([self.msa[block.K[0], i] for i in range(begin, end + 1)])
                         new_block = Block(block.K, begin, end, label)
                         private_blocks.append(new_block)
-                        logging.debug(f"Adding private block: {new_block.str()} to {private_blocks}")
+                        # logging.debug("Adding private block: %s to %s" % (new_block.str(), private_blocks))
             
         first_private_block = len(all_blocks)
         # all_blocks += enumerate(private_blocks, first_private_block)
@@ -158,7 +158,7 @@ class Optimization:
         # of indices of the blocks that cover the position (r,c)
         for idx in c_variables:
             block = all_blocks[idx]
-            logging.debug(f"block: {block.str()}")
+            # logging.debug("block: %s", block.str())
             for r in block.K:
                 for c in range(block.i, block.j + 1):
                     covering_by_position[(r, c)].append(idx)
@@ -182,12 +182,12 @@ class Optimization:
         # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
-        for block in c_variables:
-            logging.info(
-                f"variable:C({block}) = {all_blocks[block].str()}")
+        # for block in c_variables:
+        #     logging.info(
+        #         "variable:C(%s) = %s" % (block,all_blocks[block].str()))
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
-        for pos in msa_positions:
-            logging.info(f"variable:U({pos})")
+        # for pos in msa_positions:
+        #     logging.info("variable:U(%s)", pos)
 
         # Constraints
         # All C(b) variables corresponding to vertical blocks are set to 1
@@ -206,10 +206,10 @@ class Optimization:
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
-                logging.debug(f"constraint2({r},{c}) covered by {blocks_rc}")
+                # logging.debug("constraint2(%s,%s) covered by %s" % (r,c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
-                logging.debug(f"constraint3({r},{c})")
+                # logging.debug("constraint3(%s,%s" % (r,c))
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
@@ -245,7 +245,12 @@ class Optimization:
                     ),
                 GRB.MINIMIZE
             )
+        
+        tf = time.time()
+        times["objective function"] = round(tf - ti, 3)
 
+        
+        ti = time.time()
         logging.info(f"Begin ILP with Objective function: {self.obj_function}")
         if self.obj_function == "weighted":
             logging.info(f"penalization: {self.penalization}")

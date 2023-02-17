@@ -14,5 +14,5 @@ OPTIMIZATION:
     - 3
     - 5 
     - 10  
-  TIME_LIMIT: 10 # time limit to run the ILP (minutes)
+  TIME_LIMIT: 30 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

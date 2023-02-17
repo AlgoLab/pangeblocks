@@ -11,7 +11,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
     BandageLabels = namedtuple("BandageLables",["node_name","first_base","last_base", "seq"])
     info_labels = []
     seqs_by_node = defaultdict(list)
-
+    seq_id=-1
     with open(path_gfa) as fp:
         for line in fp:
             line=line.replace("\n","")
@@ -25,7 +25,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
             
             if line.startswith("P"):
                 split_line = line.split("\t")
-                seq_id = int(split_line[1].replace("seq",""))
+                seq_id = seq_id+1#split_line[1].replace("seq","")
                 path   = split_line[2].replace("+","")
                 nodes_path = [int(node_id) for node_id in path.split(",")]
                 for node_id in nodes_path:
