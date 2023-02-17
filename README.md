@@ -1,10 +1,19 @@
 # Pangeblocks (work in progress)
 Pangenome graph construction from maximal blocks in an MSAs 
 
-Set the parameters in `params.yaml`:
+Set the parameters in `params-grid-exp.yaml`:
 ```yaml
-PATH_MSAS: "msas"          # folder containing MSAs in fasta format
-PATH_OUTPUT: "experiment"  # folder where to save the results
+PATH_MSAS: "msas" # folder containing MSAs in .fasta/.fa format
+PATH_OUTPUT: "output-pangeblocks" # folder where to save the results
+OPTIMIZATION:
+  OBJECTIVE_FUNCTION: "strings" # one of: nodes, strings, weighted
+  # used only with "weighted"
+  PENALIZATION: # for blocks shorter than MIN_LEN: cost=PENALIZATION in the objective function, otherwise cost=1 
+    - 3 
+  MIN_LEN: 
+    - 2 
+  TIME_LIMIT: 30 # time limit to run the ILP (minutes)
+LOG_LEVEL: "INFO"
 ```
 ___
 
@@ -25,33 +34,5 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 
 After the previous pipeline has run, the computation of pangeblock graphs will be done only in the MSAs in `stats_msas.tsv` 
 ```bash
-snakemake -s pangeblock.smk -c16 # variation graph as GFA
+snakemake -s pangeblock-grid-exp.smk -c16 # variation graph as GFA
 ```
-
-___
-### Independent pipelines
-
-#### make_prg from Pandora
-`make_prg.smk` will download version as indicated here https://github.com/iqbal-lab-org/make_prg#download (time accession: 19/12/2022)
-, run make_prg and extract the gfa outputs for the MSAs that are in `PATH_MSAS`
-
-
-#### pggb 
-```bash
-mamba create --prefix $HOME/pggb-env -c conda-forge -c bioconda pggb
-```
-if an error occurs, try this first `sudo rm -rf /opt/mambaforge/pkgs/cache/` and run the above line again
-
-`pggb.smk` will generate GFA pangenome graphs using `pggb` tool
-
-samtools may be required to index the files `sudo apt install samtools` before running pggb
-
-```
-bgzip -@ 16 /path/to/msas/name_msa.fa
-samtools faidx /path/to/msas/name_msa.fa.gz
-./pggb -i /path/to/msas/name_msa.fa.gz -p 70 -s 500 -n 10 -t 16 -o path_output/experiment/output-pggb
-```
-
-TODO 
-- [ ] run pggb in a snakemake pipeline
-    - [ ] how to avoid overwriting .fa file when using bgzip

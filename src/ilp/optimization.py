@@ -225,14 +225,15 @@ class Optimization:
         # Objective function
         if self.obj_function == "nodes":
             # minimize the number of blocks (nodes)
-            # model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
-            vars=[var for var in model.getVars() if var.VarName.startswith("C")]
-            model.setObjective(LinExpr([1. for _ in vars], [model.getVarByName(name) for name in vars]), GRB.MINIMIZE)
+            model.setObjective(C.sum("*"), GRB.MINIMIZE)
+            # vars=[var for var in model.getVars() if var.VarName.startswith("C")]
+            # model.setObjective(LinExpr([1. for _ in vars], [model.getVarByName(name) for name in vars]), GRB.MINIMIZE)
         elif self.obj_function == "strings":
             # minimize the total length of the graph (number of characters)
             model.setObjective(
                 gp.quicksum(
-                    len(all_blocks[idx].label)*C[idx] for idx in c_variables
+                    all_blocks[idx].len()*C[idx] 
+                    for idx in c_variables
                     ), 
                 GRB.MINIMIZE
             )
@@ -242,7 +243,7 @@ class Optimization:
             PENALIZATION = self.penalization # costly than the other ones
             model.setObjective(
                 gp.quicksum( 
-                    (PENALIZATION if len(all_blocks[idx].label)<MIN_LEN else 1)*C[idx] 
+                    (PENALIZATION if all_blocks[idx].len()<MIN_LEN else 1)*C[idx] 
                     for idx in c_variables
                     ),
                 GRB.MINIMIZE

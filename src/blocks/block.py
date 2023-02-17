@@ -16,6 +16,9 @@ class Block:
     def str(self):
         return f"%s,%s,%s,%s" % (self.K,self.i,self.j,self.label)
 
+    def len(self):
+        return self.j-self.i+1
+    
     @root_validator
     def check_len_label(cls, values):
         "length of string must be equal to j-i+1"
