@@ -226,7 +226,8 @@ class Optimization:
         if self.obj_function == "nodes":
             # minimize the number of blocks (nodes)
             # model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
-            model.setObjective(LinExpr([1. for _ in range(len(c_variables))], C), GRB.MINIMIZE)
+            vars=[var for var in model.getVars() if var.VarName.startswith("C")]
+            model.setObjective(LinExpr([1. for _ in vars], [model.getVarByName(name) for name in vars]), GRB.MINIMIZE)
         elif self.obj_function == "strings":
             # minimize the total length of the graph (number of characters)
             model.setObjective(
