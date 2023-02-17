@@ -10,7 +10,7 @@ from collections import defaultdict
 from ..blocks import Block
 from pathlib import Path
 from Bio import AlignIO
-from gurobipy import GRB
+from gurobipy import GRB, LinExpr
 import gurobipy as gp
 from src.blocks.analyzer import BlockAnalyzer
 import logging
@@ -225,11 +225,12 @@ class Optimization:
         # Objective function
         if self.obj_function == "nodes":
             # minimize the number of blocks (nodes)
-            model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+            # model.setObjective(C.sum("*", "*", "*"), GRB.MINIMIZE)
+            model.setObjective(LinExpr([1. for _ in range(len(c_variables))], C), GRB.MINIMIZE)
         elif self.obj_function == "strings":
             # minimize the total length of the graph (number of characters)
             model.setObjective(
-                sum(
+                gp.quicksum(
                     len(all_blocks[idx].label)*C[idx] for idx in c_variables
                     ), 
                 GRB.MINIMIZE
@@ -239,7 +240,7 @@ class Optimization:
             MIN_LEN = self.min_len # penalize blocks with label less than MIN_LEN
             PENALIZATION = self.penalization # costly than the other ones
             model.setObjective(
-                sum( 
+                gp.quicksum( 
                     (PENALIZATION if len(all_blocks[idx].label)<MIN_LEN else 1)*C[idx] 
                     for idx in c_variables
                     ),

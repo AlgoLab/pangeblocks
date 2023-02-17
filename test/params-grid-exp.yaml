@@ -1,5 +1,5 @@
-PATH_MSAS: "/data/msas-pangeblocks/msas-HLA-zoo"
-PATH_OUTPUT: "/data/pangeblocks-experiments/output-HLA-zoo"
+PATH_MSAS: "/data/msas-pangeblocks/msas-didelot/mafft.op5-ep5"
+PATH_OUTPUT: "/data/pangeblocks-experiments/output-didelot-mafft.op5-ep5"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
