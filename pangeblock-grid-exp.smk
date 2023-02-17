@@ -47,7 +47,7 @@ rule analyze_blocks:
     #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.err.log"),
     #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-analyze_blocks.out.log")
     shell: 
-        "/usr/bin/time --verbose python analyze_blocks.py {input} --output {output}" # 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python src/analyze_blocks.py {input} --output {output}" # 2> {log.stderr} > {log.stdout}"
 
 rule decompose_blocks:
     input:
@@ -59,7 +59,7 @@ rule decompose_blocks:
     #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.err.log"),
     #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.out.log")
     shell:
-        "/usr/bin/time --verbose python decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats}" # 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python src/decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats}" # 2> {log.stderr} > {log.stdout}"
 
 rule pangeblock:
     input:
@@ -80,7 +80,7 @@ rule pangeblock:
         time_limit=config["OPTIMIZATION"]["TIME_LIMIT"]
     shell: 
         """
-        /usr/bin/time --verbose python compute_gfa.py --path_blocks {input.path_blocks} \
+        /usr/bin/time --verbose python src/compute_gfa.py --path_blocks {input.path_blocks} \
         --path_msa {input.path_msa} --path_gfa {output.path_gfa} --path_oc {output.path_oc} \
         --obj_function {params.obj_function} --penalization {params.penalization} --min_len {params.min_len} \
         --time_limit {params.time_limit} \

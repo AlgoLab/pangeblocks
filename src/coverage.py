@@ -2,11 +2,11 @@ import cProfile
 from time import time
 import json
 import argparse
-from src.blocks import Block
-from src.ilp.input import InputBlockSet
-from src.ilp.optimization import Optimization
-from src.ilp.variaton_graph_parser import asGFA
-from src.plot.coverage_msa import CoverageMSA
+from blocks import Block
+from ilp.input import InputBlockSet
+from ilp.optimization import Optimization
+from ilp.variaton_graph_parser import asGFA
+from plot.coverage_msa import CoverageMSA
 
 from pathlib import Path
 

@@ -1,6 +1,6 @@
 from pydantic import root_validator, validator
 from pydantic.dataclasses import dataclass
-from ..positional_strings import PositionalString
+from .positional_string import PositionalString
 
 @dataclass(eq=True, frozen=True)
 class Block:

@@ -7,12 +7,12 @@ from itertools import chain
 from sys import getsizeof, stderr
 import time
 from collections import defaultdict
-from ..blocks import Block
+from blocks import Block
 from pathlib import Path
 from Bio import AlignIO
 from gurobipy import GRB, LinExpr
 import gurobipy as gp
-from src.blocks.analyzer import BlockAnalyzer
+from blocks import BlockAnalyzer
 import logging
 logging.basicConfig(level=logging.ERROR,
                     format='%(asctime)s. %(message)s',

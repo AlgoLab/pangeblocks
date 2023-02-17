@@ -5,11 +5,11 @@ import cProfile
 import time
 import json
 import argparse
-from src.blocks import Block
-from src.ilp.input import InputBlockSet
-from src.ilp.optimization import Optimization
-from src.ilp.variaton_graph_parser import asGFA
-from src.ilp.postprocessing import postprocessing
+from blocks import Block
+from ilp.input import InputBlockSet
+from ilp.optimization import Optimization
+from ilp.variaton_graph_parser import asGFA
+from ilp.postprocessing import postprocessing
 from pathlib import Path
 from dataclasses import astuple
 import logging

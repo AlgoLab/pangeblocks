@@ -2,10 +2,10 @@
 import argparse
 import json 
 from pathlib import Path
-from src import Block
-from src.blocks.analyzer import BlockAnalyzer
-from src.utils.timer_decorator import timer
-from src.utils import MonitorValuesPlus
+from blocks import Block
+from blocks.analyzer import BlockAnalyzer
+from utils.timer_decorator import timer
+from utils import MonitorValuesPlus
 
 # Command line options
 parser = argparse.ArgumentParser()

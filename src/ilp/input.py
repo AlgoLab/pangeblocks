@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from src.blocks import Block
+from blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO

@@ -3,9 +3,9 @@
 from dataclasses import astuple 
 from Bio import AlignIO
 from collections import defaultdict
-from ..graph import nodes_edges_from_blocks
+from graph import nodes_edges_from_blocks
 from pathlib import Path
-from ..blocks.block import Block
+from blocks import Block
 class asGFA:
 
     def __call__(self, optimal_coverage, path_gfa, path_msa, header="VN:Z:1.0"):

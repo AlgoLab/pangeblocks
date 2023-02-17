@@ -4,8 +4,9 @@ import json
 import time
 from dataclasses import astuple
 from pathlib import Path
-from src.blocks import BlockAnalyzer, Block, block_decomposition, Decomposer
-from src.utils import MonitorValuesPlus
+from blocks import Block
+from blocks import BlockAnalyzer, block_decomposition, Decomposer
+from utils import MonitorValuesPlus
 
 # Command line options
 parser = argparse.ArgumentParser()
