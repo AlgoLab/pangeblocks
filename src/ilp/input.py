@@ -53,7 +53,7 @@ class InputBlockSet:
         return new_blocks
 
     @staticmethod
-    def get_coverage_panel(n_seqs, n_cols, blocks):
+    def get_coverage_panel(n_seqs, n_cols, blocks): #FIXME: memory consuming?
         """returns a matrix of size equal to msa (n_seq x n_cols) with 
         the number of blocks in the list_blocks that covers each position"""
 

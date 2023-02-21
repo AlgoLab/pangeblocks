@@ -46,10 +46,10 @@ class Optimization:
         "Solve ILP formulation"
         times = dict()
         ti = time.time()
-
+        
         all_blocks = self.input_blocks
         n_blocks = len(all_blocks)
-        logging.info("number of block %s", n_blocks)
+        logging.info("number of blocks %s", n_blocks)
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
@@ -65,12 +65,15 @@ class Optimization:
         #    end column
         # 2. we do a second scan of vertical blocks and, for each end
         #    column, we keep the block with the smallest beginning column
+        logging.info("loop: left maximal vertical blocks")
         for idx, block in enumerate(all_blocks):
             # logging.debug("input block: %s", block.str())
             if len(block.K) == self.n_seqs:
                 if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
                     left_maximal_vertical_blocks[block.i] = {
                         "idx": idx, "end": block.j}
+        
+        logging.info("loop: vertical blocks")
         vertical_blocks = {}
         for begin, block in left_maximal_vertical_blocks.items():
             if not block["end"] in vertical_blocks or begin < vertical_blocks[block["end"]]["begin"]:
@@ -80,6 +83,7 @@ class Optimization:
         # We keep a set of all columns that are covered by a vertical block:
         # those columns will not be involved in the U[r,c] variables and in the
         # corresponding covering constraints
+        logging.info("loop: covered by vertical blocks")
         covered_by_vertical_block = set()
         for begin, item in vertical_blocks.items():
             block = all_blocks[item['idx']]
@@ -94,6 +98,7 @@ class Optimization:
         # We compute a dictionary called zones with key the column and value the
         # zone_id, that is a progressive id of the region, where each region is
         # a set of consecutive columns that are either disjoint or included in a vertical block.
+        logging.info("zones")
         current_zone = 0
         zone = {0: 0}
         zone_boundaries = {0: {'start': 0, 'end': -1}}
@@ -131,6 +136,7 @@ class Optimization:
                 # variable, so we discard the block
                 if not zone_start in covered_by_vertical_block:
                     # The current block is disjoint from vertical blocks
+                    logging.info("block disjoint from vertical blocks")
                     disjoint_vertical.add(idx)
                 # logging.debug("disjoint vertical block: %s", block.str())
             else:
@@ -138,8 +144,8 @@ class Optimization:
                 # We need to check if the block intersects with at least two
                 # vertical blocks: in that case we need to manually decompose
                 # it.
-
                 if zone_end - zone_start >= 3 or (zone_end - zone_start >= 2) and (zone_start in covered_by_vertical_block or zone_end in covered_by_vertical_block):
+                    logging.info("block is not disjoint")
                     logging.debug("block %s is not disjoint", block.str())
                     logging.debug("zone_start: %s, zone_end: %s",
                                   zone_start, zone_end)
@@ -160,17 +166,20 @@ class Optimization:
         # all_blocks += enumerate(private_blocks, first_private_block)
         all_blocks += private_blocks
 
+        logging.info("collecting c_variables")
         c_variables = list(disjoint_vertical) + [item["idx"]
                                                  for item in vertical_blocks.values()] + list(range(first_private_block, len(all_blocks)))
         # msa_positions is a list of all positions (r,c) that are required to be
         # covered. We exclude the positions covered by vertical blocks, since
         # they will be guaranteed to be covered, as an effect of the fact that
         # the corresponding C variables will be set to 1
+        logging.info("generating msa positions")
         msa_positions = [(r, c) for r in range(self.n_seqs)
                          for c in set(range(self.n_cols)) - covered_by_vertical_block]
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
+        logging.info("covering by position")
         for idx in c_variables:
             block = all_blocks[idx]
             logging.debug("block: %s", block.str())
@@ -183,6 +192,7 @@ class Optimization:
 
         # Create the model
         ti = time.time()
+        logging.info("initializing model pangeblocks")
         model = gp.Model("pangeblocks")
 
         # Threads
@@ -195,35 +205,43 @@ class Optimization:
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
         # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
+        logging.info("adding C variables to the model")
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
         for block in c_variables:
             logging.info(
                 "variable:C(%s) = %s" % (block, all_blocks[block].str()))
+        
+        logging.info("adding U variables to the model")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.info("variable:U(%s)", pos)
 
         # Constraints
         # All C(b) variables corresponding to vertical blocks are set to 1
+        logging.info("adding constraint: C=1 for vertical blocks ")
         for end, item in vertical_blocks.items():
             model.addConstr(C[item["idx"]] == 1,
                             name=f"vertical_constraint({item['idx']})")
-
+        
+        logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
                 # 1. U[r,c] = 1 implies that at least one block covers the position
+                logging.info("constraint 1")
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
                 # 2. each position in the MSA is covered at most by one block
+                logging.info("constraint 2")
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
                 logging.debug("constraint2(%s,%s) covered by %s" %
                               (r, c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
+                logging.info("constraint 3")
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
                 logging.debug("constraint3(%s,%s" % (r, c))
         tf = time.time()
@@ -239,6 +257,7 @@ class Optimization:
         ti = time.time()
         # TODO: include input to decide which objective function to use
         # Objective function
+        logging.info("setting objective function to %s", self.obj_function)
         if self.obj_function == "nodes":
             # minimize the number of blocks (nodes)
             model.setObjective(C.sum("*"), GRB.MINIMIZE)
@@ -270,7 +289,6 @@ class Optimization:
         times["objective function"] = round(tf - ti, 3)
 
         ti = time.time()
-        logging.info(f"Begin ILP with Objective function: {self.obj_function}")
         if self.obj_function == "weighted":
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum length: {self.min_len}")
@@ -281,6 +299,7 @@ class Optimization:
         times["optimization"] = round(tf - ti, 3)
 
         if self.path_save_ilp:
+            logging.info("saving ILP model")
             Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
             model.write(self.path_save_ilp)
 
