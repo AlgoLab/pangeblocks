@@ -22,6 +22,7 @@ try:
 except ImportError:
     pass
 
+
 class Optimization:
     def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR, **kwargs):
 
@@ -35,9 +36,9 @@ class Optimization:
         self.n_seqs = n_seqs
         self.n_cols = n_cols
         self.path_save_ilp = path_save_ilp
-        self.obj_function = kwargs.get("obj_function","nodes")
-        self.penalization = kwargs.get("penalization",1)
-        self.min_len = kwargs.get("min_len",1)
+        self.obj_function = kwargs.get("obj_function", "nodes")
+        self.penalization = kwargs.get("penalization", 1)
+        self.min_len = kwargs.get("min_len", 1)
         self.time_limit = kwargs.get("time_limit", 180)
         logging.getLogger().setLevel(log_level)
 
@@ -49,7 +50,7 @@ class Optimization:
         all_blocks = self.input_blocks
         n_blocks = len(all_blocks)
         logging.info("number of block %s", n_blocks)
-        
+
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
         #
@@ -86,61 +87,75 @@ class Optimization:
             for col in range(block.i, block.j + 1):
                 covered_by_vertical_block.add(col)
         logging.info(
-            f"Covered by vertical blocks: {covered_by_vertical_block}")
+            "Covered by vertical blocks: %s", covered_by_vertical_block)
         logging.info(
-            "No covered by vertical blocks: %s out of %s" % (len(covered_by_vertical_block),self.n_cols))
+            "No. covered by vertical blocks: %s out of %s" % (len(covered_by_vertical_block), self.n_cols))
+
+        # We compute a dictionary called zones with key the column and value the
+        # zone_id, that is a progressive id of the region, where each region is
+        # a set of consecutive columns that are either disjoint or included in a vertical block.
+        current_zone = 0
+        zone = {0: 0}
+        zone_boundaries = {0: {'start': 0, 'end': -1}}
+        # We keep also a dictionary called zone_boundaries with key the zone_id
+        # and values the first and last column of the zone
+        for col in range(1, self.n_cols):
+            if (col in covered_by_vertical_block) != (col - 1 in covered_by_vertical_block):
+                logging.debug("Boundary at %s: %s-%s", col, (col in covered_by_vertical_block),
+                              (col - 1 in covered_by_vertical_block))
+
+                zone_boundaries[current_zone]['end'] = col - 1
+                current_zone += 1
+                zone_boundaries[current_zone] = {'start': col, 'end': -1}
+            zone[col] = current_zone
+        zone_boundaries[current_zone]['end'] = self.n_cols - 1
 
         # We compute the set disjoint_vertical, corresponding to the
         # blocks that are disjoint from vertical blocks.
         # The blocks that we will encode with a C variable in the
         # ILP correspond to the blocks that are disjoint from vertical blocks or
         # are vertical blocks themselves.
+        logging.debug("zones\n%s", zone)
+        logging.debug("boundaries:\n%s", zone_boundaries)
         disjoint_vertical = set()
         private_blocks = []
         for idx, block in enumerate(all_blocks):
-            # logging.info("analyzing %s out of %s", idx, n_blocks)
-            if set(range(block.i, block.j + 1)).isdisjoint(covered_by_vertical_block):
-                # The current block is disjoint from vertical blocks
-                disjoint_vertical.add(idx)
+            logging.info("analyzing %s out of %s", idx, n_blocks)
+            # Compute the zone of the boundaries of the block
+            (zone_start, zone_end) = (zone[block.i], zone[block.j])
+            # current_columns is the set of columns covered by the current block
+            if (zone_start == zone_end):
+                # The current block is contained in a single zone or it is
+                # included in a vertical block.
+                # In the latter case, we do not need to encode it with a C
+                # variable, so we discard the block
+                if not zone_start in covered_by_vertical_block:
+                    # The current block is disjoint from vertical blocks
+                    disjoint_vertical.add(idx)
                 # logging.debug("disjoint vertical block: %s", block.str())
-            elif not set(range(block.i, block.j + 1)).issubset(covered_by_vertical_block):
+            else:
                 # The current block overlaps the vertical blocks.
                 # We need to check if the block intersects with at least two
                 # vertical blocks: in that case we need to manually decompose
                 # it.
 
-                # private_cols is the set of columns of the current block that
-                # are not in any vertical blocks.
-                # We need to extract from those columns the regions with
-                # consecutive columns, so that we can decompose the current
-                # block into the sub-blocks divided by the vertical blocks.
-                private_cols = set(range(block.i, block.j + 1)) - covered_by_vertical_block
-                sorted_cols = sorted(private_cols)
-                private_regions = []
-                begin = -1
-                for idx, col in enumerate(sorted_cols):
-                    if begin < 0:
-                        begin = col
-                    if idx == len(sorted_cols) - 1 or col < sorted_cols[idx + 1] - 1:
-                        private_regions.append((begin, col))
-                        begin = -1
+                if zone_end - zone_start >= 3 or (zone_end - zone_start >= 2) and (zone_start in covered_by_vertical_block or zone_end in covered_by_vertical_block):
+                    logging.debug("block %s is not disjoint", block.str())
+                    logging.debug("zone_start: %s, zone_end: %s",
+                                  zone_start, zone_end)
+                    logging.debug("covered_by_vertical_block: %s",
+                                  covered_by_vertical_block)
 
-                num_intersecting_vertical = len(private_regions) - 1
-                if sorted_cols[0] in covered_by_vertical_block:
-                    num_intersecting_vertical += 1
-                if sorted_cols[-1] in covered_by_vertical_block:
-                    num_intersecting_vertical += 1
-                if num_intersecting_vertical >= 2:
-                    # logging.debug(
-                    #     "block %s intersects with at least two vertical blocks", block.str())
-                    # logging.debug("sorted_cols: %s", sorted_cols)
-                    # logging.debug("private_regions: %s", private_regions)
-                    for begin, end in private_regions:
-                        label = "".join([self.msa[block.K[0], i] for i in range(begin, end + 1)])
+                    logging.debug(
+                        "block %s intersects with at least two vertical blocks", block.str())
+                    for zone_id in range(zone_start, zone_end + 1):
+                        start, end = zone_boundaries[current_zone]['start'], zone_boundaries[current_zone]['end']
+                        # LAST CHANGE
+                        label = str(self.msa[block.K[0], begin:end+1].seq)
                         new_block = Block(block.K, begin, end, label)
                         private_blocks.append(new_block)
                         # logging.debug("Adding private block: %s to %s" % (new_block.str(), private_blocks))
-            
+
         first_private_block = len(all_blocks)
         # all_blocks += enumerate(private_blocks, first_private_block)
         all_blocks += private_blocks
@@ -158,7 +173,7 @@ class Optimization:
         # of indices of the blocks that cover the position (r,c)
         for idx in c_variables:
             block = all_blocks[idx]
-            # logging.debug("block: %s", block.str())
+            logging.debug("block: %s", block.str())
             for r in block.K:
                 for c in range(block.i, block.j + 1):
                     covering_by_position[(r, c)].append(idx)
@@ -175,19 +190,19 @@ class Optimization:
 
         # Time Limit
         model.setParam(GRB.Param.TimeLimit, float(60*self.time_limit))
-        
+
         # define variables
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
         # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
-        # for block in c_variables:
-        #     logging.info(
-        #         "variable:C(%s) = %s" % (block,all_blocks[block].str()))
+        for block in c_variables:
+            logging.info(
+                "variable:C(%s) = %s" % (block, all_blocks[block].str()))
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
-        # for pos in msa_positions:
-        #     logging.info("variable:U(%s)", pos)
+        for pos in msa_positions:
+            logging.info("variable:U(%s)", pos)
 
         # Constraints
         # All C(b) variables corresponding to vertical blocks are set to 1
@@ -206,10 +221,11 @@ class Optimization:
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
-                # logging.debug("constraint2(%s,%s) covered by %s" % (r,c, blocks_rc))
+                logging.debug("constraint2(%s,%s) covered by %s" %
+                              (r, c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
-                # logging.debug("constraint3(%s,%s" % (r,c))
+                logging.debug("constraint3(%s,%s" % (r, c))
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
@@ -232,34 +248,34 @@ class Optimization:
             # minimize the total length of the graph (number of characters)
             model.setObjective(
                 gp.quicksum(
-                    all_blocks[idx].len()*C[idx] 
+                    all_blocks[idx].len()*C[idx]
                     for idx in c_variables
-                    ), 
+                ),
                 GRB.MINIMIZE
             )
         elif self.obj_function == "weighted":
             # minimize the number of blocks penalizing shorter blocks
-            MIN_LEN = self.min_len # penalize blocks with label less than MIN_LEN
-            PENALIZATION = self.penalization # costly than the other ones
+            MIN_LEN = self.min_len  # penalize blocks with label less than MIN_LEN
+            PENALIZATION = self.penalization  # costly than the other ones
             model.setObjective(
-                gp.quicksum( 
-                    (PENALIZATION if all_blocks[idx].len()<MIN_LEN else 1)*C[idx] 
+                gp.quicksum(
+                    (PENALIZATION if all_blocks[idx].len(
+                    ) < MIN_LEN else 1)*C[idx]
                     for idx in c_variables
-                    ),
+                ),
                 GRB.MINIMIZE
             )
-        
+
         tf = time.time()
         times["objective function"] = round(tf - ti, 3)
 
-        
         ti = time.time()
         logging.info(f"Begin ILP with Objective function: {self.obj_function}")
         if self.obj_function == "weighted":
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum length: {self.min_len}")
 
-        model.optimize()
+#        model.optimize()
         logging.info("End ILP")
         tf = time.time()
         times["optimization"] = round(tf - ti, 3)
