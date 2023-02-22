@@ -106,8 +106,8 @@ class Optimization:
         # and values the first and last column of the zone
         for col in range(1, self.n_cols):
             if (col in covered_by_vertical_block) != (col - 1 in covered_by_vertical_block):
-                logging.debug("Boundary at %s: %s-%s", col, (col in covered_by_vertical_block),
-                              (col - 1 in covered_by_vertical_block))
+                # logging.debug("Boundary at %s: %s-%s", col, (col in covered_by_vertical_block),
+                #               (col - 1 in covered_by_vertical_block))
 
                 zone_boundaries[current_zone]['end'] = col - 1
                 current_zone += 1
@@ -120,8 +120,9 @@ class Optimization:
         # The blocks that we will encode with a C variable in the
         # ILP correspond to the blocks that are disjoint from vertical blocks or
         # are vertical blocks themselves.
-        logging.debug("zones\n%s", zone)
-        logging.debug("boundaries:\n%s", zone_boundaries)
+        # logging.debug("zones\n%s", zone)
+        # logging.debug("boundaries:\n%s", zone_boundaries)
+        intersecting_vertical_list = []
         disjoint_vertical = set()
         private_blocks = []
         for idx, block in enumerate(all_blocks):
@@ -144,16 +145,17 @@ class Optimization:
                 # We need to check if the block intersects with at least two
                 # vertical blocks: in that case we need to manually decompose
                 # it.
+                intersecting_vertical_list.append(idx)
                 if zone_end - zone_start >= 3 or (zone_end - zone_start >= 2) and (zone_start in covered_by_vertical_block or zone_end in covered_by_vertical_block):
                     logging.info("block is not disjoint")
-                    logging.debug("block %s is not disjoint", block.str())
-                    logging.debug("zone_start: %s, zone_end: %s",
-                                  zone_start, zone_end)
-                    logging.debug("covered_by_vertical_block: %s",
-                                  covered_by_vertical_block)
+                    # logging.debug("block %s is not disjoint", block.str())
+                    # logging.debug("zone_start: %s, zone_end: %s",
+                    #               zone_start, zone_end)
+                    # logging.debug("covered_by_vertical_block: %s",
+                    #               covered_by_vertical_block)
 
-                    logging.debug(
-                        "block %s intersects with at least two vertical blocks", block.str())
+                    # logging.debug(
+                    #     "block %s intersects with at least two vertical blocks", block.str())
                     for zone_id in range(zone_start, zone_end + 1):
                         start, end = zone_boundaries[current_zone]['start'], zone_boundaries[current_zone]['end']
                         # LAST CHANGE
@@ -162,6 +164,7 @@ class Optimization:
                         private_blocks.append(new_block)
                         # logging.debug("Adding private block: %s to %s" % (new_block.str(), private_blocks))
 
+        intersecting_vertical = set(intersecting_vertical_list)
         first_private_block = len(all_blocks)
         # all_blocks += enumerate(private_blocks, first_private_block)
         all_blocks += private_blocks
@@ -180,12 +183,14 @@ class Optimization:
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
         logging.info("covering by position")
+        n_cvars=len(c_variables)
         for idx in c_variables:
             block = all_blocks[idx]
-            logging.debug("block: %s", block.str())
-            for r in block.K:
-                for c in range(block.i, block.j + 1):
-                    covering_by_position[(r, c)].append(idx)
+            logging.info("block: %s / %s" %  (idx,n_cvars))
+            if idx not in intersecting_vertical and idx not in vertical_blocks:
+                for r in block.K:
+                    for c in range(block.i, block.j + 1):
+                        covering_by_position[(r, c)].append(idx)
 
         tf = time.time()
         times["init"] = round(tf - ti, 3)
@@ -238,12 +243,12 @@ class Optimization:
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
-                logging.debug("constraint2(%s,%s) covered by %s" %
-                              (r, c, blocks_rc))
+                # logging.debug("constraint2(%s,%s) covered by %s" %
+                #               (r, c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
                 logging.info("constraint 3")
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
-                logging.debug("constraint3(%s,%s" % (r, c))
+                # logging.debug("constraint3(%s,%s" % (r, c))
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
