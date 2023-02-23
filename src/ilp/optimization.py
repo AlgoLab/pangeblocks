@@ -215,9 +215,18 @@ class Optimization:
             for c in set(range(self.n_cols)) - covered_by_vertical_block:
                 logging.info("Covering position: %s %s %s" %
                              (r, c, [good_blocks[idx].str() for idx in covering_by_position[(r, c)]]))
+                if len(covering_by_position[(r, c)]) == 0:
+                    logging.info("Uncovered position! %s %s" % (r, c))
 
+        vertical_covered = set()
         for idx in vertical_blocks:
             logging.info("Vertical block fixed: %s" % good_blocks[idx].str())
+            for col in range(good_blocks[idx].i, good_blocks[idx].j + 1):
+                vertical_covered.add(col)
+        logging.info("Vertical covered: %s" %
+                     covered_by_vertical_block.difference(vertical_covered))
+        logging.info("Vertical covered: %s" %
+                     covered_by_vertical_block == vertical_covered)
 
         tf = time.time()
         times["init"] = round(tf - ti, 3)
@@ -262,7 +271,9 @@ class Optimization:
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
                 # 1. U[r,c] = 1 implies that at least one block covers the position
-                logging.info("constraint 1")
+                logging.info("constraint 1: %s %s" % (r, c))
+                logging.info("blocks_rc: %s" % blocks_rc)
+                logging.info("C variables: %s" % [C[i] for i in blocks_rc])
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
