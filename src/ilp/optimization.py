@@ -228,9 +228,9 @@ class Optimization:
         # Constraints
         # All C(b) variables corresponding to vertical blocks are set to 1
         logging.info("adding constraint: C=1 for vertical blocks ")
-        for end, item in vertical_blocks.items():
-            model.addConstr(C[item["idx"]] == 1,
-                            name=f"vertical_constraint({item['idx']})")
+        for idx in vertical_blocks:
+            model.addConstr(C[idx] == 1,
+                            name=f"vertical_constraint({good_blocks[idx]})")
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
