@@ -165,6 +165,8 @@ class Optimization:
 
         # Remove duplicates
         good_blocks = list(unsplit_blocks.union(private_blocks))
+        vertical_blocks = [idx for idx, block in enumerate(good_blocks) if (
+            zone[block.i] == zone[block.j]) and block.i in covered_by_vertical_block]
         del private_blocks
         del unsplit_blocks
         logging.info(
