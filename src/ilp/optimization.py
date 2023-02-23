@@ -264,7 +264,8 @@ class Optimization:
         for idx in vertical_blocks:
             model.addConstr(C[idx] == 1,
                             name=f"vertical_constraint({good_blocks[idx]})")
-            logging.info("Vertical block fixed: %s" % good_blocks[idx].str())
+            logging.info("Vertical block fixed: %s %s" %
+                         (idx, good_blocks[idx].str()))
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
