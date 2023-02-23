@@ -1,6 +1,7 @@
 from pydantic import root_validator, validator
 from pydantic.dataclasses import dataclass
 from .positional_string import PositionalString
+from typing import Optional
 
 @dataclass(eq=True, frozen=True)
 class Block:
@@ -44,3 +45,29 @@ class Block:
     def sort_K(cls, v):
         "sort values in K"
         return tuple(sorted(v))
+
+@dataclass(eq=True, frozen=True)
+class LightBlock:
+    "class for keeping track a block, avoiding to save the string"
+    K: tuple
+    i: int
+    j: int
+    label: Optional[str]
+
+    def to_positional_string(self,) -> PositionalString:
+        return PositionalString(self.label, self.i, self.j)
+
+    def str(self):
+        return f"%s,%s,%s,%s" % (self.K,self.i,self.j,self.label)
+
+    def len(self):
+        return self.j-self.i+1
+
+    @validator("K")
+    def sort_K(cls, v):
+        "sort values in K"
+        return tuple(sorted(v))
+    
+    @validator("label")
+    def empty_str(cls, v):
+        return ""
