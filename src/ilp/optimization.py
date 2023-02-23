@@ -346,10 +346,10 @@ class Optimization:
         tf = time.time()
         times["optimization"] = round(tf - ti, 3)
 
-        # if self.path_save_ilp:
-        logging.info("saving ILP model")
-        Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
-        model.write(self.path_save_ilp)
+        if self.path_save_ilp:
+            logging.info("saving ILP model")
+            Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
+            model.write(self.path_save_ilp)
 
         try:
             solution_C = model.getAttr("X", C)
