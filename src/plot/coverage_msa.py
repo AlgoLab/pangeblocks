@@ -68,7 +68,7 @@ class CoverageMSA:
         coverage_panel = np.zeros((n_seqs, n_cols))
         for block in blocks:
             for r in block.K:
-                for c in range(block.i,block.j+1):
+                for c in range(block.start,block.end+1):
                     coverage_panel[r,c] += 1
         return coverage_panel
 
@@ -82,6 +82,6 @@ class CoverageMSA:
         for block in blocks:
             color = next(colors)
             for r in block.K:
-                for c in range(block.i,block.j+1):
+                for c in range(block.start,block.end+1):
                     coverage_panel[r,c,:] = color
         return coverage_panel

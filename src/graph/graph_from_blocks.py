@@ -17,10 +17,10 @@ def nodes_edges_from_blocks(block1, block2):
     K = list(common_rows)
     K.sort()
 
-    if b1.j == b2.i-1 and len(K)>0:
+    if b1.end == b2.start-1 and len(K)>0:
         # print("Condicion- consecutive blocks")
-        node1 = Node(b1.K, b1.i, b1.j, b1.label)
-        node2 = Node(b2.K, b2.i, b2.j, b2.label)
+        node1 = Node(b1.K, b1.start, b1.end, b1.label)
+        node2 = Node(b2.K, b2.start, b2.end, b2.label)
         nodes.extend([node1, node2])
         edges.append(Edge(node1, node2, K))
     # else: 

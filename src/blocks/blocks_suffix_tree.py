@@ -14,8 +14,8 @@ from typing import Tuple, List, Union
 ALPHABET ={"A","C","G","T","-"}
 FIRST_CHAR = chr(100)
 ## ___ ___ ___ 
-Block = namedtuple("Block",["K","i","j","seq"])
-_Block = Tuple[List[Union[int,str]], int, int] # Block (K,i,j)
+Block = namedtuple("Block",["K","start","end","seq"])
+_Block = Tuple[List[Union[int,str]], int, int] # Block (K,start,end)
 
 ## Functions
 def save_as_dot(tree, path_save: str = "graph.dot"):
@@ -79,7 +79,7 @@ def is_maximal_block(block, previous_blocks) -> bool:
     "Compare new block against maximal blocks"
     for pblock in previous_blocks:
         # if not a maximal block return False 
-        if set(block.K) == set(pblock.K) and block.j==pblock.j and block.i > pblock.i:
+        if set(block.K) == set(pblock.K) and block.end==pblock.end and block.start > pblock.start:
             return False
     return True
 
@@ -88,7 +88,7 @@ def map_coverage(blocks, size_msa, n_seqs):
     coverage = np.zeros((n_seqs, size_msa))
     for block in blocks: 
         for k in block.K:
-            coverage[k,block.i:block.j+1] = 1
+            coverage[k,block.start:block.end+1] = 1
     return coverage
 
 def compute_max_blocks(seqs, size_msa):

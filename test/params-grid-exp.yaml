@@ -1,13 +1,13 @@
-PATH_MSAS: "test"
-PATH_OUTPUT: "/data/pangeblocks-experiments/output-test"
+PATH_MSAS: "/data/pangeblocks-experiments/msas"
+PATH_OUTPUT: "/data/pangeblocks-experiments/output-small-msas"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
-    - "nodes"
+    # - "nodes"
     - "strings"
-    - "weighted"
+    # - "weighted"
   PENALIZATION: # used only with "weighted"
-    - 7 
+    - 3 
   MIN_LEN: # used only with "weighted"
-    - 10  
+    - 3  
   TIME_LIMIT: 30 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

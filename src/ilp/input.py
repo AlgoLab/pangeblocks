@@ -32,7 +32,7 @@ class InputBlockSet:
 
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + missing_blocks + blocks_one_char  #[block for block in missing_blocks if block.j-block.i+1 > 1]
+        set_B = blocks + missing_blocks + blocks_one_char  #[block for block in missing_blocks if block.end-block.start+1 > 1]
 
         return set_B
     
@@ -42,7 +42,7 @@ class InputBlockSet:
         blocks_by_start = defaultdict(list)
         for block in list_blocks:
             if len(block.label) == 1: # only one character blocks
-                blocks_by_start[(block.i,block.label)].extend(list(block.K))
+                blocks_by_start[(block.start,block.label)].extend(list(block.K))
             else: 
                 new_blocks.append(block)
         
@@ -61,7 +61,7 @@ class InputBlockSet:
         coverage_panel = np.zeros((n_seqs, n_cols))
         for block in blocks:
             for r in block.K:
-                for c in range(block.i,block.j+1):
+                for c in range(block.start,block.end+1):
                     coverage_panel[r,c] += 1
         return coverage_panel
 
@@ -85,7 +85,7 @@ class InputBlockSet:
             for pos in consecutive_pos: 
                 label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1])
                 missing_blocks.append(
-                    Block(K=(seq,), i=pos[0],j=pos[-1], label=label)
+                    Block(K=(seq,), start=pos[0],end=pos[-1], label=label)
                 )
 
         return missing_blocks
@@ -123,7 +123,7 @@ class InputBlockSet:
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            Block(K=K, i=col, j=col, label=c)
+                            Block(K=K, start=col, end=col, label=c)
                     )
 
         return blocks_one_char

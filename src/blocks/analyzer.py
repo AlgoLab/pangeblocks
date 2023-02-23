@@ -51,7 +51,7 @@ class BlockAnalyzer:
     @staticmethod
     def _list_inter_blocks(list_blocks: list[Block], return_sorted_list: bool = False) -> list[tuple]:
         "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
-        blocks = sorted(list_blocks, key=lambda block: block.i)
+        blocks = sorted(list_blocks, key=lambda block: block.start)
         
         # save pairs of indexes for the sorted blocks that intersect
         intersections = [] 
