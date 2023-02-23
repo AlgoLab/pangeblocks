@@ -46,7 +46,7 @@ class Optimization:
         "Solve ILP formulation"
         times = dict()
         ti = time.time()
-        
+
         all_blocks = self.input_blocks
         n_blocks = len(all_blocks)
         logging.info("number of blocks %s", n_blocks)
@@ -72,7 +72,7 @@ class Optimization:
                 if not block.i in left_maximal_vertical_blocks or block.j > left_maximal_vertical_blocks[block.i]["end"]:
                     left_maximal_vertical_blocks[block.i] = {
                         "idx": idx, "end": block.j}
-        
+
         logging.info("loop: vertical blocks")
         vertical_blocks = {}
         for begin, block in left_maximal_vertical_blocks.items():
@@ -168,10 +168,15 @@ class Optimization:
         first_private_block = len(all_blocks)
         # all_blocks += enumerate(private_blocks, first_private_block)
         all_blocks += private_blocks
+        logging.info(f"Total number of blocks: {len(all_blocks)}")
+
+        # Remove duplicates
+        all_blocks = list(set(all_blocks))
+        logging.info(
+            f"Total number of distinct blocks: {len(all_blocks)}")
 
         logging.info("collecting c_variables")
-        c_variables = list(disjoint_vertical) + [item["idx"]
-                                                 for item in vertical_blocks.values()] + list(range(first_private_block, len(all_blocks)))
+        c_variables = list(range(len(all_blocks)))
         # msa_positions is a list of all positions (r,c) that are required to be
         # covered. We exclude the positions covered by vertical blocks, since
         # they will be guaranteed to be covered, as an effect of the fact that
@@ -183,11 +188,19 @@ class Optimization:
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
         logging.info("covering by position")
-        n_cvars=len(c_variables)
+        n_cvars = len(c_variables)
+        logging.info(f"MSA: {self.n_seqs} x {self.n_cols}")
+        logging.info(
+            f"Number blocks in intersecting_vertical: {len(intersecting_vertical)}")
+        logging.info(
+            f"Number blocks in vertical_blocks: {len(vertical_blocks)}")
+        logging.info(
+            f"Number blocks in union: {len(intersecting_vertical.union(vertical_blocks))}")
         for idx in c_variables:
             block = all_blocks[idx]
-            logging.info("block: %s / %s" %  (idx,n_cvars))
+            logging.info("block: %s / %s" % (idx, n_cvars))
             if idx not in intersecting_vertical and idx not in vertical_blocks:
+                logging.debug("Adding %s %s %s" % (block.i, block.j, block.K))
                 for r in block.K:
                     for c in range(block.i, block.j + 1):
                         covering_by_position[(r, c)].append(idx)
@@ -216,7 +229,7 @@ class Optimization:
         for block in c_variables:
             logging.info(
                 "variable:C(%s) = %s" % (block, all_blocks[block].str()))
-        
+
         logging.info("adding U variables to the model")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
@@ -228,7 +241,7 @@ class Optimization:
         for end, item in vertical_blocks.items():
             model.addConstr(C[item["idx"]] == 1,
                             name=f"vertical_constraint({item['idx']})")
-        
+
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
             blocks_rc = covering_by_position[(r, c)]
