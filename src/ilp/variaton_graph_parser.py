@@ -6,22 +6,33 @@ from collections import defaultdict
 from graph import nodes_edges_from_blocks
 from pathlib import Path
 from blocks import Block
+
+import logging
+logging.basicConfig(level=logging.ERROR,
+                    format='%(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+
 class asGFA:
 
     def __call__(self, optimal_coverage, path_gfa, path_msa, header="VN:Z:1.0"):
         
+        self.msa, self.n_seqs, self.n_cols = self.load_msa(path_msa)
         list_nodes, list_edges = self.create_graph(optimal_coverage, path_msa)
+
         self.parse(list_nodes, list_edges, path_gfa, header)
 
     def create_graph(self, optimal_coverage, path_msa):
+        logging.info("CREATE GRAPH")
         list_nodes = []
         list_edges = []
 
-        _, n_seqs, n_cols= self.load_msa(path_msa)
-        optimal_coverage.append(Block((r for r in range(n_seqs)), -1,-1,"s")) # source node
-        optimal_coverage.append(Block((r for r in range(n_seqs)), n_cols,n_cols,"S")) # sink node
+        # optimal_coverage.append(Block((r for r in range(self.n_seqs)), -1,-1,"s")) # source node
+        # optimal_coverage.append(Block((r for r in range(self.n_seqs)), self.n_cols,self.n_cols,"S")) # sink node
         
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.start )
+        for idx, block in enumerate(sorted_solution):
+            logging.info("sorted solution %s: %s" % (idx, block))
+
         for pos1, block1 in enumerate(sorted_solution[:-1]):
 
             for rel_pos, block2 in enumerate(sorted_solution[pos1+1:]):
@@ -31,16 +42,34 @@ class asGFA:
                 list_nodes.extend(nodes)
                 list_edges.extend(edges)
 
-        list_nodes = set([(node.K,node.i,node.j,node.label) for node in list_nodes])
+
+        filtered_nodes = set()
+        for node in list_nodes:
+            logging.info("node K %s", node)
+            logging.info("node.K[0]=%s, %s" % (node.K[0], type(node.K[0])))
+            logging.info("types start:%s, end:%s" % (type(node.start), type(node.end)))
+            # logging.info(str(self.msa[node.K[0],node.start:node.end+1].seq))
+            filtered_nodes.add(
+                (node.K,node.start,node.end, str(self.msa[int(node.K[0]),int(node.start):int(node.end)+1].seq))
+            )
+
+        list_nodes = filtered_nodes#set([(node.K,node.start,node.end, str(self.msa[node.K[0],node.start:node.end+1].seq)) for node in list_nodes])
         
-        
+        for node in list_nodes:
+            logging.info("node: %s", node)
+
+
         _list_edges = []
         for edge in list_edges:
             node1=edge.node1
             node2=edge.node2
 
             _list_edges.append(
-                ((node1.K,node1.i,node1.j,node1.label),(node2.K,node2.i,node2.j,node2.label), tuple(edge.seqs))
+                (
+                (node1.K,node1.start,node1.end, str(self.msa[int(node1.K[0]), int(node1.start):int(node1.end)+1].seq)),
+                (node2.K,node2.start,node2.end, str(self.msa[int(node2.K[0]), int(node2.start):int(node2.end)+1].seq)), 
+                tuple(edge.seqs)
+                )
             )
 
         list_edges = list(set(_list_edges))

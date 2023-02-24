@@ -5,7 +5,7 @@ import cProfile
 import time
 import json
 import argparse
-from blocks import Block
+from blocks import LightBlock as Block
 from ilp.input import InputBlockSet
 from ilp.optimization import Optimization
 from ilp.variaton_graph_parser import asGFA
@@ -49,7 +49,7 @@ def main():
     logging.info(f"Computing Pangeblocks for: {Path(path_msa).stem}")
     logging.info("Loading blocks")
     with open(path_blocks) as fp:
-        blocks = [Block(*block) for block in json.load(fp)]
+        blocks = [Block(*block[:3]) for block in json.load(fp)]
 
     ti = time.time()
     logging.info("Generating input set")
@@ -73,15 +73,15 @@ def main():
     
     name_msa = Path(path_msa).stem
 
-    for b in opt_coverage:
-        logging.info(f"Optimal Coverage block {b.str()}")
+    # for b in opt_coverage:
+    #     logging.info(f"Optimal Coverage block {b.str()}")
 
     # save optimal coverage
     if path_oc: 
         Path(path_oc).parent.mkdir(parents=True, exist_ok=True)
         blocks = [astuple(block) for block in opt_coverage]
         # int64 are not json serializable
-        blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks] 
+        blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2])] for b in blocks] 
         with open(path_oc, "w") as fp:
             json.dump(blocks, fp)
 

@@ -1,23 +1,11 @@
 import numpy as np
 from collections import defaultdict
-from blocks import Block
+from blocks import LightBlock as Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
 from itertools import cycle
 from PIL import Image
-
-COLORS = [
-    (255,0,0), # red
-    (0,255,0), # green 
-    (0,0,255), # blue
-    (255,255,0), # yellow
-    (0,255,255), # cyan
-    (255,0,255), # magenta
-    (255,125,0), # orange
-    (125,0,255), # blue-magenta
-    (255,0,125), # red-magenta
-]
 
 class InputBlockSet:
 
@@ -41,14 +29,13 @@ class InputBlockSet:
         new_blocks = []
         blocks_by_start = defaultdict(list)
         for block in list_blocks:
-            if len(block.label) == 1: # only one character blocks
-                blocks_by_start[(block.start,block.label)].extend(list(block.K))
+            if block.len() == 1: # only one character blocks
+                blocks_by_start[block.start].extend(list(block.K))
             else: 
                 new_blocks.append(block)
         
-        for i_label,K in blocks_by_start.items():
-            i, label = i_label
-            new_blocks.append(Block(K,i,i,label))
+        for start, K in blocks_by_start.items():
+            new_blocks.append(Block(K,start,start))
 
         return new_blocks
 
@@ -85,7 +72,7 @@ class InputBlockSet:
             for pos in consecutive_pos: 
                 label = str(msa[int(seq)].seq[pos[0]:pos[-1]+1])
                 missing_blocks.append(
-                    Block(K=(seq,), start=pos[0],end=pos[-1], label=label)
+                    Block(K=(seq,), start=pos[0],end=pos[-1])
                 )
 
         return missing_blocks
@@ -123,7 +110,7 @@ class InputBlockSet:
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            Block(K=K, start=col, end=col, label=c)
+                            Block(K=K, start=col, end=col)
                     )
 
         return blocks_one_char

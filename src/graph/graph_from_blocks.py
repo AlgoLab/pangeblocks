@@ -4,7 +4,7 @@ create edges and nodes for DAG"""
 from collections import namedtuple
 # from ...blocks import Block
 
-Node = namedtuple("Node",["K","i","j","label"]) # is a block
+Node = namedtuple("Node",["K","start","end"]) # is a block
 Edge = namedtuple("Edge",["node1","node2","seqs"])
 
 def nodes_edges_from_blocks(block1, block2):
@@ -19,8 +19,8 @@ def nodes_edges_from_blocks(block1, block2):
 
     if b1.end == b2.start-1 and len(K)>0:
         # print("Condicion- consecutive blocks")
-        node1 = Node(b1.K, b1.start, b1.end, b1.label)
-        node2 = Node(b2.K, b2.start, b2.end, b2.label)
+        node1 = Node(b1.K, b1.start, b1.end)
+        node2 = Node(b2.K, b2.start, b2.end)
         nodes.extend([node1, node2])
         edges.append(Edge(node1, node2, K))
     # else: 

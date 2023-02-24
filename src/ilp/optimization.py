@@ -7,7 +7,7 @@ from itertools import chain
 from sys import getsizeof, stderr
 import time
 from collections import defaultdict
-from blocks import Block
+from blocks import LightBlock as Block
 from pathlib import Path
 from Bio import AlignIO
 from gurobipy import GRB, LinExpr
@@ -170,7 +170,7 @@ class Optimization:
                                 # end of the zone
                                 end = block.end
                             label = str(self.msa[block.K[0], begin:end+1].seq)
-                            new_block = Block(block.K, begin, end, label)
+                            new_block = Block(block.K, begin, end)#, label)
                             logging.debug("considering adding: %s %s %s" %
                                           (new_block.start, new_block.end, new_block.K))
                             private_blocks[(new_block.start, new_block.end,

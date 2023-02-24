@@ -47,18 +47,20 @@ class Block:
         "sort values in K"
         return tuple(sorted(v))
 
-@dataclass
+@pydataclass(eq=True, frozen=True)
 class LightBlock:
     "class for keeping track a block without the label"
     K: tuple
     start: int
     end: int
 
-    def to_positional_string(self,) -> PositionalString:
-        return PositionalString(self.label, self.start, self.end)
-
     def str(self):
-        return "%s,%s,%s,%s" % (self.K,self.start,self.end,self.label)
+        return "%s,%s,%s" % (self.K,self.start,self.end)
 
     def len(self):
         return self.end-self.start+1
+
+    @validator("K")
+    def sort_K(cls, v):
+        "sort values in K"
+        return tuple(sorted(v))
