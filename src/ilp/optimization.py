@@ -50,7 +50,7 @@ class Optimization:
         n_blocks = len(self.input_blocks)
         logging.info("number of blocks %s", n_blocks)
         for idx, block in enumerate(self.input_blocks):
-            logging.info("input block %s: %s" % (idx,block.str()))
+            logging.info("input block %s: %s" % (idx, block.str()))
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
@@ -80,6 +80,8 @@ class Optimization:
             if not block["end"] in vertical_blocks or begin < vertical_blocks[block["end"]]["begin"]:
                 vertical_blocks[block["end"]] = {
                     "idx": block["idx"], "begin": begin}
+        logging.info("vertical blocks: %s", vertical_blocks)
+
         #
         # We keep a set of all columns that are covered by a vertical block:
         # those columns will not be involved in the U[r,c] variables and in the
@@ -95,6 +97,14 @@ class Optimization:
             "Covered by vertical blocks: %s", covered_by_vertical_block)
         logging.info(
             "No. covered by vertical blocks: %s out of %s" % (len(covered_by_vertical_block), self.n_cols))
+
+        # msa_positions is a list of all positions (r,c) that are required to be
+        # covered. We exclude the positions covered by vertical blocks, since
+        # they will be guaranteed to be covered, as an effect of the fact that
+        # the corresponding C variables will be set to 1
+        logging.debug("generating msa positions")
+        msa_positions = [(r, c) for r in range(self.n_seqs)
+                         for c in set(range(self.n_cols)) - covered_by_vertical_block]
 
         # We compute a dictionary called zones with key the column and value the
         # zone_id, that is a progressive id of the region, where each region is
@@ -124,15 +134,18 @@ class Optimization:
         logging.debug("zones\n%s", zone)
         logging.debug("boundaries:\n%s", zone_boundaries)
         # We start with all vertical blocks, since they will be encoded with a C variable
-        private_blocks = {self.input_blocks[block['idx']]  for (end, block) in  vertical_blocks}
-        logging.info("private blocks: %s", private_blocks)
+        private_blocks = {
+            (self.input_blocks[vertical_blocks[k]['idx']].start,
+             self.input_blocks[vertical_blocks[k]['idx']].end,
+             frozenset(self.input_blocks[vertical_blocks[k]['idx']].K)): self.input_blocks[vertical_blocks[k]['idx']] for k in vertical_blocks}
+        logging.debug("private vertical blocks: %s", private_blocks)
 
         for idx, block in enumerate(self.input_blocks):
             logging.info("Analyzing %s out of %s. Size=%sx%s. Block=%s %s %s",
                          idx+1, n_blocks, len(block.K), block.end - block.start + 1, block.start, block.end, block.K)
             # Compute the zone of the boundaries of the block
             (zone_start, zone_end) = (zone[block.start], zone[block.end])
-            logging.info("Zones: %s-%s" % (zone_start, zone_end))
+            logging.debug("Zones: %s-%s" % (zone_start, zone_end))
             # current_columns is the set of columns covered by the current block
             if (zone_start == zone_end):
                 # Since the current block is contained in a single zone, it is
@@ -152,41 +165,40 @@ class Optimization:
                 # logging.debug("disjoint vertical block: %s", block.str())
             else:
                 # The current block overlaps the vertical blocks.
-                # We need to check if the block intersects with at least two
-                # vertical blocks: in that case we need to manually decompose
-                # it.
-                if zone_end - zone_start >= 3 or (zone_end - zone_start >= 2) and (zone_start in covered_by_vertical_block or zone_end in covered_by_vertical_block):
-                    logging.info("splitting block: %s %s %s" %
-                                 (block.start, block.end, block.K))
+                # We need to decompose it into parts that are disjoint from the
+                # vertical blocks.
+                logging.info("splitting block: %s %s %s" %
+                             (block.start, block.end, block.K))
 
-                    # logging.debug("block %s is not disjoint", block.str())
-                    # logging.debug("zone_start: %s, zone_end: %s",
-                    #               zone_start, zone_end)
-                    # logging.debug("covered_by_vertical_block: %s",
-                    #               covered_by_vertical_block)
+                # logging.debug("block %s is not disjoint", block.str())
+                # logging.debug("zone_start: %s, zone_end: %s",
+                #               zone_start, zone_end)
+                # logging.debug("covered_by_vertical_block: %s",
+                #               covered_by_vertical_block)
 
-                    # logging.debug(
-                    #     "block %s intersects with at least two vertical blocks", block.str())
-                    for zone_id in range(zone_start, zone_end + 1):
-                        begin, end = zone_boundaries[zone_id]['start'], zone_boundaries[zone_id]['end']
-                        if begin not in covered_by_vertical_block:
-                            # the current zone is not covered by a vertical block
-                            if block.end < end:
-                                # this is the last zone of the block, so the
-                                # last position is the end of the block, not the
-                                # end of the zone
-                                end = block.end
-                            label = str(self.msa[block.K[0], begin:end+1].seq)
-                            new_block = Block(block.K, begin, end, label)
-                            logging.debug("considering adding: %s %s %s" %
-                                          (new_block.start, new_block.end, new_block.K))
-                            private_blocks[(new_block.start, new_block.end,
-                                            frozenset(new_block.K))] = new_block
-                            logging.info("Added %s -> %s", (new_block.start, new_block.end,
-                                                            frozenset(new_block.K)),  (new_block.start, new_block.end, new_block.K))
+                # logging.debug(
+                #     "block %s intersects with at least two vertical blocks", block.str())
+                for zone_id in range(zone_start, zone_end + 1):
+                    begin, end = zone_boundaries[zone_id]['start'], zone_boundaries[zone_id]['end']
+                    if begin not in covered_by_vertical_block:
+                        # the current zone is not covered by a vertical block
+                        if block.end < end:
+                            # this is the last zone of the block, so the
+                            # last position is the end of the block, not the
+                            # end of the zone
+                            end = block.end
+                        label = str(self.msa[block.K[0], begin:end+1].seq)
+                        new_block = Block(block.K, begin, end, label)
+                        logging.debug("considering adding: %s %s %s" %
+                                      (new_block.start, new_block.end, new_block.K))
+                        private_blocks[(new_block.start, new_block.end,
+                                        frozenset(new_block.K))] = new_block
+                        logging.info("Added %s -> %s", (new_block.start, new_block.end,
+                                                        frozenset(new_block.K)),  (new_block.start, new_block.end, new_block.K))
 
                         # logging.debug("Adding private block: %s to %s" % (new_block.str(), private_blocks))
-        logging.info("Private blocks: %s", private_blocks)
+        logging.debug("Private blocks: %s", private_blocks)
+
         # Remove duplicates
         good_blocks = list(private_blocks.values())
         vertical_blocks = [idx for idx, block in enumerate(good_blocks) if (
@@ -198,13 +210,6 @@ class Optimization:
 
         logging.info("collecting c_variables")
         c_variables = list(range(len(good_blocks)))
-        # msa_positions is a list of all positions (r,c) that are required to be
-        # covered. We exclude the positions covered by vertical blocks, since
-        # they will be guaranteed to be covered, as an effect of the fact that
-        # the corresponding C variables will be set to 1
-        logging.info("generating msa positions")
-        msa_positions = [(r, c) for r in range(self.n_seqs)
-                         for c in set(range(self.n_cols)) - covered_by_vertical_block]
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
@@ -213,8 +218,9 @@ class Optimization:
         logging.info(f"MSA: {self.n_seqs} x {self.n_cols}")
         for idx in c_variables:
             block = good_blocks[idx]
-            logging.info("block: %s / %s" % (idx, n_cvars))
-            logging.debug("Adding %s %s %s" % (block.start, block.end, block.K))
+            logging.debug("block: %s / %s" % (idx, n_cvars))
+            logging.debug("Adding %s %s %s" %
+                          (block.start, block.end, block.K))
             for r in block.K:
                 for c in range(block.start, block.end + 1):
                     covering_by_position[(r, c)].append(idx)
@@ -222,19 +228,20 @@ class Optimization:
         logging.info("Covering not vertical")
         for r in range(self.n_seqs):
             for c in set(range(self.n_cols)) - covered_by_vertical_block:
-                logging.info("Covering position: %s %s %s %s" %
-                             (r, c, idx, [good_blocks[idx].str() for idx in covering_by_position[(r, c)]]))
+                logging.debug("Covering position: %s %s %s" %
+                              (r, c, [(idx, good_blocks[idx].str()) for idx in covering_by_position[(r, c)]]))
                 if len(covering_by_position[(r, c)]) == 0:
                     logging.info("Uncovered position! %s %s" % (r, c))
 
         vertical_covered = set()
         for idx in vertical_blocks:
-            logging.info("Vertical block fixed: %s" % good_blocks[idx].str())
+            logging.debug("Vertical block fixed: idx:%s %s" %
+                          (idx, good_blocks[idx].str()))
             for col in range(good_blocks[idx].start, good_blocks[idx].end + 1):
                 vertical_covered.add(col)
-        logging.info("Vertical covered: %s" %
+        logging.debug("Vertical covered: %s" %
                      covered_by_vertical_block.difference(vertical_covered))
-        logging.info("Vertical covered: %s" %
+        logging.debug("Vertical covered: %s" %
                      covered_by_vertical_block == vertical_covered)
 
         tf = time.time()
@@ -278,7 +285,7 @@ class Optimization:
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
-            logging.info("MSA position (%s,%s)" % (r,c))
+            logging.info("MSA position (%s,%s)" % (r, c))
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
                 # 1. U[r,c] = 1 implies that at least one block covers the position
