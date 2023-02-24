@@ -49,7 +49,7 @@ class Optimization:
 
         n_blocks = len(self.input_blocks)
         logging.info("number of blocks %s", n_blocks)
-        for idx, block in enumerate(self.input_blocks): 
+        for idx, block in enumerate(self.input_blocks):
             logging.info("input block %s: %s" % (idx,block.str()))
 
         # covering_by_position is a dictionary with key (r,c) and value the list
@@ -123,7 +123,9 @@ class Optimization:
         # are vertical blocks themselves.
         logging.debug("zones\n%s", zone)
         logging.debug("boundaries:\n%s", zone_boundaries)
-        private_blocks = {}
+        # We start with all vertical blocks, since they will be encoded with a C variable
+        private_blocks = {self.input_blocks[block['idx']]  for (end, block) in  vertical_blocks}
+        logging.info("private blocks: %s", private_blocks)
 
         for idx, block in enumerate(self.input_blocks):
             logging.info("Analyzing %s out of %s. Size=%sx%s. Block=%s %s %s",
@@ -138,10 +140,15 @@ class Optimization:
                 # In both cases, we encode it with a C variable
                 logging.info("unsplit block: %s %s %s" %
                              (block.start, block.end, block.K))
-                private_blocks[(block.start, block.end,
-                                frozenset(block.K))] = block
-                logging.info("Added %s -> %s", (block.start, block.end,
-                                                frozenset(block.K)), (block.start, block.end, block.K))
+                # If the block is included in a vertical block, we can
+                # discard it.
+                # Notice that all maximal vertical blocks have been added to
+                # private blocks before this for loop.
+                if block.start not in covered_by_vertical_block:
+                    private_blocks[(block.start, block.end,
+                                    frozenset(block.K))] = block
+                    logging.info("Added %s -> %s", (block.start, block.end,
+                                                    frozenset(block.K)), (block.start, block.end, block.K))
                 # logging.debug("disjoint vertical block: %s", block.str())
             else:
                 # The current block overlaps the vertical blocks.
@@ -215,8 +222,8 @@ class Optimization:
         logging.info("Covering not vertical")
         for r in range(self.n_seqs):
             for c in set(range(self.n_cols)) - covered_by_vertical_block:
-                logging.info("Covering position: %s %s %s" %
-                             (r, c, [good_blocks[idx].str() for idx in covering_by_position[(r, c)]]))
+                logging.info("Covering position: %s %s %s %s" %
+                             (r, c, idx, [good_blocks[idx].str() for idx in covering_by_position[(r, c)]]))
                 if len(covering_by_position[(r, c)]) == 0:
                     logging.info("Uncovered position! %s %s" % (r, c))
 
