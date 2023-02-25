@@ -63,7 +63,7 @@ class BlockAnalyzer:
 
                 # check for not empty intersection
                 common_rows = list(set(block1.K).intersection(set(block2.K))) # intersection set K
-                common_cols = list(set(range(block1.i,block1.j+1)).intersection(set(range(block2.i,block2.j+1)))) # intersection columns [i,j]
+                common_cols = list(set(range(block1.start,block1.end+1)).intersection(set(range(block2.start,block2.end+1)))) # intersection columns [i,j]
 
                 if (common_rows and common_cols):
                     intersections.append((pos1,pos2))

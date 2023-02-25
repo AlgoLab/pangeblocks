@@ -279,7 +279,7 @@ class Optimization:
         logging.info("adding constraint: C=1 for vertical blocks ")
         for idx in vertical_blocks:
             model.addConstr(C[idx] == 1,
-                            name=f"vertical_constraint({good_blocks[idx]})")
+                            name=f"vertical_constraint_good_blocks({idx})")
             logging.info("Vertical block fixed: %s %s" %
                          (idx, good_blocks[idx].str()))
 

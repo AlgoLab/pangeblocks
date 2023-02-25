@@ -1,13 +1,17 @@
-PATH_MSAS: "/data/pangeblocks-experiments/msas"
-PATH_OUTPUT: "/data/pangeblocks-experiments/output-small-msas"
+PATH_MSAS: "/data/msas-pangeblocks/msas-didelot/mafft.op1.53-ep0"
+PATH_OUTPUT: "/data/pangeblocks-experiments/output-didelot-mafft.op1.53-ep0"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
-    # - "nodes"
+    - "nodes"
     - "strings"
-    # - "weighted"
+    - "weighted"
   PENALIZATION: # used only with "weighted"
-    - 3 
+    - 3
+    - 5
+    - 7 
   MIN_LEN: # used only with "weighted"
-    - 3  
+    - 3
+    - 5
+    - 10   
   TIME_LIMIT: 30 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

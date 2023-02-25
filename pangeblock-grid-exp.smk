@@ -55,11 +55,11 @@ rule decompose_blocks:
     output:
         path_blocks=pjoin(PATH_OUTPUT, "block_decomposition", "{name_msa}.json"),
         path_blocks_stats=pjoin(PATH_OUTPUT, "block_decomposition", "stats", "{name_msa}.tsv")
-    # log:
-    #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.err.log"),
-    #     stdout=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-decompose_blocks.out.log")
+    log:
+        stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-rule-decompose_blocks.err.log"),
+        stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-rule-decompose_blocks.out.log")
     shell:
-        "/usr/bin/time --verbose python src/decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats}" # 2> {log.stderr} > {log.stdout}"
+        "/usr/bin/time --verbose python src/decompose_blocks.py {input.path_max_blocks} --output {output.path_blocks} --output-stats {output.path_blocks_stats}  2> {log.stderr} > {log.stdout}"
 
 rule pangeblock:
     input:
