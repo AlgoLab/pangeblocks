@@ -19,7 +19,7 @@ class Block:
         return "%s,%s,%s,%s" % (self.K,self.start,self.end,self.label)
 
     def len(self):
-        return self.start-self.end+1
+        return self.end-self.start+1
     
     @root_validator
     def check_len_label(cls, values):
