@@ -102,8 +102,10 @@ rule unchop_gfa:
     output:
         path_unchop_gfa=pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization{penalization}-min_len{min_len}" ,"{name_msa}.gfa"),
         path_labels=pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization{penalization}-min_len{min_len}" ,"{name_msa}.csv")
+    conda:
+        "envs/vg.yaml"
     shell:
         """
-        ../vg mod -u {input} > {output.path_unchop_gfa}
+        vg mod -u {input} > {output.path_unchop_gfa}
         python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
         """
