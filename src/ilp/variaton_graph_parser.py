@@ -18,8 +18,6 @@ class asGFA:
         list_edges = []
 
         _, n_seqs, n_cols= self.load_msa(path_msa)
-        optimal_coverage.append(Block((r for r in range(n_seqs)), -1,-1,"s")) # source node
-        optimal_coverage.append(Block((r for r in range(n_seqs)), n_cols,n_cols,"S")) # sink node
         
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.start )
         for pos1, block1 in enumerate(sorted_solution[:-1]):
