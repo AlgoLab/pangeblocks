@@ -4,6 +4,11 @@ create edges and nodes for DAG"""
 from collections import namedtuple
 # from ...blocks import Block
 
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+
 Node = namedtuple("Node",["K","i","j","label"]) # is a block
 Edge = namedtuple("Edge",["node1","node2","seqs"])
 
@@ -23,6 +28,9 @@ def nodes_edges_from_blocks(block1, block2):
         node2 = Node(b2.K, b2.start, b2.end, b2.label)
         nodes.extend([node1, node2])
         edges.append(Edge(node1, node2, K))
+    
+    if b2.end == b1.start-1 and len(K)>0:
+        logging.debug("block %s and block %s not connected" % (b1.str(), b2.str()))
     # else: 
     #     # print("Not consecutive blocks")
     return nodes, edges

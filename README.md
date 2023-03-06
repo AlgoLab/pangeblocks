@@ -1,12 +1,15 @@
 # Pangeblocks (work in progress)
-Pangenome graph construction from maximal blocks in an MSAs 
+Pangenome graph construction from maximal blocks in an MSA 
 
 Set the parameters in `params-grid-exp.yaml`:
 ```yaml
 PATH_MSAS: "msas" # folder containing MSAs in .fasta/.fa format
-PATH_OUTPUT: "output-pangeblocks" # folder where to save the results
+PATH_OUTPUT: "output" # folder where to save the results
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION: "strings" # one of: nodes, strings, weighted
+  OBJECTIVE_FUNCTION: 
+    - "nodes"
+    - "strings"
+    - "weighted"
   # used only with "weighted"
   PENALIZATION: # for blocks shorter than MIN_LEN: cost=PENALIZATION in the objective function, otherwise cost=1 
     - 3 
@@ -34,5 +37,5 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 
 After the previous pipeline has run, the computation of pangeblock graphs will be done only in the MSAs in `stats_msas.tsv` with at least 2 sequences
 ```bash
-snakemake -s pangeblock-grid-exp.smk -c16 # variation graph as GFA
+snakemake -s pangeblock-grid-exp.smk -c16 --use-conda # variation graph as GFA
 ```

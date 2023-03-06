@@ -6,6 +6,7 @@ panels*/
 experiment*/
 *experiment/
 test-*/
+*ipynb
 
 # pandora / make_prg
 make_prg_0.4.0

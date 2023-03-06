@@ -50,7 +50,7 @@ class Optimization:
         n_blocks = len(self.input_blocks)
         logging.info("number of blocks %s", n_blocks)
         for idx, block in enumerate(self.input_blocks):
-            logging.info("input block %s: %s" % (idx, block.str()))
+            logging.debug("input block %s: %s" % (idx, block.str()))
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
@@ -141,7 +141,7 @@ class Optimization:
         logging.debug("private vertical blocks: %s", private_blocks)
 
         for idx, block in enumerate(self.input_blocks):
-            logging.info("Analyzing %s out of %s. Size=%sx%s. Block=%s %s %s",
+            logging.debug("Analyzing %s out of %s. Size=%sx%s. Block=%s %s %s",
                          idx+1, n_blocks, len(block.K), block.end - block.start + 1, block.start, block.end, block.K)
             # Compute the zone of the boundaries of the block
             (zone_start, zone_end) = (zone[block.start], zone[block.end])
@@ -151,7 +151,7 @@ class Optimization:
                 # Since the current block is contained in a single zone, it is
                 # included in a vertical block or disjoint from vertical blocks.
                 # In both cases, we encode it with a C variable
-                logging.info("unsplit block: %s %s %s" %
+                logging.debug("unsplit block: %s %s %s" %
                              (block.start, block.end, block.K))
                 # If the block is included in a vertical block, we can
                 # discard it.
@@ -160,7 +160,7 @@ class Optimization:
                 if block.start not in covered_by_vertical_block:
                     private_blocks[(block.start, block.end,
                                     frozenset(block.K))] = block
-                    logging.info("Added %s -> %s", (block.start, block.end,
+                    logging.debug("Added %s -> %s", (block.start, block.end,
                                                     frozenset(block.K)), (block.start, block.end, block.K))
                 # logging.debug("disjoint vertical block: %s", block.str())
             else:
@@ -178,8 +178,9 @@ class Optimization:
 
                 # logging.debug(
                 #     "block %s intersects with at least two vertical blocks", block.str())
+
                 for zone_id in range(zone_start, zone_end + 1):
-                    begin, end = zone_boundaries[zone_id]['start'], zone_boundaries[zone_id]['end']
+                    begin, end = max(zone_boundaries[zone_id]['start'],block.start), min(zone_boundaries[zone_id]['end'], block.end)
                     if begin not in covered_by_vertical_block:
                         # the current zone is not covered by a vertical block
                         if block.end < end:
@@ -189,11 +190,24 @@ class Optimization:
                             end = block.end
                         label = str(self.msa[block.K[0], begin:end+1].seq)
                         new_block = Block(block.K, begin, end, label)
+                        # check correct label of the block for all rows
+                        for r in new_block.K:
+                            for pos_block, c in enumerate(range(new_block.start, new_block.end + 1)):
+
+                                # sanity check of labels
+                                r = int(r)
+                                char_msa = self.msa[r,c].upper()
+                                char_block = new_block.label[pos_block].upper() 
+                                if char_msa != char_block:
+                                    logging.info("incorrect new_block covering position (%s,%s): %s" % (r,c,new_block.str()))
+                                    logging.info("label of new_block should be %s", str(self.msa[r, new_block.start:new_block.end + 1].seq))
+
+
                         logging.debug("considering adding: %s %s %s" %
                                       (new_block.start, new_block.end, new_block.K))
                         private_blocks[(new_block.start, new_block.end,
                                         frozenset(new_block.K))] = new_block
-                        logging.info("Added %s -> %s", (new_block.start, new_block.end,
+                        logging.debug("Added %s -> %s", (new_block.start, new_block.end,
                                                         frozenset(new_block.K)),  (new_block.start, new_block.end, new_block.K))
 
                         # logging.debug("Adding private block: %s to %s" % (new_block.str(), private_blocks))
@@ -222,8 +236,17 @@ class Optimization:
             logging.debug("Adding %s %s %s" %
                           (block.start, block.end, block.K))
             for r in block.K:
-                for c in range(block.start, block.end + 1):
+                for pos_block, c in enumerate(range(block.start, block.end + 1)):
                     covering_by_position[(r, c)].append(idx)
+
+                    # sanity check of labels
+                    r = int(r)
+                    start = int(block.start)
+                    end = int(block.end)
+                    char_msa = self.msa[r,c].upper()
+                    char_block = block.label[pos_block].upper() 
+                    if char_msa != char_block:
+                        logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c,block.str()))
 
         logging.info("Covering not vertical")
         for r in range(self.n_seqs):
@@ -231,7 +254,7 @@ class Optimization:
                 logging.debug("Covering position: %s %s %s" %
                               (r, c, [(idx, good_blocks[idx].str()) for idx in covering_by_position[(r, c)]]))
                 if len(covering_by_position[(r, c)]) == 0:
-                    logging.info("Uncovered position! %s %s" % (r, c))
+                    logging.debug("Uncovered position! %s %s" % (r, c))
 
         vertical_covered = set()
         for idx in vertical_blocks:
@@ -266,13 +289,13 @@ class Optimization:
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
         for block in c_variables:
-            logging.info(
+            logging.debug(
                 "variable:C(%s) = %s" % (block, good_blocks[block].str()))
 
         logging.info("adding U variables to the model")
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
-            logging.info("variable:U(%s)", pos)
+            logging.debug("variable:U(%s)", pos)
 
         # Constraints
         # All C(b) variables corresponding to vertical blocks are set to 1
@@ -280,30 +303,30 @@ class Optimization:
         for idx in vertical_blocks:
             model.addConstr(C[idx] == 1,
                             name=f"vertical_constraint_good_blocks({idx})")
-            logging.info("Vertical block fixed: %s %s" %
+            logging.debug("Vertical block fixed: %s %s" %
                          (idx, good_blocks[idx].str()))
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
-            logging.info("MSA position (%s,%s)" % (r, c))
+            logging.debug("MSA position (%s,%s)" % (r, c))
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
                 # 1. U[r,c] = 1 implies that at least one block covers the position
-                logging.info("constraint 1")
-                logging.info("blocks_rc: %s" % blocks_rc)
-                logging.info("C variables: %s" % [C[i] for i in blocks_rc])
+                logging.debug("constraint 1")
+                logging.debug("blocks_rc: %s" % blocks_rc)
+                logging.debug("C variables: %s" % [C[i] for i in blocks_rc])
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
                 # 2. each position in the MSA is covered at most by one block
-                logging.info("constraint 2")
+                logging.debug("constraint 2")
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
                 # logging.debug("constraint2(%s,%s) covered by %s" %
                 #               (r, c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
-                logging.info("constraint 3")
+                logging.debug("constraint 3")
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
                 # logging.debug("constraint3(%s,%s" % (r, c))
         tf = time.time()
@@ -376,7 +399,7 @@ class Optimization:
         for k, v in solution_C.items():
 
             if v > 0:
-                logging.info(
+                logging.debug(
                     f"Optimal Solution: {k}, {good_blocks[k].str()}")
                 optimal_coverage.append(good_blocks[k])
         tf = time.time()

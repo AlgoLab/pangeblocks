@@ -4,35 +4,72 @@ from blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
-from itertools import cycle
-from PIL import Image
 
-COLORS = [
-    (255,0,0), # red
-    (0,255,0), # green 
-    (0,0,255), # blue
-    (255,255,0), # yellow
-    (0,255,255), # cyan
-    (255,0,255), # magenta
-    (255,125,0), # orange
-    (125,0,255), # blue-magenta
-    (255,0,125), # red-magenta
-]
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
 
 class InputBlockSet:
 
     def __call__(self, path_msa: Union[str,Path], blocks: list[Block]) -> list[Block]:
         
         msa, n_seqs, n_cols = self.load_msa(path_msa)
+        logging.info("MSA loaded, nrows:(%s), ncols:(%s)" % (n_seqs, n_cols))
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, blocks)
         missing_blocks = self.get_missing_blocks(coverage_panel, msa)
 
         # glue missing blocks of one character in the same column
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
+        # check missing blocks are correctly labeled
+        for block in missing_blocks: 
+            # logging.debug("missing block %s", block)
+            for r in block.K:
+                r=int(r)
+                start=int(block.start)
+                end=int(block.end)
+                label_msa = msa[r].seq[start:end+1].upper()
+                # if label_msa != block.label.upper():
+                #     logging.debug("incorrect missing block covering position (%s,%s): %s" % (r,c,block.str()))
+
+                for pos_block, c in enumerate(range(start, end+1)):
+                    char_msa = str(msa[r,start:end+1].seq)[pos_block].upper()
+                    char_block = block.label[pos_block].upper() 
+                    if char_msa != char_block:
+                        logging.debug("incorrect missing block covering position (%s,%s): %s" % (r,c,block.str()))
+
 
         blocks_one_char = self.get_blocks_one_char(msa, n_seqs, n_cols)
+        # check blocks one char are correctly labeled
+        for block in blocks_one_char: 
+            # logging.debug("block one char %s", block)
+            for r in block.K:
+                r=int(r)
+                start=int(block.start)
+                end=int(block.end)
+                for pos_block, c in enumerate(range(start, end+1)):
+                    char_msa = msa[r].seq[c].upper()
+                    char_block = block.label[pos_block].upper() 
+                    if char_msa != char_block:
+                        logging.debug("incorrect block one char covering position (%s,%s): %s" % (r,c,block.str()))
+
+
+        # check input set of blocks 
+        for block in blocks: 
+            # logging.debug("input block %s", block)
+            for r in block.K:
+                r=int(r)
+                start=int(block.start)
+                end=int(block.end)
+                for pos_block, c in enumerate(range(start, end+1)):
+                    char_msa = msa[r].seq[c].upper()
+                    char_block = block.label[pos_block].upper() 
+                    if char_msa != char_block:
+                        logging.debug("incorrect input block covering position (%s,%s): %s" % (r,c,block.str()))
+
+
         # set B: input blocks (maximal blocks, the decompositions under intersection by pairs and blocks of one position in the MSA)
-        set_B = blocks + missing_blocks + blocks_one_char  #[block for block in missing_blocks if block.end-block.start+1 > 1]
+        set_B = blocks + missing_blocks + blocks_one_char
 
         return set_B
     
