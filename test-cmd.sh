@@ -12,7 +12,8 @@
 # path_msas="/data/msas-pangeblocks/msas-tests"
 # path_output="output"
 # echo $path_msas
-# sleep 18200
+echo "waiting 7200 secs"
+sleep 7200
 snakemake -s eda.smk -c8 
 snakemake -s pangeblock-grid-exp.smk -c16 --use-conda
 # --config PATH_MSAS=$path_msas --config PATH_OUTPUT=$path_output

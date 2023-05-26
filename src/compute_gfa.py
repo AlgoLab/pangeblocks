@@ -21,8 +21,9 @@ parser.add_argument("--path_msa", help="path to MSA in .fa format")
 parser.add_argument("--path_gfa", help="path to save the output in GFA format")
 parser.add_argument("--path_oc", help="path to save the optimal coverage in json format")
 parser.add_argument("--obj_function", help="objective function (nodes/strings/weighted)", dest="obj_function")
-parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted' as obj_function", dest="penalization", type=int)
+parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted', and under-covered blocks when using 'depth' as obj_function", dest="penalization", type=int)
 parser.add_argument("--min_len", help="minimum length of shorter blocks when using 'weighted' as obj_function to be penalized", dest="min_len", type=int)
+parser.add_argument("--min_coverage", help="minimum percentage of sequence when using 'depth' as obj_function to be penalized", dest="min_coverage", type=float)
 parser.add_argument("--time_limit", help="time limit in minutes to run the ILP, after this the best solution so far will be returned", dest="time_limit", type=int)
 
 parser.add_argument(

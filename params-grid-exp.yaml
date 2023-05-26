@@ -1,17 +1,22 @@
-PATH_MSAS: "/data/msas-pangeblocks/msas-test" 
-PATH_OUTPUT: "/data/pangeblocks-experiments/test-pangeblocks/output-test-infomsa"
+PATH_MSAS: "/data/alessia/covid/msa" # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op1.53-ep0" 
+PATH_OUTPUT: "/data/alessia/covid/pangeblocks" #  "HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op1.53-ep0"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
     - "strings"
     - "weighted"
-  PENALIZATION: # used only with "weighted"
+    - "depth"
+  PENALIZATION: # used only with "weighted" and "depth"
     - 3
-    # - 5
+    - 5
     - 7 
   MIN_LEN: # used only with "weighted"
     - 3
-    # - 5
-    # - 10   
+    - 5
+    - 10   
+  MIN_COVERAGE: # used only with "depth"
+    - 0.1
+    - 0.2
+    - 0.3
   TIME_LIMIT: 30 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

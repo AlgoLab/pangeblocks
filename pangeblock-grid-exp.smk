@@ -7,9 +7,10 @@ PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
 LOG_LEVEL = config["LOG_LEVEL"]
 
-# weighted
-PENALIZATION=config["OPTIMIZATION"]["PENALIZATION"]
+# 'weighted' and 'depth' loss functions
+PENALIZATION=config["OPTIMIZATION"]["PENALIZATION"] 
 MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
+MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
 
 # load names of MSAs
@@ -18,14 +19,15 @@ STATS_MSAS = pd.read_csv(
                 index_col=False, sep="\t"
                 )
 
-NAMES = STATS_MSAS[["path_msa","n_seqs"]].query("n_seqs>1")["path_msa"].apply(lambda path: Path(path).stem)
+NAMES = STATS_MSAS[["path_msa","n_seqs","n_unique_seqs"]].query("n_unique_seqs>1")["path_msa"].apply(lambda path: Path(path).stem)
 EXT_MSA = Path(STATS_MSAS["path_msa"][0]).suffix 
 # --- 
 
 rule all:
     input:
         expand(pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization0-min_len0", "{name_msa}.gfa"), obj_func=["strings","nodes"], name_msa=NAMES),
-        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", "penalization{penalization}-min_len{min_len}" ,"{name_msa}.gfa"), penalization=PENALIZATION, min_len=MIN_LEN, name_msa=NAMES)
+        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", "penalization{penalization}-min_len{min_len}" ,"{name_msa}.gfa"), penalization=PENALIZATION, min_len=MIN_LEN, name_msa=NAMES),
+        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa"), penalization=PENALIZATION, min_coverage=MIN_COVERAGE, name_msa=NAMES)
 
 rule compute_blocks:
     input:
@@ -98,6 +100,62 @@ rule unchop_gfa:
         "envs/vg.yaml"
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-unchop_gfa.err.log"),
+    shell:
+        """
+        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log.stderr}
+        python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
+        """
+
+
+# new loss function: 'depth'
+rule pangeblock_depth:
+    input:
+        path_blocks=pjoin(PATH_OUTPUT, "block_decomposition", "{name_msa}.json"),
+        path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA)
+    output: 
+        path_gfa=pjoin(PATH_OUTPUT, "gfa", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa"),
+        path_oc=pjoin(PATH_OUTPUT, "opt-coverage","depth","penalization{penalization}-min_coverage{min_coverage}","{name_msa}.json"),
+        path_labels=pjoin(PATH_OUTPUT, "gfa", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.csv")
+    log: 
+        stderr=pjoin(PATH_OUTPUT, "logs", "depth","penalization{penalization}-min_coverage{min_coverage}","{name_msa}-rule-pangeblock.err.log"),
+        stdout=pjoin(PATH_OUTPUT, "logs", "depth","penalization{penalization}-min_coverage{min_coverage}","{name_msa}-rule-pangeblock.out.log")
+    params: 
+        penalization= "{penalization}",
+        min_coverage="{min_coverage}",
+        log_level=config["LOG_LEVEL"],
+        time_limit=config["OPTIMIZATION"]["TIME_LIMIT"]
+    shell: 
+        """
+        /usr/bin/time --verbose python src/compute_gfa.py --path_blocks {input.path_blocks} \
+        --path_msa {input.path_msa} --path_gfa {output.path_gfa} --path_oc {output.path_oc} \
+        --obj_function depth --penalization {params.penalization} --min_coverage {params.min_coverage} \
+        --time_limit {params.time_limit} \
+        --log_level {params.log_level}  > {log.stdout} 2> {log.stderr}
+        python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_gfa} --path_save {output.path_labels}
+        """
+
+
+rule postprocessing_gfa_depth:
+    input:
+        path_gfa=pjoin(PATH_OUTPUT, "gfa", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa")
+    output:
+        path_post_gfa=pjoin(PATH_OUTPUT, "gfa-post", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa") 
+    log:
+        stderr=pjoin(PATH_OUTPUT, "logs", "depth","penalization{penalization}-min_coverage{min_coverage}","{name_msa}-rule-postprocessing_gfa.err.log"),
+        # stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-rule-postprocessing_gfa.out.log")
+    shell:
+        "/usr/bin/time --verbose python src/postprocess_gfa.py --path_gfa {input.path_gfa} > {output.path_post_gfa} 2> {log.stderr}" 
+
+rule unchop_gfa_depth:
+    input:
+        path_post_gfa=pjoin(PATH_OUTPUT, "gfa-post", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa")
+    output:
+        path_unchop_gfa=pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.gfa"),
+        path_labels=pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_coverage{min_coverage}" ,"{name_msa}.csv")
+    conda:
+        "envs/vg.yaml"
+    log:
+        stderr=pjoin(PATH_OUTPUT, "logs", "depth","penalization{penalization}-min_coverage{min_coverage}","{name_msa}-rule-unchop_gfa.err.log"),
     shell:
         """
         /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log.stderr}

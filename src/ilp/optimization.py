@@ -39,6 +39,7 @@ class Optimization:
         self.obj_function = kwargs.get("obj_function", "nodes")
         self.penalization = kwargs.get("penalization", 1)
         self.min_len = kwargs.get("min_len", 1)
+        self.min_coverage = kwargs.get("min_coverage", 1)
         self.time_limit = kwargs.get("time_limit", 180)
         logging.getLogger().setLevel(log_level)
 
@@ -369,7 +370,16 @@ class Optimization:
                 ),
                 GRB.MINIMIZE
             )
-
+        elif self.obj_function == "depth":
+            # minimize the number blocks covering less than k sequences
+            MIN_COVERAGE= self.min_coverage # penalize blocks covering less than MIN_COVERAGE % of the sequences
+            PENALIZATION = self.penalization # costly than others
+            model.setObjective(
+                gp.quicksum(
+                    (1 if len(good_blocks[idx].K)/self.n_seqs > MIN_COVERAGE  else PENALIZATION)*C[idx] 
+                    for idx in c_variables
+                )
+            )
         tf = time.time()
         times["objective function"] = round(tf - ti, 3)
 
