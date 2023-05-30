@@ -19,6 +19,7 @@ class Block:
         return "%s,%s,%s,%s" % (self.K,self.start,self.end,self.label)
 
     def len(self):
+        "Length of the blocks, number of columns it spans"
         return self.end-self.start+1
     
     @root_validator

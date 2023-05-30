@@ -1,5 +1,5 @@
-PATH_MSAS: "/data/alessia/covid/msa" # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op1.53-ep0" 
-PATH_OUTPUT: "/data/alessia/covid/pangeblocks" #  "HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op1.53-ep0"
+PATH_MSAS: "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op1.53-ep0" # "/data/alessia/covid/msa" 
+PATH_OUTPUT: "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op1.53-ep0" # "/data/alessia/covid/pangeblocks"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"

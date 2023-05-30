@@ -353,7 +353,8 @@ class Optimization:
             # minimize the total length of the graph (number of characters)
             model.setObjective(
                 gp.quicksum(
-                    good_blocks[idx].len()*C[idx]
+                    # good_blocks[idx].len()*C[idx]
+                    len(good_blocks[idx].label.replace("-","")) * C[idx]
                     for idx in c_variables
                 ),
                 GRB.MINIMIZE
@@ -364,8 +365,8 @@ class Optimization:
             PENALIZATION = self.penalization  # costly than the other ones
             model.setObjective(
                 gp.quicksum(
-                    (PENALIZATION if good_blocks[idx].len(
-                    ) < MIN_LEN else 1)*C[idx]
+                    # (PENALIZATION if good_blocks[idx].len() < MIN_LEN else 1)*C[idx]
+                    (PENALIZATION if len(good_blocks[idx].label.replace("-","")) < MIN_LEN else 1)*C[idx]
                     for idx in c_variables
                 ),
                 GRB.MINIMIZE
@@ -387,6 +388,10 @@ class Optimization:
         if self.obj_function == "weighted":
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum length: {self.min_len}")
+        
+        if self.obj_function == "depth":
+            logging.info(f"penalization: {self.penalization}")
+            logging.info(f"minimum coverage: {self.min_coverage}")
 
         model.optimize()
         logging.info("End ILP")
