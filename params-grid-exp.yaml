@@ -1,5 +1,5 @@
-PATH_MSAS: "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" # "/data/alessia/covid/msa" 
-PATH_OUTPUT: "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" # "/data/alessia/covid/pangeblocks"
+PATH_MSAS: "test" #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" # "/data/alessia/covid/msa" 
+PATH_OUTPUT: "output-test" #"/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" # "/data/alessia/covid/pangeblocks"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
@@ -10,8 +10,8 @@ OPTIMIZATION:
     - 3
     - 5
     - 7 
-    - 128
-    - 1024
+    # - 128
+    # - 1024
   MIN_LEN: # used only with "weighted"
     - 3
     - 5

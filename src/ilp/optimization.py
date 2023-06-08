@@ -13,6 +13,12 @@ from Bio import AlignIO
 from gurobipy import GRB, LinExpr
 import gurobipy as gp
 from blocks import BlockAnalyzer
+from .losses import (
+    loss_nodes,
+    loss_strings,
+    loss_weighted,
+    loss_depth
+)
 import logging
 logging.basicConfig(level=logging.ERROR,
                     format='%(asctime)s. %(message)s',
@@ -333,66 +339,38 @@ class Optimization:
         tf = time.time()
         times["constraints1-2-3"] = round(tf - ti, 3)
 
-        # # constraint 4: vertical blocks are part of the solution
-        # for idx in vertical_blocks:
-        #     model.addConstr(C[idx] == 1)
-        #     logging.info(
-        #         f"constraint4: vertical block ({idx}) - {self.input_blocks[idx].str()}"
-        #     )
-
         ti = time.time()
-        # TODO: include input to decide which objective function to use
         # Objective function
         logging.info("setting objective function to %s", self.obj_function)
         if self.obj_function == "nodes":
-            # minimize the number of blocks (nodes)
-            model.setObjective(C.sum("*"), GRB.MINIMIZE)
-            # vars=[var for var in model.getVars() if var.VarName.startswith("C")]
-            # model.setObjective(LinExpr([1. for _ in vars], [model.getVarByName(name) for name in vars]), GRB.MINIMIZE)
+            # # minimize the number of blocks (nodes)
+            model = loss_nodes(model, vars=C)
+
         elif self.obj_function == "strings":
-            # minimize the total length of the graph (number of characters)
-            model.setObjective(
-                gp.quicksum(
-                    # good_blocks[idx].len()*C[idx]
-                    len(good_blocks[idx].label.replace("-","")) * C[idx]
-                    for idx in c_variables
-                ),
-                GRB.MINIMIZE
-            )
+            # # minimize the total length of the graph (number of characters)
+            model = loss_strings(model, vars=C, blocks=good_blocks, c_variables=c_variables)
+
         elif self.obj_function == "weighted":
-            # minimize the number of blocks penalizing shorter blocks
-            MIN_LEN = self.min_len  # penalize blocks with label less than MIN_LEN
-            PENALIZATION = self.penalization  # costly than the other ones
-            model.setObjective(
-                gp.quicksum(
-                    # (PENALIZATION if good_blocks[idx].len() < MIN_LEN else 1)*C[idx]
-                    (PENALIZATION if len(good_blocks[idx].label.replace("-","")) < MIN_LEN else 1)*C[idx]
-                    for idx in c_variables
-                ),
-                GRB.MINIMIZE
-            )
+            # # minimize the number of blocks penalizing shorter blocks
+            model = loss_weighted(model, vars=C, blocks=good_blocks, c_variables=c_variables, 
+                                  penalization=self.penalization, min_len=self.min_len)
+            logging.info(f"penalization: {self.penalization}")
+            logging.info(f"minimum length: {self.min_len}")
+
         elif self.obj_function == "depth":
-            # minimize the number blocks covering less than k sequences
-            MIN_COVERAGE= self.min_coverage # penalize blocks covering less than MIN_COVERAGE % of the sequences
-            PENALIZATION = self.penalization # costly than others
-            model.setObjective(
-                gp.quicksum(
-                    (1 if len(good_blocks[idx].K)/self.n_seqs > MIN_COVERAGE  else PENALIZATION)*C[idx] 
-                    for idx in c_variables
-                )
-            )
+            # # minimize the number blocks covering less than k sequences
+            model = loss_depth(model, vars=C, blocks=good_blocks, c_variables=c_variables, 
+                                  penalization=self.penalization, min_coverage=self.min_coverage, n_seqs=self.n_seqs)
+            logging.info(f"penalization: {self.penalization}")
+            logging.info(f"minimum coverage: {self.min_coverage}")
+        
         tf = time.time()
         times["objective function"] = round(tf - ti, 3)
 
         ti = time.time()
-        if self.obj_function == "weighted":
-            logging.info(f"penalization: {self.penalization}")
-            logging.info(f"minimum length: {self.min_len}")
         
-        if self.obj_function == "depth":
-            logging.info(f"penalization: {self.penalization}")
-            logging.info(f"minimum coverage: {self.min_coverage}")
 
+        # ---  Optimization ---  
         model.optimize()
         logging.info("End ILP")
         tf = time.time()
