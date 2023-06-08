@@ -54,6 +54,7 @@ class Optimization:
         times = dict()
         ti = time.time()
 
+        # TODO: input_blocks must be the complete list of blocks that the ILP will use
         n_blocks = len(self.input_blocks)
         logging.info("number of blocks %s", n_blocks)
         for idx, block in enumerate(self.input_blocks):
@@ -229,8 +230,10 @@ class Optimization:
             f"Total number of distinct blocks: {len(good_blocks)}")
         logging.info("Vertical blocks: %s", len(vertical_blocks))
 
+        # TODO: Modify until here
+        
         logging.info("collecting c_variables")
-        c_variables = list(range(len(good_blocks)))
+        c_variables = list(range(len(good_blocks))) # TODO: good_blocks must be the input to the ILP
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
@@ -255,29 +258,33 @@ class Optimization:
                     if char_msa != char_block:
                         logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c,block.str()))
 
-        logging.info("Covering not vertical")
-        for r in range(self.n_seqs):
-            for c in set(range(self.n_cols)) - covered_by_vertical_block:
-                logging.debug("Covering position: %s %s %s" %
-                              (r, c, [(idx, good_blocks[idx].str()) for idx in covering_by_position[(r, c)]]))
-                if len(covering_by_position[(r, c)]) == 0:
-                    logging.debug("Uncovered position! %s %s" % (r, c))
+        # logging.info("Covering not vertical")
+        # for r in range(self.n_seqs):
+        #     for c in set(range(self.n_cols)) - covered_by_vertical_block:
+        #         logging.debug("Covering position: %s %s %s" %
+        #                       (r, c, [(idx, good_blocks[idx].str()) for idx in covering_by_position[(r, c)]]))
+        #         if len(covering_by_position[(r, c)]) == 0:
+        #             logging.debug("Uncovered position! %s %s" % (r, c))
 
-        vertical_covered = set()
-        for idx in vertical_blocks:
-            logging.debug("Vertical block fixed: idx:%s %s" %
-                          (idx, good_blocks[idx].str()))
-            for col in range(good_blocks[idx].start, good_blocks[idx].end + 1):
-                vertical_covered.add(col)
-        logging.debug("Vertical covered: %s" %
-                     covered_by_vertical_block.difference(vertical_covered))
-        logging.debug("Vertical covered: %s" %
-                     covered_by_vertical_block == vertical_covered)
+        # vertical_covered = set()
+        # for idx in vertical_blocks:
+        #     logging.debug("Vertical block fixed: idx:%s %s" %
+        #                   (idx, good_blocks[idx].str()))
+        #     for col in range(good_blocks[idx].start, good_blocks[idx].end + 1):
+        #         vertical_covered.add(col)
+        # logging.debug("Vertical covered: %s" %
+        #              covered_by_vertical_block.difference(vertical_covered))
+        # logging.debug("Vertical covered: %s" %
+        #              covered_by_vertical_block == vertical_covered)
 
         tf = time.time()
         times["init"] = round(tf - ti, 3)
 
-        # Create the model
+
+
+        #  ------------------------
+        #  --- Create the model ---
+        #  ------------------------
         ti = time.time()
         logging.info("initializing model pangeblocks")
         model = gp.Model("pangeblocks")
