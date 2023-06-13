@@ -16,7 +16,8 @@ EXT_MSA = MSAS[0].suffix
 
 rule all: 
     input:
-        expand(pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt"), name_msa=NAMES)
+        # expand(pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt"), name_msa=NAMES)
+        expand(pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log"), name_msa=NAMES)
         # expand(pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json"), name_msa=NAMES)
 
 rule compute_vertical_blocks:
@@ -30,33 +31,48 @@ rule compute_vertical_blocks:
         """/usr/bin/time --verbose src/maximal_blocks.py {input} --output {output} \
         --only-vertical-blocks true --log-level {params.log_level}""" 
 
-rule submsas:
+rule submsa_index:
     input: 
         path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
         path_vertical_blocks=pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json"),
     output: 
-        pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt")
+        submsa_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt")
     shell:
         """/usr/bin/time --verbose src/submsas.py --path-msa {input.path_msa} \
         --path-vertical-blocks {input.path_vertical_blocks} --output {output}
         """
 
-# a checkpoint?
-rule generateILPs:
+rule ilp:
     input: 
         path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
         path_submsas_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt")
     output:
-        directory(pjoin(PATH_OUTPUT, "submsas"))
+        auxfile=pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log")
+    params:
+        path_save=pjoin(PATH_OUTPUT, "ilp","{name_msa}"),
+        obj_function=config["OPTIMIZATION"]["OBJECTIVE_FUNCTION"],
+        penalization=config["OPTIMIZATION"]["PENALIZATION"],
+        min_len=config["OPTIMIZATION"]["MIN_LEN"],
+        min_coverage=config["OPTIMIZATION"]["MIN_COVERAGE"],
+        log_level=config["LOG_LEVEL"],
+        time_limit=config["OPTIMIZATION"]["TIME_LIMIT"]
+    threads:
+        config["THREADS"]
     shell:
-        """
-        mkdir -p {output}
-        idx=0
-        cat {input.path_submsas_index} | while read f; do echo $f > {output}/{wildcards.name_msa}-$idx.txt && idx=$(idx+1); done  
-        """
-
-rule collectILPs:
-    input:
+        """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {params.obj_function} \
+        --path-save-ilp {params.path_save}/{wildcards.name_msa} --path-opt-solution {params.path_save}/{wildcards.name_msa} \
+        --submsa-index {input.path_submsas_index} 2> {output}"""
+        # """
+        # src/solve_submsa.py --path-msa test/test3.fa --submsa-index output-test/submsas/test3.txt --obj-function nodes --path-save-ilp output-test/ilp/test3 --path-opt-solution output-test/ilp/test3
+        
+        # --penalization {params.penalization} \
+        # --min-len {params.min_len} \
+        # --min-coverage {params.min_coverage} \
+        # --time-limit {params.time_limit} \
+        # --solve-ilp true \
+        
+        # --workers {threads} > {output.auxfile}
+        # """
 
 # rule compute_blocks:
 #     input:

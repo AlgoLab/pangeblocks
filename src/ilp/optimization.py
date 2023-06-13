@@ -2,17 +2,13 @@
 Given an MSA, and a set of blocks such that the union of them covers all the MSA,
 Find a non-overlapping set the blocks covering the entire MSA
 # """
-from collections import deque
-from itertools import chain
 from sys import getsizeof, stderr
-import time
 from collections import defaultdict
 from blocks import Block
 from pathlib import Path
 from Bio import AlignIO
 from gurobipy import GRB, LinExpr
 import gurobipy as gp
-from blocks import BlockAnalyzer
 from .losses import (
     loss_nodes,
     loss_strings,
@@ -57,10 +53,10 @@ class Optimization:
         # K is a tuple of rows,
         # i and j are the first and last column
         # label is the string of the block
-        msa, n_seqs, n_cols = self.load_submsa(path_msa)
+        msa = load_submsa(path_msa)
         self.msa = msa
-        self.n_seqs = n_seqs
-        self.n_cols = n_cols
+        self.n_seqs = len(msa)
+        self.n_cols = msa.get_alignment_length()
         
         # ILP params       
         self.obj_function = kwargs.get("obj_function", "nodes")
@@ -69,7 +65,7 @@ class Optimization:
         self.min_coverage = kwargs.get("min_coverage", 1)
         self.time_limit = kwargs.get("time_limit", 180)
         
-    def __call__(self, return_times: bool = False, solve_ilp: bool = False):
+    def __call__(self, solve_ilp: bool = False):
         """Generates the ILP model, and solves it if return_model is False
 
         Args:
@@ -79,11 +75,6 @@ class Optimization:
         Returns: 
             list with blocks in the optimal solution
         """        
-
-        times = dict()
-        ti = time.time()
-
-        # TODO: input_blocks must be the complete list of blocks that the ILP will use
         n_blocks = len(self.input_blocks)
         logging.info("number of blocks %s", n_blocks)
         for idx, block in enumerate(self.input_blocks):
@@ -91,12 +82,9 @@ class Optimization:
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that include the position (r,c)
-        #
-        # to speed up the process, we iterate over the blocks and append the
+        # To speed up the process, we iterate over the blocks and append the
         # block to all the positions it covers
         covering_by_position = defaultdict(list)
-
-        # TODO: Modify until here
         
         logging.info("collecting c_variables")
         c_variables = list(range(len(self.input_blocks)))
@@ -124,13 +112,9 @@ class Optimization:
                     if char_msa != char_block:
                         logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c,block.str()))
                                      
-        tf = time.time()
-        times["init"] = round(tf - ti, 3)
-
         #  ------------------------
         #  --- Create the model ---
         #  ------------------------
-        ti = time.time()
         logging.info("initializing model pangeblocks")
         model = gp.Model("pangeblocks")
 
@@ -160,14 +144,6 @@ class Optimization:
         #  ------------------------
         #  Constraints
         #  ------------------------
-        # FIXME: not needed in the new approach
-        # # All C(b) variables corresponding to vertical blocks are set to 1
-        # logging.info("adding constraint: C=1 for vertical blocks ")
-        # for idx in vertical_blocks:
-        #     model.addConstr(C[idx] == 1,
-        #                     name=f"vertical_constraint_good_blocks({idx})")
-        #     logging.debug("Vertical block fixed: %s %s" %
-        #                  (idx, self.input_blocks[idx].str()))
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
@@ -192,10 +168,6 @@ class Optimization:
                 logging.debug("constraint 3")
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
                 # logging.debug("constraint3(%s,%s" % (r, c))
-        tf = time.time()
-        times["constraints1-2-3"] = round(tf - ti, 3)
-
-        ti = time.time()
 
         #  ------------------------
         #  Objective function
@@ -223,35 +195,20 @@ class Optimization:
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum coverage: {self.min_coverage}")
         
-        tf = time.time()
-        times["objective function"] = round(tf - ti, 3)
-        
         #  ------------------------
         #  Solve or save the ILP model
         #  ------------------------
-        
-        ti = time.time()
-        if self.path_save_ilp:
-            logging.info("saving ILP model")
-            Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
-            model.write(self.path_save_ilp)
-            tf = time.time()
-            times["save-ilp"] = round(tf - ti, 3)
-        
         if solve_ilp:
             logging.info("solving ILP model")
             model.optimize()
             logging.info("End ILP")
-            tf = time.time()
-            times["optimization"] = round(tf - ti, 3)
-
+            
             try:
                 solution_C = model.getAttr("X", C)
             except:
                 raise ("No solution")
 
             # filter optimal coverage of blocks for the MSA
-            ti = time.time()
             optimal_coverage = []
             for k, v in solution_C.items():
 
@@ -259,9 +216,11 @@ class Optimization:
                     logging.debug(
                         f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
                     optimal_coverage.append(self.input_blocks[k])
-            tf = time.time()
-            times["solution as blocks"] = round(tf - ti, 3)
+            
+        if self.path_save_ilp:
+            logging.info("saving ILP model")
+            Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
+            model.write(self.path_save_ilp)
 
-            if return_times is True:
-                return optimal_coverage, times
-            return optimal_coverage
+        return optimal_coverage
+        

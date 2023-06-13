@@ -26,6 +26,14 @@ parser.add_argument("--min_len", help="minimum length of shorter blocks when usi
 parser.add_argument("--min_coverage", help="minimum percentage of sequence when using 'depth' as obj_function to be penalized", dest="min_coverage", type=float)
 parser.add_argument("--time_limit", help="time limit in minutes to run the ILP, after this the best solution so far will be returned", dest="time_limit", type=int)
 
+args = parser.parse_args()
+
+logging.basicConfig(level=args.log_level,
+                format='[Solve subMSA] %(asctime)s. %(message)s',
+                datefmt='%Y-%m-%d@%H:%M:%S')
+
+
+
 parser.add_argument(
     "--path_ilp", help="path to save the ILP formulation", default=None)
 parser.add_argument("--log_level", default='ERROR', dest='log_level',

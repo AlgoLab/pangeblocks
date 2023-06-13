@@ -1,9 +1,13 @@
 import numpy as np
 from collections import defaultdict
-from src.blocks import Block
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
+import sys
+PATH=Path(__file__).parent.parent.parent
+sys.path.append(str(PATH))
+
+from src.blocks import Block 
 from src.blocks.block_decomposer import Decomposer
 
 import logging
@@ -28,7 +32,6 @@ class InputBlockSet:
         
         # blocks not covered by maximal blocks
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, maximal_blocks, start_column)
-        print(coverage_panel)
         missing_blocks = self.get_missing_blocks(coverage_panel, msa, start_column)
         
         # block decomposition
@@ -57,7 +60,6 @@ class InputBlockSet:
         blocks_one_char = self.get_blocks_one_char(msa, start_column)
         # check blocks one char are correctly labeled
         for block in blocks_one_char:
-            print(block)
             # logging.debug("block one char %s", block)
             for r in block.K:
                 r=int(r)
@@ -72,7 +74,7 @@ class InputBlockSet:
         # Input set: input blocks:decomposition of blocks  of one position in the MSA)
         input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
 
-        return decomposed_blocks , missing_blocks , blocks_one_char
+        return input_set_ilp
     
     def glue_vertical_blocks(self,list_blocks,):
         "Glue blocks of length 1 that shares column"
@@ -109,8 +111,6 @@ class InputBlockSet:
         """
         rows, cols=np.where(coverage_panel == 0)
         missing_blocks = [(r,c+start_column) for r,c in zip(rows,cols)]
-        print("Missing blocks")
-        print(missing_blocks)
 
         missing_blocks = sorted(missing_blocks, key= lambda d: (d[0],d[1]))
         idx_missing_blocks_by_seq = defaultdict(list)
