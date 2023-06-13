@@ -1,3 +1,4 @@
+"""Not needed anymore"""
 from src.blocks import Block
 
 def block_between_vertical_blocks(horizontal_block: Block, vertical_block1: Block, vertical_block2: Block):
