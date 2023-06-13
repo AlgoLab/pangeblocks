@@ -1,4 +1,4 @@
-from .block import Block
+from .. import Block
 
 def block_decomposition(block1: Block, block2: Block):
     """Decompose 2 blocks based on their intersection

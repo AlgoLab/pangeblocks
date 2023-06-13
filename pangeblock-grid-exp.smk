@@ -12,7 +12,6 @@ PENALIZATION=config["OPTIMIZATION"]["PENALIZATION"]
 MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
 MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
-
 # load names of MSAs
 STATS_MSAS = pd.read_csv(
                 Path(PATH_OUTPUT).joinpath("analysis-msa/stats_msas.tsv"), 

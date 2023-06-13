@@ -19,37 +19,67 @@ from .losses import (
     loss_weighted,
     loss_depth
 )
+
 import logging
 logging.basicConfig(level=logging.ERROR,
-                    format='%(asctime)s. %(message)s',
+                    format='[ILP] - %(asctime)s. %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
-try:
-    from reprlib import repr
-except ImportError:
-    pass
+
+def load_submsa(filename, start_column=0, end_column=-1):
+    "Return MSA from start_column to end_column (both included)"
+    # load MSA
+    msa = AlignIO.read(filename, "fasta")
+    
+    # filter sub-MSA if start/end columns are given
+    if start_column>0 or end_column!=-1:
+        # get last column
+        # n_seqs = len(align)
+        n_cols = msa.get_alignment_length()
+        assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
+        msa = msa[:, start_column:end_column+1] # end_column included
+    
+    return msa
 
 class Optimization:
-    def __init__(self, blocks, path_msa, path_save_ilp=None, log_level=logging.ERROR, **kwargs):
+    "Generates/solves ILP model for a subMSA, from column start_column to end_column"
+    def __init__(self, blocks: list, path_msa: str, 
+                 start_column: int, end_column: int,
+                 path_save_ilp: str, log_level=logging.ERROR, **kwargs):
 
-        self.input_blocks = blocks
+        self.input_blocks=blocks
+        self.path_msa=path_msa
+        self.start_column=start_column
+        self.end_column=end_column
+        self.path_save_ilp = path_save_ilp
+        logging.getLogger().setLevel(log_level)
+
         # Each block is a tuple (K, i, j, label) where
         # K is a tuple of rows,
         # i and j are the first and last column
         # label is the string of the block
-        msa, n_seqs, n_cols = self.load_msa(path_msa)
+        msa, n_seqs, n_cols = self.load_submsa(path_msa)
         self.msa = msa
         self.n_seqs = n_seqs
         self.n_cols = n_cols
-        self.path_save_ilp = path_save_ilp
+        
+        # ILP params       
         self.obj_function = kwargs.get("obj_function", "nodes")
         self.penalization = kwargs.get("penalization", 1)
         self.min_len = kwargs.get("min_len", 1)
         self.min_coverage = kwargs.get("min_coverage", 1)
         self.time_limit = kwargs.get("time_limit", 180)
-        logging.getLogger().setLevel(log_level)
+        
+    def __call__(self, return_times: bool = False, solve_ilp: bool = False):
+        """Generates the ILP model, and solves it if return_model is False
 
-    def __call__(self, return_times: bool = False):
-        "Solve ILP formulation"
+        Args:
+            return_times (bool, optional): return detailed time of the execution. Defaults to False.
+            solve_ilp (bool, optional): try to find ptimal solution if True, otherwise just save the ILP formulation. Defaults to False.
+
+        Returns: 
+            list with blocks in the optimal solution
+        """        
+
         times = dict()
         ti = time.time()
 
@@ -69,7 +99,7 @@ class Optimization:
         # TODO: Modify until here
         
         logging.info("collecting c_variables")
-        c_variables = list(range(len(self.input_blocks))) # TODO: self.input_blocks must be the input to the ILP
+        c_variables = list(range(len(self.input_blocks)))
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
@@ -93,30 +123,9 @@ class Optimization:
                     char_block = block.label[pos_block].upper() 
                     if char_msa != char_block:
                         logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c,block.str()))
-
-        # logging.info("Covering not vertical")
-        # for r in range(self.n_seqs):
-        #     for c in set(range(self.n_cols)) - covered_by_vertical_block:
-        #         logging.debug("Covering position: %s %s %s" %
-        #                       (r, c, [(idx, self.input_blocks[idx].str()) for idx in covering_by_position[(r, c)]]))
-        #         if len(covering_by_position[(r, c)]) == 0:
-        #             logging.debug("Uncovered position! %s %s" % (r, c))
-
-        # vertical_covered = set()
-        # for idx in vertical_blocks:
-        #     logging.debug("Vertical block fixed: idx:%s %s" %
-        #                   (idx, self.input_blocks[idx].str()))
-        #     for col in range(self.input_blocks[idx].start, self.input_blocks[idx].end + 1):
-        #         vertical_covered.add(col)
-        # logging.debug("Vertical covered: %s" %
-        #              covered_by_vertical_block.difference(vertical_covered))
-        # logging.debug("Vertical covered: %s" %
-        #              covered_by_vertical_block == vertical_covered)
-
+                                     
         tf = time.time()
         times["init"] = round(tf - ti, 3)
-
-
 
         #  ------------------------
         #  --- Create the model ---
@@ -143,6 +152,7 @@ class Optimization:
                 "variable:C(%s) = %s" % (block, self.input_blocks[block].str()))
 
         logging.info("adding U variables to the model")
+        msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)]
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.debug("variable:U(%s)", pos)
@@ -150,13 +160,14 @@ class Optimization:
         #  ------------------------
         #  Constraints
         #  ------------------------
-        # All C(b) variables corresponding to vertical blocks are set to 1
-        logging.info("adding constraint: C=1 for vertical blocks ")
-        for idx in vertical_blocks:
-            model.addConstr(C[idx] == 1,
-                            name=f"vertical_constraint_good_blocks({idx})")
-            logging.debug("Vertical block fixed: %s %s" %
-                         (idx, self.input_blocks[idx].str()))
+        # FIXME: not needed in the new approach
+        # # All C(b) variables corresponding to vertical blocks are set to 1
+        # logging.info("adding constraint: C=1 for vertical blocks ")
+        # for idx in vertical_blocks:
+        #     model.addConstr(C[idx] == 1,
+        #                     name=f"vertical_constraint_good_blocks({idx})")
+        #     logging.debug("Vertical block fixed: %s %s" %
+        #                  (idx, self.input_blocks[idx].str()))
 
         logging.info("adding constraints for each (r,c) position of the MSA")
         for r, c in msa_positions:
@@ -214,13 +225,11 @@ class Optimization:
         
         tf = time.time()
         times["objective function"] = round(tf - ti, 3)
-
         
         #  ------------------------
         #  Solve or save the ILP model
         #  ------------------------
         
-        # TODO: use flag to store the ILP instead of solving it
         ti = time.time()
         if self.path_save_ilp:
             logging.info("saving ILP model")
@@ -228,7 +237,8 @@ class Optimization:
             model.write(self.path_save_ilp)
             tf = time.time()
             times["save-ilp"] = round(tf - ti, 3)
-        else:
+        
+        if solve_ilp:
             logging.info("solving ILP model")
             model.optimize()
             logging.info("End ILP")
@@ -255,12 +265,3 @@ class Optimization:
             if return_times is True:
                 return optimal_coverage, times
             return optimal_coverage
-
-    def load_msa(self, path_msa):
-        "return alignment, number of sequences and columns"
-        # load MSA
-        align = AlignIO.read(path_msa, "fasta")
-        n_cols = align.get_alignment_length()
-        n_seqs = len(align)
-
-        return align, n_seqs, n_cols

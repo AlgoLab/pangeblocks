@@ -1,8 +1,9 @@
-PATH_MSAS: "msas"
-PATH_OUTPUT: "output-strings"
+PATH_MSAS: "test"
+PATH_OUTPUT: "output-test"
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION: "strings" # nodes, strings, weighted
+  OBJECTIVE_FUNCTION: "strings" # nodes, strings, weighted, depth
   PENALIZATION: 3 # used only with "weighted"
   MIN_LEN: 2 # used only with "weighted"
+  MIN_COVERAGE: 0.2 # used only with "depth"
   TIME_LIMIT: 10 # time limit to run the ILP (minutes)
 LOG_LEVEL: "INFO"

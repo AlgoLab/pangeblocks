@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from collections import defaultdict, namedtuple
 from suffix_tree import Tree
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 import logging
 
 def timer(func):
@@ -73,22 +73,20 @@ def maximal_blocks_from_pos_strings(pos_strings: list, seqs: list, only_vertical
             extended_ps = (extended_ps[0] + start_column, extended_ps[1] + start_column, extended_ps[-1])
         
         # check if only vertical blocks are required
-        if only_vertical is False:
-            print(size_K, n_seqs, only_vertical, "here")
-            max_blocks.append(
-                (K, *extended_ps)
-            )
-        else:
-            print("Vertical block only")
-            # check if it is a vertical block
-            if size_K == n_seqs: 
+        if only_vertical:
+            # add block if it is a vertical block
+            if size_K == n_seqs:
                 max_blocks.append(
                     (K, *extended_ps)
                 )
+        else:
+            max_blocks.append(
+                (K, *extended_ps)
+            )
 
     return max_blocks
 
-def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path], 
+def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
                            only_vertical: bool = False):# multi: bool = True):
     "Compute maximal blocks in a submsa"
@@ -110,26 +108,24 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path],
 
     ## compute max blocks by first get maximal repeats
     pos_strings, t_pos_strings = compute_pos_strings(seqs)
-    for ps in pos_strings:
-        print(ps)
-        # logging.INFO(f"positional string: {ps}")
 
-    # to create the blocks from positional strings, we match the string in
-    # the positional string to all the rows in the original (without removing duplicates)
-    # MSA
+    # to create the blocks from positional strings, we match the string in the positional string
+    # to all the rows in the original (without removing duplicates) MSA
     max_blocks, t_max_blocks = maximal_blocks_from_pos_strings(pos_strings=pos_strings, seqs=all_seqs, only_vertical=only_vertical, start_column=start_column)
 
     # Save maximal blocks
-    n_max_blocks = len(max_blocks)
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w") as fp:
-        json.dump(max_blocks, fp,)# indent=0)
+    if output:
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        with open(output, "w") as fp:
+            json.dump(max_blocks, fp,)
 
-    # save times
-    path_time = Path(args.output).parent / (Path(args.output).stem + ".txt")
-    with open(path_time, "w") as fp:
-        fp.write(f"t_pos_string\t{t_pos_strings}\n")
-        fp.write(f"t_max_blocks\t{t_max_blocks}\n")
+        # save times
+        path_time = Path(output).parent / (Path(output).stem + ".txt")
+        with open(path_time, "w") as fp:
+            fp.write(f"t_pos_string\t{t_pos_strings}\n")
+            fp.write(f"t_max_blocks\t{t_max_blocks}\n")
+    
+    return max_blocks
 
 if __name__=="__main__":
     # Command line options
@@ -139,11 +135,15 @@ if __name__=="__main__":
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
     parser.add_argument("-vb","--only-vertical-blocks", help="Output only vertical blocks: those using all sequences", type=bool, default=False, dest="only_vertical")
-    # parser.add_argument("--multi", help="split alignment into regions", action="store_true")
-    parser.add_argument("--log-level", default='ERROR', dest="log_level",help="set log level (ERROR/WARNING/INFO/DEBUG)")
+    parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG)", dest="log_level")
     args = parser.parse_args()
 
-    logging.basicConfig(level=args.log_level)
+    logging.basicConfig(level=args.log_level,
+                    format='[Maximal Blocks] %(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+    logging.info(f"filename MSA: '{args.filename}'") 
+    logging.info(f"subMSA columns [start, end] = {[args.start_column, args.end_column]}")
+    logging.info(f"Output only vertical blocks = {args.only_vertical}")
 
     compute_maximal_blocks(
         filename=args.filename, output=args.output, 
