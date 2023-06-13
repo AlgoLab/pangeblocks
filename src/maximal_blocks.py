@@ -57,17 +57,35 @@ def set_K_from_pos_string(pos_string, seqs):
     return K, (start, end, label)
 
 @timer
-def maximal_blocks_from_pos_strings(pos_strings: list, seqs: list):
+def maximal_blocks_from_pos_strings(pos_strings: list, seqs: list, only_vertical: bool):
     "generate the set of sequences K that each positional string match and return it as a block"
     max_blocks = []
+    n_seqs = len(seqs)
+    
+    # iterate over positional strings and sequences to obtain blocks
     for ps in pos_strings:
         K, extended_ps = set_K_from_pos_string(ps, seqs)
-        max_blocks.append(
-            (K, *extended_ps)
-        )
+        size_K = len(K)
+        
+        # check if only vertical blocks are required
+        if only_vertical is False:
+            print(size_K, n_seqs, only_vertical, "here")
+            max_blocks.append(
+                (K, *extended_ps)
+            )
+        else:
+            print("Vertical block only")
+            # check if it is a vertical block
+            if size_K == n_seqs: 
+                max_blocks.append(
+                    (K, *extended_ps)
+                )
+
     return max_blocks
 
-def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path], start_column: int = 0, end_column: int = -1, multi: bool = True):
+def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path], 
+                           start_column: int = 0, end_column: int = -1, 
+                           only_vertical: bool = False, multi: bool = True):
     "Compute maximal blocks in a submsa"
     msa=load_submsa(filename, start_column, end_column)
     n_cols=msa.get_alignment_length()
@@ -83,6 +101,7 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path], s
     n_unique_seqs = len(seq_by_string)
     seqs = seq_by_string.keys()
 
+    # TODO: check with @Gianluca if we need this
     # block_end is a boolean list that is true iff the corresponding column consists
     # of a single character (excluding indels)
     # Moreover, block_end has an additional final element that is True
@@ -110,13 +129,13 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Union[str,Path], s
     # to create the blocks from positional strings, we match the string in
     # the positional string to all the rows in the original (without removing duplicates)
     # MSA
-    max_blocks, t_max_blocks = maximal_blocks_from_pos_strings(pos_strings, all_seqs)
+    max_blocks, t_max_blocks = maximal_blocks_from_pos_strings(pos_strings=pos_strings, seqs=all_seqs, only_vertical=only_vertical)
 
     # Save maximal blocks
     n_max_blocks = len(max_blocks)
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as fp:
-        json.dump(max_blocks, fp, indent=0)
+        json.dump(max_blocks, fp,)# indent=0)
 
     # save times
     path_time = Path(args.output).parent / (Path(args.output).stem + ".txt")
@@ -131,11 +150,13 @@ if __name__=="__main__":
     parser.add_argument("-o","--output", help="output file", dest="output")
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
+    parser.add_argument("-vb","--only-vertical-blocks", help="Output only vertical blocks: those using all sequences", type=bool, default=False, dest="only_vertical")
     parser.add_argument("--multi", help="split alignment into regions", action="store_true")
+    
     args = parser.parse_args()
 
     compute_maximal_blocks(
         filename=args.filename, output=args.output, 
         start_column=args.start_column, end_column=args.end_column, 
-        multi=args.multi
+        multi=args.multi, only_vertical=args.only_vertical
         )
