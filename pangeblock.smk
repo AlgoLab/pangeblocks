@@ -19,7 +19,7 @@ rule all:
         # expand(pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt"), name_msa=NAMES)
         # expand(pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log"), name_msa=NAMES),
         # expand(pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json"), name_msa=NAMES)
-        expand(pjoin(PATH_OUTPUT, "gfa","{name_msa}.gfa"), name_msa=NAMES)
+        expand(pjoin(PATH_OUTPUT, "gfa-unchop","{name_msa}.gfa"), name_msa=NAMES)
 
 rule compute_vertical_blocks:
     input: 
@@ -79,6 +79,34 @@ rule coverage_to_graph:
     shell:
         """/usr/bin/time --verbose src/compute_gfa.py --path-msa {input.path_msa} \
         --dir-subsolutions {params.dir_subsols} --path-vert-blocks {input.path_vb} --path-gfa {output}"""
+
+rule postprocessing_gfa:
+    input:
+        path_gfa=pjoin(PATH_OUTPUT, "gfa", "{name_msa}.gfa")
+    output:
+        path_post_gfa=pjoin(PATH_OUTPUT, "gfa-post", "{name_msa}.gfa") 
+    # log:
+        # stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-postprocessing_gfa.err.log"),
+        # stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-rule-postprocessing_gfa.out.log")
+    shell:
+        "/usr/bin/time --verbose python src/postprocess_gfa.py --path_gfa {input.path_gfa} > {output.path_post_gfa}" 
+
+rule unchop_gfa:
+    input:
+        path_post_gfa=pjoin(PATH_OUTPUT, "gfa-post", "{name_msa}.gfa")
+    output:
+        path_unchop_gfa=pjoin(PATH_OUTPUT, "gfa-unchop", "{name_msa}.gfa"),
+        path_labels=pjoin(PATH_OUTPUT, "gfa-unchop", "{name_msa}.csv")
+    conda:
+        "envs/vg.yaml"
+    # log:
+    #     stderr=pjoin(PATH_OUTPUT, "logs", "{obj_func}","penalization{penalization}-min_len{min_len}","{name_msa}-rule-unchop_gfa.err.log"),
+    shell:
+        """
+        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 
+        python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
+        """
+
 
 # rule compute_blocks:
 #     input:
