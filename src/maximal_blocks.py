@@ -32,7 +32,7 @@ def load_submsa(filename, start_column=0, end_column=-1):
         n_cols = msa.get_alignment_length()
         assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
         msa = msa[:, start_column:end_column+1] # end_column included
-    
+    # print(msa)
     return msa
 
 @timer
@@ -45,6 +45,7 @@ def compute_pos_strings(seqs):
          "".join([c[1] for c in b if type(c) == tuple][:len(b)])
          ) for b in blocks
     ]
+    
     return decoded_blocks
 
 def set_K_from_pos_string(pos_string, seqs):
@@ -96,18 +97,18 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
     n_cols=msa.get_alignment_length()
     n_seqs=len(msa)
 
-    # identify unique sequences to create the Tree and compute maximal blocks
+    # # identify unique sequences to create the Tree and compute maximal blocks
     seq_by_string = defaultdict(list)
     all_seqs = []
     for seq, record in enumerate(msa):
         str_seq = str(record.seq)
         seq_by_string[str_seq].append(seq)
         all_seqs.append(str_seq)
-    n_unique_seqs = len(seq_by_string)
-    seqs = seq_by_string.keys()
+    # n_unique_seqs = len(seq_by_string)
+    # seqs = seq_by_string.keys()
 
     ## compute max blocks by first get maximal repeats
-    pos_strings, t_pos_strings = compute_pos_strings(seqs)
+    pos_strings, t_pos_strings = compute_pos_strings(all_seqs)
 
     # to create the blocks from positional strings, we match the string in the positional string
     # to all the rows in the original (without removing duplicates) MSA

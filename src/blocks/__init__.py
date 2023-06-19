@@ -3,6 +3,3 @@ from .block import Block, LightBlock
 from .analyzer import BlockAnalyzer
 from .block_decomposer import Decomposer
 from .positional_string import PositionalString
-
-from .decompositions.block_decomposition_row_maximal import block_decomposition as block_decomposition_row_maximal
-from .decompositions.block_decomposition_not_row_maximal import block_decomposition as block_decomposition_not_row_maximal

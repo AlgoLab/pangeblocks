@@ -22,7 +22,7 @@ from functools import partial
 from collections import namedtuple        
 
 # def solve_msa(args):
-def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_solution, solve_ilp, obj_function, penalization, min_len, time_limit):
+def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_solution, solve_ilp, obj_function, penalization, min_len, min_coverage, time_limit, **kwargs):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
 
     # # Load set of decomposed blocks
@@ -36,6 +36,7 @@ def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_sol
         obj_function=obj_function,
         penalization=penalization,
         min_len=min_len,
+        min_coverage=min_coverage,
         time_limit=time_limit
     )
 
@@ -108,7 +109,7 @@ if __name__=="__main__":
         opt_args=OptArgs(args.obj_function, args.penalization, args.min_len, args.min_coverage, args.time_limit)
         submsa = partial(solve_submsa, path_msa=args.path_msa, solve_ilp=args.solve_ilp, 
                          obj_function=args.obj_function, penalization=args.penalization,
-                         min_len=args.min_len, time_limit=args.time_limit
+                         min_len=args.min_len, min_coverage=args.min_coverage, time_limit=args.time_limit
                          )
         def run(argspool):
             "Function to run with ThreadPoolExecutor"
@@ -136,6 +137,6 @@ if __name__=="__main__":
                     future.result()
     
     else:
-        solve_submsa(**args)
+        solve_submsa(**vars(args))
 
     

@@ -17,8 +17,9 @@ EXT_MSA = MSAS[0].suffix
 rule all: 
     input:
         # expand(pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt"), name_msa=NAMES)
-        expand(pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log"), name_msa=NAMES)
+        # expand(pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log"), name_msa=NAMES),
         # expand(pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json"), name_msa=NAMES)
+        expand(pjoin(PATH_OUTPUT, "gfa","{name_msa}.gfa"), name_msa=NAMES)
 
 rule compute_vertical_blocks:
     input: 
@@ -61,18 +62,23 @@ rule ilp:
     shell:
         """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {params.obj_function} \
         --path-save-ilp {params.path_save}/{wildcards.name_msa} --path-opt-solution {params.path_save}/{wildcards.name_msa} \
-        --submsa-index {input.path_submsas_index} 2> {output}"""
-        # """
-        # src/solve_submsa.py --path-msa test/test3.fa --submsa-index output-test/submsas/test3.txt --obj-function nodes --path-save-ilp output-test/ilp/test3 --path-opt-solution output-test/ilp/test3
-        
-        # --penalization {params.penalization} \
-        # --min-len {params.min_len} \
-        # --min-coverage {params.min_coverage} \
-        # --time-limit {params.time_limit} \
-        # --solve-ilp true \
-        
-        # --workers {threads} > {output.auxfile}
-        # """
+        --penalization {params.penalization} --min-len {params.min_len} --min-coverage {params.min_coverage} \
+        --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
+        --workers {threads} > {output.auxfile}"""
+
+# TODO
+rule coverage_to_graph:
+    input:
+        auxfile=pjoin(PATH_OUTPUT, "ilp","{name_msa}","{name_msa}.log"),
+        path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
+        path_vb=pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}","vertical_blocks.json")
+    output:
+        path_gfa=pjoin(PATH_OUTPUT, "gfa","{name_msa}.gfa"),
+    params:
+        dir_subsols=pjoin(PATH_OUTPUT, "ilp","{name_msa}")
+    shell:
+        """/usr/bin/time --verbose src/compute_gfa.py --path-msa {input.path_msa} \
+        --dir-subsolutions {params.dir_subsols} --path-vert-blocks {input.path_vb} --path-gfa {output}"""
 
 # rule compute_blocks:
 #     input:
