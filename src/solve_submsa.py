@@ -6,11 +6,10 @@ import cProfile
 import time
 import json
 import argparse
+from Bio import AlignIO
 from blocks import Block
 from ilp.input import InputBlockSet
 from ilp.optimization import Optimization
-# from ilp.variaton_graph_parser import asGFA
-# from ilp.postprocessing import postprocessing
 from maximal_blocks import compute_maximal_blocks
 from pathlib import Path
 from dataclasses import astuple
@@ -19,19 +18,13 @@ import logging
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from collections import namedtuple        
+from collections import namedtuple, defaultdict
 
 # def solve_msa(args):
 def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_solution, solve_ilp, obj_function, penalization, min_len, min_coverage, time_limit, **kwargs):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
 
     # # Load set of decomposed blocks
-    # path_msa= args.path_msa
-    # start_column = args.start_column
-    # end_column = args.end_column
-    # path_save_ilp = args.path_save_ilp
-    # path_opt_solution = args.path_opt_solution
-    # solve_ilp = args.solve_ilp
     kwargs_opt = dict(
         obj_function=obj_function,
         penalization=penalization,
@@ -40,21 +33,44 @@ def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_sol
         time_limit=time_limit
     )
 
-    # 1. compute maximal blocks
-    logging.info(f"Computing maximal blocks")
-    maximal_blocks = compute_maximal_blocks(filename=path_msa, start_column=start_column, end_column=end_column, only_vertical=False)
-    
-    # 2. compute input set of blocks for the ILP (decomposition is included)
-    logging.info("Generating input set")
-    inputset_gen = InputBlockSet()
-    inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
+    # if only one column is involved, return the blocks with one character
+    if start_column==end_column:
+        logging.info("start and end columns are the same, skipping ILP")
+        msa = load_submsa(path_msa, start_column, end_column)
 
-    # 3. solve the ILP / output ILP model
-    # find optimal coverage of the MSA by blocks
-    logging.info("Starting optimization")
-    opt = Optimization(blocks=inputset, path_msa=path_msa, start_column=start_column, end_column=end_column,
-                       log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
-    opt_coverage = opt(solve_ilp=solve_ilp)
+        blocks_one_char = []
+        n_cols=msa.get_alignment_length()
+        n_seqs=len(msa)
+
+        for col in range(n_cols):
+            seq_by_char = defaultdict(list)
+            for row in range(n_seqs):
+                seq_by_char[msa[row,col]].append(row)
+
+            for c, K in seq_by_char.items():
+                # ommit vertical blocks, they will be part of a maximal one
+                if len(K) < n_seqs:
+                    blocks_one_char.append(
+                            Block(K=K, start=col+start_column, end=col+start_column, label=c)
+                    )
+        opt_coverage = blocks_one_char
+
+    else:
+        # 1. compute maximal blocks
+        logging.info(f"Computing maximal blocks")
+        maximal_blocks = compute_maximal_blocks(filename=path_msa, start_column=start_column, end_column=end_column, only_vertical=False)
+        
+        # 2. compute input set of blocks for the ILP (decomposition is included)
+        logging.info("Generating input set")
+        inputset_gen = InputBlockSet()
+        inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
+
+        # 3. solve the ILP / output ILP model
+        # find optimal coverage of the MSA by blocks
+        logging.info("Starting optimization")
+        opt = Optimization(blocks=inputset, path_msa=path_msa, start_column=start_column, end_column=end_column,
+                        log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
+        opt_coverage = opt(solve_ilp=solve_ilp)
 
     for b in opt_coverage:
         logging.info(f"Optimal Coverage block {b.str()}")
@@ -66,6 +82,22 @@ def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_sol
             blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks] 
             json.dump(blocks, fp)
 
+
+def load_submsa(filename, start_column=0, end_column=-1):
+    "Return 0-indexed MSA from start_column to end_column (both included)"
+    # load MSA
+    msa = AlignIO.read(filename, "fasta")
+    
+    # filter sub-MSA if start/end columns are given
+    if start_column>0 or end_column!=-1:
+        # get last column
+        n_cols = msa.get_alignment_length()
+        assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
+        if end_column == -1:
+            msa = msa[:, start_column:] # end_column included
+        else:
+            msa = msa[:, start_column:end_column+1] # end_column included
+    return msa
 
 if __name__=="__main__":
     ## Command line options
@@ -114,12 +146,6 @@ if __name__=="__main__":
         def run(argspool):
             "Function to run with ThreadPoolExecutor"
             submsa(start_column=argspool.start_column, end_column=argspool.end_column, path_save_ilp=argspool.path_save_ilp, path_opt_solution=argspool.path_opt_solution)
-        
-        # for start, end in tqdm(submsa_index, desc="Solving MSA"):
-        #     path_save_ilp = args.path_save_ilp + "_{start}-{end}.mps"
-        #     path_opt_solution = args.path_opt_solution + "_{start}-{end}.json"
-        #     args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution)
-        #     run(args_submsa)
         
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             with tqdm(total=len(submsa_index)) as progress:
