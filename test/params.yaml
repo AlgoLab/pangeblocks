@@ -1,6 +1,6 @@
-PATH_MSAS: "/data/alessia/covid/msa"
-PATH_OUTPUT: "output-covid"
-THRESHOLD_VERTICAL_BLOCKS: 3
+PATH_MSAS: "test" #"/data/alessia/covid/msa" 
+PATH_OUTPUT: "output-test" # "output-covid"
+THRESHOLD_VERTICAL_BLOCKS: 2
 OPTIMIZATION:
   OBJECTIVE_FUNCTION: "nodes" # nodes, strings, weighted, depth
   PENALIZATION: 3 # used only with "weighted"

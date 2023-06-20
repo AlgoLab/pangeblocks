@@ -24,11 +24,13 @@ rule compute_vertical_blocks:
     output: 
         pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json")
     params:
-        log_level=LOG_LEVEL
+        log_level=LOG_LEVEL,
+        threshold_vertical_blocks=config["THRESHOLD_VERTICAL_BLOCKS"]
     log:
         err=pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.log")
     shell:
-        """/usr/bin/time --verbose src/greedy_vertical_blocks.py {input} --output {output} --log-level {params.log_level} > {log.err} 2>&1"""
+        """/usr/bin/time --verbose src/greedy_vertical_blocks.py {input} --output {output} \
+        --threshold-vertical-blocks {params.threshold_vertical_blocks} --log-level {params.log_level} > {log.err} 2>&1"""
 
 rule submsa_index:
     input: 

@@ -143,20 +143,22 @@ if __name__=="__main__":
                          obj_function=args.obj_function, penalization=args.penalization,
                          min_len=args.min_len, min_coverage=args.min_coverage, time_limit=args.time_limit
                          )
+        
         def run(argspool):
             "Function to run with ThreadPoolExecutor"
             submsa(start_column=argspool.start_column, end_column=argspool.end_column, path_save_ilp=argspool.path_save_ilp, path_opt_solution=argspool.path_opt_solution)
         
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            with tqdm(total=len(submsa_index)) as progress:
-                progress.set_description("Solving subMSA")
+            with tqdm(total=len(submsa_index), leave=True, ncols=100, bar_format='{l_bar}{bar}| [{elapsed}{postfix}]') as pbar:
+                
                 futures=[]
                 for start,end in submsa_index:
                     path_save_ilp = args.path_save_ilp + f"_{start}-{end}.mps"
                     path_opt_solution = args.path_opt_solution + f"_{start}-{end}.json"
                     args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution)
                     future = pool.submit(run, args_submsa)
-                    future.add_done_callback(lambda p: progress.update())
+                    future.add_done_callback(lambda p: pbar.update())
+                    future.add_done_callback(lambda p: pbar.set_description(f"Solved subMSA: [{start},{end}]"))
                     futures.append(future)
                 
                 for future in futures:

@@ -38,9 +38,10 @@ def load_submsa(filename, start_column=0, end_column=-1):
 
 @timer
 def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
-                           start_column: int = 0, end_column: int = -1,):
+                           start_column: int = 0, end_column: int = -1, threshold_vertical_blocks: int = 1):
     "Compute maximal blocks in a submsa"
 
+    logging.info(f"threshold vertical blocks: {threshold_vertical_blocks}")
     # load subMSA
     msa=load_submsa(filename, start_column, end_column)
     n_cols=msa.get_alignment_length()
@@ -58,7 +59,7 @@ def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[st
             chars_block.append(chars_col[0])
         else:
             
-            if len(chars_block)>0:
+            if len(chars_block)>= args.threshold_vertical_blocks:
                 end_col = col-1 # end column is included
                 vertical_blocks.append(
                     (list(range(n_seqs)), start_col, end_col, "".join(chars_block))
@@ -85,6 +86,7 @@ if __name__=="__main__":
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
     # parser.add_argument("-vb","--only-vertical-blocks", help="Output only vertical blocks: those using all sequences", type=bool, default=False, dest="only_vertical")
+    parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length at least the threshold will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
     parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG)", dest="log_level")
     args = parser.parse_args()
 
@@ -97,6 +99,7 @@ if __name__=="__main__":
     vertical_blocks, times = compute_vertical_blocks(
         filename=args.filename, output=args.output, 
         start_column=args.start_column, end_column=args.end_column, 
+        threshold_vertical_blocks=args.threshold_vertical_blocks
         )
     
     
