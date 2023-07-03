@@ -36,8 +36,8 @@ rule submsa_index:
     input: 
         path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
         path_vertical_blocks=pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks.json"),
-    output: 
-        submsa_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt")
+    output:
+        path_submsa_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}.txt")
     params:
         threshold_vertical_blocks=config["THRESHOLD_VERTICAL_BLOCKS"]
     log:
@@ -85,7 +85,8 @@ rule coverage_to_graph:
         auxfile=pjoin(PATH_OUTPUT, "gfa","{name_msa}.log"),
     shell:
         """/usr/bin/time --verbose src/compute_gfa.py --path-msa {input.path_msa} \
-        --dir-subsolutions {params.dir_subsols} --path-vert-blocks {input.path_vb} --path-gfa {output} > {log} 2>&1"""
+        --dir-subsolutions {params.dir_subsols} --path-vert-blocks {input.path_vb} \
+        --path-gfa {output} > {log} 2>&1"""
 
 rule postprocessing_gfa:
     input:
