@@ -22,10 +22,11 @@ if __name__=="__main__":
     # Command line options
     parser = argparse.ArgumentParser()
     parser.add_argument("--path-vertical-blocks", help="path to vertical_blocks.json", dest="path_vertical_blocks")
-    parser.add_argument("--path-msa", help="path to vertical_blocks.json", dest="path_msa")
+    parser.add_argument("--path-msa", help="path to msa  in fasta format", dest="path_msa")
     parser.add_argument("-o","--output", help="output file .txt", dest="output")
-    parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length at least the threshold will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
-    parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG)", dest="log_level")
+    parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length greather or equal than the threshold \
+                        will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
+    parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG). Default ERROR", dest="log_level")
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,

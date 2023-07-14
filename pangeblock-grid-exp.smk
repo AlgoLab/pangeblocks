@@ -15,8 +15,9 @@ MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
 MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
 # path msas
+SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
 MSAS = list(Path(PATH_MSAS).glob("*.[fa]*"))
-NAMES = [path.stem for path in MSAS]
+NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
 EXT_MSA = MSAS[0].suffix
 
 rule all:
@@ -63,7 +64,8 @@ rule ilp:
     params:
         dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "alpha{alpha}"),
         log_level=config["LOG_LEVEL"],
-        time_limit=config["OPTIMIZATION"]["TIME_LIMIT"]
+        time_limit=config["OPTIMIZATION"]["TIME_LIMIT"],
+        threads_ilp=config["THREADS"]["ILP"],
     threads:
         config["THREADS"]
     log:

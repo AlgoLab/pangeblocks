@@ -6,6 +6,9 @@ from src.utils import MonitorValuesPlus
 from src.msa import AnalyzerMSA
 from tqdm import tqdm
 
+
+
+
 # --- EDA MSA
 rule eda_msa: 
     input: 
@@ -34,7 +37,14 @@ rule eda_msa:
                 mv_problems()
 
         # list of (path to) msas
-        list_paths = list(Path(config["PATH_MSAS"]).glob("*.[fa]*"))
+        # list_paths = list(Path(config["PATH_MSAS"]).glob("*.[fa]*"))
+
+        # path msas
+        SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
+        MSAS = list(Path(config["PATH_MSAS"]).glob("*.[fa]*"))
+        
+        list_paths = [path for path in MSAS if path.stem in SUBSET_HLA]
+        print(MSAS)
 
         with ThreadPoolExecutor(max_workers=16) as pool:
             with tqdm(total=len(list_paths)) as progress:

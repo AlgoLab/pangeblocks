@@ -18,15 +18,18 @@
 # snakemake -s pangeblock-grid-exp.smk -c16 --use-conda
 # --config PATH_MSAS=$path_msas --config PATH_OUTPUT=$path_output
 
-from src.ilp.input import InputBlockSet
-from src.maximal_blocks import compute_maximal_blocks
+# from src.ilp.input import InputBlockSet
+# from src.maximal_blocks import compute_maximal_blocks
 
-ibs = InputBlockSet()
-path_msa = "/home/avila/pangeblocks/test/test3.fa"
-sc,ec=4,6
-maximal_blocks = compute_maximal_blocks(path_msa, start_column=sc,end_column=ec)
-decomp, missing, one_char = ibs(path_msa, maximal_blocks, sc, ec)
+# ibs = InputBlockSet()
+# path_msa = "/home/avila/pangeblocks/test/test3.fa"
+# sc,ec=4,6
+# maximal_blocks = compute_maximal_blocks(path_msa, start_column=sc,end_column=ec)
+# decomp, missing, one_char = ibs(path_msa, maximal_blocks, sc, ec)
 
-src/solve_submsa.py --path-msa test/test3.fa -sc 4  -ec 6 --obj-function nodes --path-save-ilp output-test/ilp/test3_4-6.mps --path-opt-solution output-test/ilp/test3_4-6.json
+# src/solve_submsa.py --path-msa test/test3.fa -sc 4  -ec 6 --obj-function nodes --path-save-ilp output-test/ilp/test3_4-6.mps --path-opt-solution output-test/ilp/test3_4-6.json
 
-src/solve_submsa.py --path-msa test/test3.fa --submsa-index output-test/submsas/test3.txt --obj-function nodes --path-save-ilp output-test/ilp/test3 --path-opt-solution output-test/ilp/test3
+# src/solve_submsa.py --path-msa test/test3.fa --submsa-index output-test/submsas/test3.txt --obj-function nodes --path-save-ilp output-test/ilp/test3 --path-opt-solution output-test/ilp/test3
+
+/home/avila/Wild-pBWT/bin/wild-pbwt -a 5 -f test-gfa/haplotypes.txt -o y
+# > haplotypes_maxblocks.txt

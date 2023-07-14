@@ -9,6 +9,9 @@ from collections import defaultdict, namedtuple
 from typing import Tuple, List, Union, Optional
 import logging
 
+# TODO move functions to src/blocks/maximal_blocks/utils.py and
+# compute_vertical_blocks() to src/blocks/maximal_blocks/greedy_vertical_blocks.py
+# Keep only the argparse here
 def timer(func):
     "returns output and execution time of 'func'"
     def wrap_func(*args, **kwargs):

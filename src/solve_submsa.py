@@ -2,6 +2,7 @@
 """
 Compute a Variation Graph from an MSA
 """
+import os
 import cProfile
 import time
 import json
@@ -10,7 +11,8 @@ from Bio import AlignIO
 from blocks import Block
 from ilp.input import InputBlockSet
 from ilp.optimization import Optimization
-from maximal_blocks import compute_maximal_blocks
+from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree
+from blocks.maximal_blocks.wild_pbwt import compute_maximal_blocks as maximal_blocks_pbwt
 from pathlib import Path
 from dataclasses import astuple
 import logging
@@ -19,11 +21,14 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from collections import namedtuple, defaultdict
+from typing import Optional 
 
-# def solve_msa(args):
-def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_solution, solve_ilp, obj_function, penalization, min_len, min_coverage, time_limit, **kwargs):
+def solve_submsa(path_msa, start_column, end_column, 
+                 path_save_ilp, path_opt_solution, solve_ilp, 
+                 obj_function, penalization, min_len, min_coverage, 
+                 time_limit, bin_wildpbwt: Optional[str] = None, use_wildpbwt: bool = True,):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
-
+    
     # # Load set of decomposed blocks
     kwargs_opt = dict(
         obj_function=obj_function,
@@ -58,7 +63,19 @@ def solve_submsa(path_msa, start_column, end_column, path_save_ilp, path_opt_sol
     else:
         # 1. compute maximal blocks
         logging.info(f"Computing maximal blocks")
-        maximal_blocks = compute_maximal_blocks(filename=path_msa, start_column=start_column, end_column=end_column, only_vertical=False)
+        if use_wildpbwt:
+            maximal_blocks = maximal_blocks_pbwt(
+                        filename=path_msa,
+                        start_column=start_column, end_column=end_column,
+                        alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4},
+                        bin_wildpbwt = bin_wildpbwt,
+                        label_blocks = True
+                    )
+        else:
+            maximal_blocks = maximal_blocks_suffixtree(
+                        filename=path_msa, 
+                        start_column=start_column, end_column=end_column, only_vertical=False
+                        )
         
         # 2. compute input set of blocks for the ILP (decomposition is included)
         logging.info("Generating input set")
@@ -106,8 +123,9 @@ if __name__=="__main__":
     parser.add_argument("--path-msa", help="path to MSA in .fa format", dest="path_msa")
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
+    parser.add_argument("--use-wildpbwt", help="Compte maximal blocks with WildPBWT, otherwise use Suffix Tree. Default True", action="store_true", default=True, type=bool)
     # ILP
-    parser.add_argument("--obj-function", help="objective function (nodes/strings/weighted/depth)", dest="obj_function")
+    parser.add_argument("--obj-function", help="objective function", dest="obj_function", choices=["nodes","strings","weighted","depth"])
     parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted', and under-covered blocks when using 'depth' as obj_function", dest="penalization", type=int)
     parser.add_argument("--min-len", help="minimum length of shorter blocks when using 'weighted' as obj_function to be penalized", dest="min_len", type=int)
     parser.add_argument("--min-coverage", help="minimum percentage of sequence when using 'depth' as obj_function to be penalized", dest="min_coverage", type=float)
