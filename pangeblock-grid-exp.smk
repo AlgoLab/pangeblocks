@@ -17,9 +17,10 @@ MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 # path msas
 SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
 MSAS = list(Path(PATH_MSAS).glob("*.[fa]*"))
-NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
+NAMES = [path.stem for path in MSAS]
+# NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
 EXT_MSA = MSAS[0].suffix
-
+print(NAMES)
 rule all:
     input:
         expand(pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization0-min_len0-min_coverage0-alpha{alpha}", "{name_msa}.gfa"), 
@@ -66,8 +67,11 @@ rule ilp:
         log_level=config["LOG_LEVEL"],
         time_limit=config["OPTIMIZATION"]["TIME_LIMIT"],
         threads_ilp=config["THREADS"]["ILP"],
+        use_wildpbwt=config["USE_WILDPBWT"],
+        bin_wildpbwt=config["BIN_WILDPBWT"],
+
     threads:
-        config["THREADS"]
+        config["THREADS"]["TOTAL"]
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log"),
     shell:
@@ -75,6 +79,7 @@ rule ilp:
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
+        --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {params.bin_wildpbwt}\
         --workers {threads} > {output.auxfile} 2> {log.stderr}"""
 
 rule coverage_to_graph:

@@ -26,7 +26,8 @@ from typing import Optional
 def solve_submsa(path_msa, start_column, end_column, 
                  path_save_ilp, path_opt_solution, solve_ilp, 
                  obj_function, penalization, min_len, min_coverage, 
-                 time_limit, bin_wildpbwt: Optional[str] = None, use_wildpbwt: bool = True,):
+                 time_limit, 
+                 use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, ):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
     
     # # Load set of decomposed blocks
@@ -123,7 +124,8 @@ if __name__=="__main__":
     parser.add_argument("--path-msa", help="path to MSA in .fa format", dest="path_msa")
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
-    parser.add_argument("--use-wildpbwt", help="Compte maximal blocks with WildPBWT, otherwise use Suffix Tree. Default True", action="store_true", default=True, type=bool)
+    parser.add_argument("-pbwt","--use-wildpbwt", help="Compute maximal blocks with WildPBWT, otherwise use Suffix Tree. Default True", default=True, type=bool, dest="use_wildpbwt")
+    parser.add_argument("--bin-wildpbwt", help="path to bin/wild-pbwt", dest="bin_wildpbwt")
     # ILP
     parser.add_argument("--obj-function", help="objective function", dest="obj_function", choices=["nodes","strings","weighted","depth"])
     parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted', and under-covered blocks when using 'depth' as obj_function", dest="penalization", type=int)
@@ -140,7 +142,6 @@ if __name__=="__main__":
     parser.add_argument("--workers", help="Workers for ThreadPoolExecutor to solve subMSAs", dest="workers", type=int, default=16)
     args = parser.parse_args()
 
-
     logging.basicConfig(level=args.log_level,
                     format='[Solve subMSA] %(asctime)s. %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
@@ -148,7 +149,7 @@ if __name__=="__main__":
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
     if args.submsa_index:
         OptArgs=namedtuple("OptArgs",["obj_function", "penalization", "min_len", "min_coverage", "time_limit"])
-        ArgsPool=namedtuple("Args",["start_column", "end_column", "path_save_ilp", "path_opt_solution"])
+        ArgsPool=namedtuple("Args",["start_column", "end_column", "path_save_ilp", "path_opt_solution",])
 
         submsa_index = []
         with open(args.submsa_index, "r") as fp:
@@ -159,7 +160,8 @@ if __name__=="__main__":
         opt_args=OptArgs(args.obj_function, args.penalization, args.min_len, args.min_coverage, args.time_limit)
         submsa = partial(solve_submsa, path_msa=args.path_msa, solve_ilp=args.solve_ilp, 
                          obj_function=args.obj_function, penalization=args.penalization,
-                         min_len=args.min_len, min_coverage=args.min_coverage, time_limit=args.time_limit
+                         min_len=args.min_len, min_coverage=args.min_coverage, time_limit=args.time_limit,
+                         use_wildpbwt=args.use_wildpbwt, bin_wildpbwt=args.bin_wildpbwt
                          )
         
         def run(argspool):
@@ -173,7 +175,7 @@ if __name__=="__main__":
                 for start,end in submsa_index:
                     path_save_ilp = args.path_save_ilp + f"_{start}-{end}.mps"
                     path_opt_solution = args.path_opt_solution + f"_{start}-{end}.json"
-                    args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution)
+                    args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution,)
                     future = pool.submit(run, args_submsa)
                     future.add_done_callback(lambda p: pbar.update())
                     future.add_done_callback(lambda p: pbar.set_description(f"Solved subMSA: [{start},{end}]"))
@@ -184,5 +186,3 @@ if __name__=="__main__":
     
     else:
         solve_submsa(**vars(args))
-
-    

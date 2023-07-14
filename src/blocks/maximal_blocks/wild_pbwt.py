@@ -10,6 +10,9 @@ from src.blocks.maximal_blocks.utils import (
     load_submsa,
 ) 
 
+import logging
+
+
 def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
                            only_vertical: bool = False,
@@ -20,7 +23,9 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
     "Compute maximal blocks in a submsa"
     
     PATH_WILD_PBWT=bin_wildpbwt
-    assert os.path.isfile(), f"it seems that {PATH_WILD_PBWT} is not the correct path to /bin/wild-pbwt"
+    logging.info(f"WILD-PBWT: {PATH_WILD_PBWT}")
+    if PATH_WILD_PBWT:
+        assert os.path.isfile(PATH_WILD_PBWT), f"it seems that {PATH_WILD_PBWT} is not the correct path to /bin/wild-pbwt"
     SIZE_ALPHABET=len(alphabet_to_ascii)
     
     # load subMSA
@@ -30,6 +35,7 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
 
     # create file to store input matrix for wild-pBWT
     fd, path = tempfile.mkstemp()
+    logging.info(f"tmp file [{start_column},{end_column}] {path}")
     try:
         with os.fdopen(fd, 'w') as fileTemp:
             for seq, record in enumerate(msa):
@@ -41,6 +47,7 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
                 fileTemp.write(row_panel + "\n")
 
         # compute maximal blocks with wild-pBWT
+        logging.info("")
         COMMANDS = f"{PATH_WILD_PBWT} -a {SIZE_ALPHABET} -f {path} -o y".split(" ")
         # print(COMMANDS)
         result = subprocess.run(COMMANDS, capture_output=True, text=True)
