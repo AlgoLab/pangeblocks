@@ -66,7 +66,7 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
                            start_column: int = 0, end_column: int = -1, 
                            only_vertical: bool = False):# multi: bool = True):
     "Compute maximal blocks in a submsa"
-
+    logging.info(f"Computing maximal blocks with Suffix Tree")
     # load subMSA
     msa=load_submsa(filename, start_column, end_column)
     n_cols=msa.get_alignment_length()

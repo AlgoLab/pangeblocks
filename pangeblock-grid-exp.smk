@@ -42,6 +42,7 @@ rule install_wild_pbwt:
     conda:
         "envs/wild-pbwt.yml"
     shell:
+        #TODO: if else to check if binary file already exists and is working (skip installation)
         """
         rm -rf Wild-pBWT/
         git clone {params.github} && cd Wild-pBWT
@@ -51,7 +52,6 @@ rule install_wild_pbwt:
 rule compute_vertical_blocks:
     input:
         msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
-        wild_pbwt="Wild-pBWT/bin/wild-pbwt"
     output: 
         pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}","vertical_blocks_alpha{alpha}.json")
     params:
@@ -82,7 +82,8 @@ rule submsa_index:
 rule ilp:
     input:
         path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
-        path_submsas_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}_alpha{alpha}.txt")
+        path_submsas_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}_alpha{alpha}.txt"),
+        wild_pbwt="Wild-pBWT/bin/wild-pbwt"
     output:
         auxfile=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log")
     params:
@@ -91,7 +92,6 @@ rule ilp:
         time_limit=config["OPTIMIZATION"]["TIME_LIMIT"],
         threads_ilp=config["THREADS"]["ILP"],
         use_wildpbwt=config["USE_WILDPBWT"],
-        bin_wildpbwt=config["BIN_WILDPBWT"],
     threads:
         config["THREADS"]["TOTAL"]
     log:
@@ -103,7 +103,7 @@ rule ilp:
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
-        --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {params.bin_wildpbwt}\
+        --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt}\
         --workers {threads} > {output.auxfile} 2> {log.stderr}"""
 
 rule coverage_to_graph:

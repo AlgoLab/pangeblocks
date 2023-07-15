@@ -4,8 +4,8 @@ OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
     - "strings"
-    # - "weighted"
-    # - "depth"
+    - "weighted"
+    - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -14,25 +14,26 @@ OPTIMIZATION:
   MIN_LEN: # used only with "weighted"
     # - 3
     # - 5
-    # - 10   
+    - 10   
     - 15
+    - 20
   MIN_COVERAGE: # used only with "depth"
     # - 0.1
     # - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
     - 1 
-    - 2
+    # - 2
     # - 8
-    # - 16
-    # - 32
+    - 16
+    - 32
     # - 8
     # - 16
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
-  TOTAL: 16
+  TOTAL: 32
   SUBMSAS: 8
   ILP: 4
 USE_WILDPBWT: True # to compute maximal blocks, otherwise SuffixTree will be used
-BIN_WILDPBWT: "/home/avila/Wild-pBWT/bin/wild-pbwt"
+# BIN_WILDPBWT: "/home/avila/Wild-pBWT/bin/wild-pbwt"

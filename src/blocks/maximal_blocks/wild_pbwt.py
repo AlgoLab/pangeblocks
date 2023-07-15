@@ -22,9 +22,9 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
     "Compute maximal blocks in a submsa"
     
     PATH_WILD_PBWT=bin_wildpbwt
-    logging.info(f"WILD-PBWT: {PATH_WILD_PBWT}")
+    logging.info(f"Computing maximal blocks with Wild-pBWT: {PATH_WILD_PBWT}")
     if PATH_WILD_PBWT:
-        assert os.path.isfile(PATH_WILD_PBWT), f"it seems that {PATH_WILD_PBWT} is not the correct path to /bin/wild-pbwt"
+        assert os.path.isfile(PATH_WILD_PBWT), f"it seems that {PATH_WILD_PBWT} is not the correct path to the binary 'wild-pbwt'"
     SIZE_ALPHABET=len(alphabet_to_ascii)
     
     # load subMSA
