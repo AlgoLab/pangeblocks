@@ -1,0 +1,7 @@
+name: wild-pbwt
+channels:
+  - conda-forge
+dependencies:
+  - compilers
+  - make
+  - sdsl-lite

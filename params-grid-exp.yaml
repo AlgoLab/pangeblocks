@@ -1,11 +1,11 @@
-PATH_MSAS: "test" #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" # "/data/alessia/covid/msa"   
-PATH_OUTPUT:  "output-test-grid" # "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"# "/data/alessia/covid/pangeblocks"
+PATH_MSAS: "test" # "/data/alessia/covid/small-msa" # "test" #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
+PATH_OUTPUT: "output-test-grid" # "/data/alessia/covid/pangeblocks-small-msa-wildpbwt" # "output-test-grid" # "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"# 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
     - "strings"
-    - "weighted"
-    - "depth"
+    # - "weighted"
+    # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -21,8 +21,11 @@ OPTIMIZATION:
     # - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    - 1
+    - 1 
     - 2
+    # - 8
+    # - 16
+    # - 32
     # - 8
     # - 16
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)

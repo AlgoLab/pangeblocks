@@ -28,19 +28,40 @@ rule all:
         expand(pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", "penalization{penalization}-min_len{min_len}-min_coverage0-alpha{alpha}" ,"{name_msa}.gfa"), 
         penalization=PENALIZATION, min_len=MIN_LEN, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
         expand(pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_len0-min_coverage{min_coverage}-alpha{alpha}" ,"{name_msa}.gfa"),
-        penalization=PENALIZATION, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES)
+        penalization=PENALIZATION, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
+        "Wild-pBWT/bin/wild-pbwt"
+
+
+rule install_wild_pbwt:
+    params: 
+        github = "https://github.com/illoxian/Wild-pBWT.git"
+    output:
+        "Wild-pBWT/bin/wild-pbwt"
+    log:
+        pjoin(PATH_OUTPUT, "logs", "rule-install_wild_pbwt.err.log"),
+    conda:
+        "envs/wild-pbwt.yml"
+    shell:
+        """
+        rm -rf Wild-pBWT/
+        git clone {params.github} && cd Wild-pBWT
+        make wild-pbwt
+        """
 
 rule compute_vertical_blocks:
     input:
-        pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA)
+        msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
+        wild_pbwt="Wild-pBWT/bin/wild-pbwt"
     output: 
         pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}","vertical_blocks_alpha{alpha}.json")
     params:
         log_level=LOG_LEVEL
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-rule-compute_blocks_alpha{alpha}.err.log"),
+    conda: 
+        "envs/pangeblocks.yml"
     shell:
-        """/usr/bin/time --verbose src/greedy_vertical_blocks.py {input} --output {output} \
+        """/usr/bin/time --verbose src/greedy_vertical_blocks.py {input.msa} --output {output} \
         --threshold-vertical-blocks {wildcards.alpha} --log-level {params.log_level} > {log.stderr} 2>&1"""
 
 rule submsa_index:
@@ -51,6 +72,8 @@ rule submsa_index:
         path_submsa_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}_alpha{alpha}.txt")
     log: 
         stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-alpha{alpha}-rule-submsa_index.out.log"),
+    conda: 
+        "envs/pangeblocks.yml"
     shell:
         """/usr/bin/time --verbose src/submsas.py --path-msa {input.path_msa} \
         --path-vertical-blocks {input.path_vertical_blocks} --threshold-vertical-blocks {wildcards.alpha} --output {output} > {log.stdout} 2>&1
@@ -69,11 +92,12 @@ rule ilp:
         threads_ilp=config["THREADS"]["ILP"],
         use_wildpbwt=config["USE_WILDPBWT"],
         bin_wildpbwt=config["BIN_WILDPBWT"],
-
     threads:
         config["THREADS"]["TOTAL"]
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log"),
+    conda: 
+        "envs/pangeblocks.yml"
     shell:
         """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
@@ -93,6 +117,8 @@ rule coverage_to_graph:
         dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "alpha{alpha}"),
     log:
         stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-coverage_to_graph.log")
+    conda: 
+        "envs/pangeblocks.yml"
     shell:
         """/usr/bin/time --verbose src/compute_gfa.py --path-msa {input.path_msa} \
         --dir-subsolutions {params.dir_subsols} --path-vert-blocks {input.path_vb} \
@@ -103,6 +129,8 @@ rule postprocessing_gfa:
         path_gfa=pjoin(PATH_OUTPUT, "gfa","{obj_func}", "penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}", "{name_msa}.gfa")
     output:
         path_post_gfa=pjoin(PATH_OUTPUT, "gfa-post","{obj_func}", "penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}", "{name_msa}.gfa")
+    conda: 
+        "envs/pangeblocks.yml"
     shell:
         "/usr/bin/time --verbose python src/postprocess_gfa.py --path_gfa {input.path_gfa} > {output.path_post_gfa}" 
 
@@ -112,10 +140,12 @@ rule unchop_gfa:
     output:
         path_unchop_gfa=pjoin(PATH_OUTPUT, "gfa-unchop","{obj_func}", "penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}", "{name_msa}.gfa"),
         path_labels=pjoin(PATH_OUTPUT, "gfa-unchop","{obj_func}", "penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}", "{name_msa}.csv")
+    log:
+        pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-unchop_gfa.log")
     conda:
-        "envs/vg.yaml"
+        "envs/vg.yml"
     shell:
         """
-        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 
+        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log} 
         python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
         """

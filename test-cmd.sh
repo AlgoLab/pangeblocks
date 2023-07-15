@@ -31,5 +31,6 @@
 
 # src/solve_submsa.py --path-msa test/test3.fa --submsa-index output-test/submsas/test3.txt --obj-function nodes --path-save-ilp output-test/ilp/test3 --path-opt-solution output-test/ilp/test3
 
-/home/avila/Wild-pBWT/bin/wild-pbwt -a 5 -f test-gfa/haplotypes.txt -o y
+# /home/avila/Wild-pBWT/bin/wild-pbwt -a 5 -f test-gfa/haplotypes.txt -o y
 # > haplotypes_maxblocks.txt
+git clone https://github.com/illoxian/Wild-pBWT.git

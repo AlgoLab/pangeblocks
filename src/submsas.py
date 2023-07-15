@@ -43,27 +43,37 @@ if __name__=="__main__":
 
     ncols = ncols_msa(args.path_msa)
 
-    # sort vertical blocks by starting position
-    vertical_blocks = sorted(vertical_blocks, key=lambda b: (b[1],b[2]))
-
-    # Include auxiliar first and last block if needed
-    first_vb = vertical_blocks[0]
-    if first_vb[1] > 0:
-        vertical_blocks.insert(0, [[],-1,-1,"N"])
-    
-    last_vb = vertical_blocks[-1]
-    if last_vb[2] < ncols-1: 
-        vertical_blocks.append([[],ncols,ncols,"N"])
-    
-    pairs_blocks = zip(vertical_blocks[:-1], vertical_blocks[1:])
-    
-    # save starting and ending positions for each subMSA
-    with open(args.output, "w") as fp: 
-        for j, pair in enumerate(pairs_blocks):
-            left_block, right_block = pair
-
-            start = left_block[2] + 1 # start submsa = end of left block + 1  
-            end   = right_block[1] - 1 # end submsa = start of right block - 1 
-            print("Vertical Block",left_block, right_block, start, end)
-    
+    if len(vertical_blocks) == 0:
+        
+        with open(args.output, "w") as fp: 
+            
+            start = 0 # start MSA  
+            end   = -1 # end MSA 
+            logging.info("No Vertical Blocks", start, end)
             fp.writelines(f"{start}\t{end}\n")
+
+    else:   
+        # sort vertical blocks by starting position
+        vertical_blocks = sorted(vertical_blocks, key=lambda b: (b[1],b[2]))
+
+        # Include auxiliar first and last block if needed
+        first_vb = vertical_blocks[0]
+        if first_vb[1] > 0:
+            vertical_blocks.insert(0, [[],-1,-1,"N"])
+        
+        last_vb = vertical_blocks[-1]
+        if last_vb[2] < ncols-1: 
+            vertical_blocks.append([[],ncols,ncols,"N"])
+        
+        pairs_blocks = zip(vertical_blocks[:-1], vertical_blocks[1:])
+    
+        # save starting and ending positions for each subMSA
+        with open(args.output, "w") as fp: 
+            for j, pair in enumerate(pairs_blocks):
+                left_block, right_block = pair
+
+                start = left_block[2] + 1 # start submsa = end of left block + 1  
+                end   = right_block[1] - 1 # end submsa = start of right block - 1 
+                print("Vertical Block",left_block, right_block, start, end)
+        
+                fp.writelines(f"{start}\t{end}\n")

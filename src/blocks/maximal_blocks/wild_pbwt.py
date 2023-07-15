@@ -12,12 +12,11 @@ from src.blocks.maximal_blocks.utils import (
 
 import logging
 
-
 def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
                            only_vertical: bool = False,
                            alphabet_to_ascii: dict = {"-":0,"A":1,"C":2,"G":3,"T":4},
-                           bin_wildpbwt: str = "/home/avila/Wild-pBWT/bin/wild-pbwt",
+                           bin_wildpbwt: str = "Wild-pBWT/bin/wild-pbwt",
                            label_blocks: bool = True
                            ):
     "Compute maximal blocks in a submsa"
