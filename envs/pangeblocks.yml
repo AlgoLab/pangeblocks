@@ -16,4 +16,3 @@ dependencies:
     - seaborn==0.12.1
     - pydantic==1.10.2
     - tqdm
-    # - gurobipy==9.5.2

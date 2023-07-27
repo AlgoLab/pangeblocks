@@ -3,12 +3,16 @@ from collections import defaultdict
 from typing import Union
 from pathlib import Path
 from Bio import AlignIO
+
+# ------
+# FIXME:  better way to import this?
 import sys
 PATH=Path(__file__).parent.parent.parent
 sys.path.append(str(PATH))
 
-from src.blocks import Block 
+from src.blocks import Block # FIXME: Block
 from src.blocks.block_decomposer import Decomposer
+# ------
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
@@ -22,17 +26,21 @@ class InputBlockSet:
     def __call__(self, path_msa: Union[str,Path], maximal_blocks: list[Block],
                  start_column: int, end_column: int) -> list[Block]:
         
+        
+        self.start_column = start_column
+        self.end_column = end_column
+
         # parse maximal blocks as Block objects
-        maximal_blocks = [Block(*b) for b in maximal_blocks]
+        maximal_blocks = [Block(*b[:3]) for b in maximal_blocks] # FIXME: Block
         # load MSA
-        msa = self.load_submsa(path_msa, start_column, end_column)
-        n_seqs = len(msa) 
-        n_cols = msa.get_alignment_length()
+        self.msa = self.load_submsa(path_msa, start_column, end_column)
+        n_seqs = len(self.msa) 
+        n_cols = self.msa.get_alignment_length()
         logging.info("subMSA loaded, nrows:(%s), ncols:(%s)" % (n_seqs, n_cols))
         
         # blocks not covered by maximal blocks
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, maximal_blocks, start_column)
-        missing_blocks = self.get_missing_blocks(coverage_panel, msa, start_column)
+        missing_blocks = self.get_missing_blocks(coverage_panel, self.msa, start_column)
         
         # block decomposition
         decomposer = Decomposer(row_maximal_decomposition=True)
@@ -57,19 +65,19 @@ class InputBlockSet:
         #                 logging.debug("incorrect missing block covering position (%s,%s): %s" % (r,c,block.str()))
 
 
-        blocks_one_char = self.get_blocks_one_char(msa, start_column)
-        # check blocks one char are correctly labeled
-        for block in blocks_one_char:
-            # logging.debug("block one char %s", block)
-            for r in block.K:
-                r=int(r)
-                start=int(block.start)
-                end=int(block.end)
-                for pos_block, c in enumerate(range(start, end+1)):
-                    char_msa = msa[r].seq[c-start_column].upper()
-                    char_block = block.label[pos_block].upper() 
-                    if char_msa != char_block:
-                        logging.debug("incorrect block one char covering position (%s,%s): %s" % (r,c,block.str()))
+        blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
+        # # check blocks one char are correctly labeled
+        # for block in blocks_one_char:
+        #     # logging.debug("block one char %s", block)
+        #     for r in block.K:
+        #         r=int(r)
+        #         start=int(block.start)
+        #         end=int(block.end)
+        #         for pos_block, c in enumerate(range(start, end+1)):
+        #             char_msa = msa[r].seq[c-start_column].upper()
+        #             char_block = block.label[pos_block].upper() 
+        #             if char_msa != char_block:
+        #                 logging.debug("incorrect block one char covering position (%s,%s): %s" % (r,c,block.str()))
 
         # Input set: input blocks:decomposition of blocks  of one position in the MSA)
         input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
@@ -81,15 +89,19 @@ class InputBlockSet:
         new_blocks = []
         blocks_by_start = defaultdict(list)
         for block in list_blocks:
-            if len(block.label) == 1: # only one character blocks
-                blocks_by_start[(block.start,block.label)].extend(list(block.K))
+            logging.info(f"block {block.str()}")
+            if block.len() == 1: # only one character blocks
+                print(block, block.K[0], block.start)
+                print(self.msa)
+                label = self.msa[int(block.K[0])].seq[int(block.start) - self.start_column]
+                blocks_by_start[(block.start, label)].extend(list(block.K))
             else: 
                 new_blocks.append(block)
         
         for i_label,K in blocks_by_start.items():
             i, label = i_label
-            new_blocks.append(Block(K,i,i,label))
-
+            # new_blocks.append(Block(K,i,i,label)) # FIXME: Block
+            new_blocks.append(Block(K,i,i))
         return new_blocks
 
     @staticmethod
@@ -124,9 +136,9 @@ class InputBlockSet:
             for pos in consecutive_pos: 
                 start_submsa = pos[0] - start_column
                 end_submsa = pos[-1] - start_column
-                label = str(msa[int(row)].seq[start_submsa:end_submsa+1])
+                # label = str(msa[int(row)].seq[start_submsa:end_submsa+1])
                 missing_blocks.append(
-                    Block(K=(row,), start=pos[0],end=pos[-1], label=label)
+                    Block(K=(row,), start=pos[0],end=pos[-1]) # FIXME: Block
                 )
 
         return missing_blocks
@@ -170,7 +182,7 @@ class InputBlockSet:
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            Block(K=K, start=col+start_column, end=col+start_column, label=c)
+                            Block(K=K, start=col+start_column, end=col+start_column) # FIXME: Block
                     )
 
         return blocks_one_char

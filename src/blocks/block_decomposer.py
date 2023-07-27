@@ -1,13 +1,15 @@
 import numpy as np
 from pathlib import Path
 from typing import Optional, Union
-from .block import Block
+from . import Block
 from .analyzer import BlockAnalyzer
 # from .block_decomposition import block_decomposition
 from .decompositions import (
     block_decomposition_row_maximal,
     block_decomposition_not_row_maximal,
 )
+
+from dataclasses import astuple
 
 class Decomposer(BlockAnalyzer):
 
@@ -53,5 +55,6 @@ class Decomposer(BlockAnalyzer):
         # join decomposed blocks and input blocks
         decomposed_blocks.extend(list_blocks)
 
+        decomposed_blocks = [astuple(b) for b in decomposed_blocks]
         # return non-duplicated blocks
-        return list(set(decomposed_blocks))
+        return list([Block(*b) for b in set(decomposed_blocks)])

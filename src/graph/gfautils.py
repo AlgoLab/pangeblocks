@@ -1,3 +1,4 @@
+# not used
 import gfapy
 
 class PrintListGFA:

@@ -1,5 +1,6 @@
 name: vg
 channels:
   - bioconda
+  - conda-forge
 dependencies:
   - vg

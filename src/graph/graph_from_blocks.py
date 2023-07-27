@@ -1,3 +1,4 @@
+# not used
 """Given a set of non overlapping and consecutives blocks by pairs,
 create edges and nodes for DAG"""
 
@@ -11,6 +12,8 @@ logging.basicConfig(level=logging.DEBUG,
 
 Node = namedtuple("Node",["K","i","j","label"]) # is a block
 Edge = namedtuple("Edge",["node1","node2","seqs"])
+
+# def label_from_msa()
 
 def nodes_edges_from_blocks(block1, block2):
     b1, b2 = block1, block2

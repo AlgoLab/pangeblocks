@@ -3,9 +3,7 @@
 from dataclasses import astuple 
 from Bio import AlignIO
 from collections import defaultdict, namedtuple
-# from src.graph import nodes_edges_from_blocks
 from pathlib import Path
-# from src.blocks import Block
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
@@ -24,10 +22,10 @@ class asGFA:
         list_nodes = []
         list_edges = []
 
-        msa, n_seqs, n_cols= self.load_msa(path_msa)
+        self.msa, n_seqs, n_cols= self.load_msa(path_msa)
         
         self.idx2seqid = dict()
-        for idx, record in enumerate(msa): 
+        for idx, record in enumerate(self.msa): 
             self.idx2seqid[idx] = record.id 
 
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.start )
@@ -40,7 +38,7 @@ class asGFA:
                     logging.debug("breaking for loop block1.end=%s << block2.start=%s" % (block1.end, block2.start) )
                     break
 
-                nodes, edges = nodes_edges_from_blocks(block1, block2)
+                nodes, edges = self.nodes_edges_from_blocks(block1, block2)
                 list_nodes.extend(nodes)
                 list_edges.extend(edges)
 
@@ -51,7 +49,7 @@ class asGFA:
 
         logging.debug("Number of nodes: %s", len(list_nodes))
         list_nodes = list(set([(node.K,node.i,node.j,
-                                str(msa[int(node.K[0]),int(node.i):int(node.j)+1].seq) ) for node in list_nodes]))
+                                str(self.msa[int(node.K[0]),int(node.i):int(node.j)+1].seq) ) for node in list_nodes]))
         logging.debug("Number of unique nodes %s", len(list_nodes))
         
         _list_edges = []
@@ -130,30 +128,31 @@ class asGFA:
 
         return align, n_seqs, n_cols
 
+    def nodes_edges_from_blocks(self, block1, block2):
+        Node = namedtuple("Node",["K","i","j","label"]) # is a block
+        Edge = namedtuple("Edge",["node1","node2","seqs"])
 
+        b1, b2 = block1, block2
+        nodes = []
+        edges = []
+        # not empty intersection
+        common_rows = set(b1.K).intersection(set(b2.K))
+        # K = len(common_rows)# number of seqs that can traverse the edge
+        K = list(common_rows)
+        K.sort()
 
-def nodes_edges_from_blocks(block1, block2):
-    Node = namedtuple("Node",["K","i","j","label"]) # is a block
-    Edge = namedtuple("Edge",["node1","node2","seqs"])
+        if b1.end == b2.start-1 and len(K)>0:
+            b1_label = self.msa[b1.K[0]].seq[b1.start:b1.end+1]
+            b2_label = self.msa[b2.K[0]].seq[b2.start:b2.end+1]
 
-    b1, b2 = block1, block2
-    nodes = []
-    edges = []
-    # not empty intersection
-    common_rows = set(b1.K).intersection(set(b2.K))
-    # K = len(common_rows)# number of seqs that can traverse the edge
-    K = list(common_rows)
-    K.sort()
-
-    if b1.end == b2.start-1 and len(K)>0:
-        # print("Condicion- consecutive blocks")
-        node1 = Node(b1.K, b1.start, b1.end, b1.label)
-        node2 = Node(b2.K, b2.start, b2.end, b2.label)
-        nodes.extend([node1, node2])
-        edges.append(Edge(node1, node2, K))
-    
-    if b2.end == b1.start-1 and len(K)>0:
-        logging.debug("block %s and block %s not connected" % (b1.str(), b2.str()))
-    # else: 
-    #     # print("Not consecutive blocks")
-    return nodes, edges
+            # print("Condicion- consecutive blocks")
+            node1 = Node(b1.K, b1.start, b1.end, b1_label)
+            node2 = Node(b2.K, b2.start, b2.end, b2_label)
+            nodes.extend([node1, node2])
+            edges.append(Edge(node1, node2, K))
+        
+        if b2.end == b1.start-1 and len(K)>0:
+            logging.debug("block %s and block %s not connected" % (b1.str(), b2.str()))
+        # else: 
+        #     # print("Not consecutive blocks")
+        return nodes, edges

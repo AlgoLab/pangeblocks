@@ -11,7 +11,7 @@ from Bio import AlignIO
 from blocks import Block
 from ilp.input import InputBlockSet
 from ilp.optimization import Optimization
-from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree
+from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree # FIXME: did not touch this
 from blocks.maximal_blocks.wild_pbwt import compute_maximal_blocks as maximal_blocks_pbwt
 from pathlib import Path
 from dataclasses import astuple
@@ -26,7 +26,7 @@ from typing import Optional
 def solve_submsa(path_msa, start_column, end_column, 
                  path_save_ilp, path_opt_solution, solve_ilp, 
                  obj_function, penalization, min_len, min_coverage, 
-                 time_limit, 
+                 time_limit, threads_ilp=4,
                  use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, ):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
     
@@ -36,7 +36,8 @@ def solve_submsa(path_msa, start_column, end_column,
         penalization=penalization,
         min_len=min_len,
         min_coverage=min_coverage,
-        time_limit=time_limit
+        time_limit=time_limit,
+        threads_ilp=threads_ilp
     )
 
     # if only one column is involved, return the blocks with one character
@@ -57,7 +58,8 @@ def solve_submsa(path_msa, start_column, end_column,
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            Block(K=K, start=col+start_column, end=col+start_column, label=c)
+                            # Block(K=K, start=col+start_column, end=col+start_column, label=c) # FIXME: Block
+                            Block(K=K, start=col+start_column, end=col+start_column)
                     )
         opt_coverage = blocks_one_char
 
@@ -97,7 +99,8 @@ def solve_submsa(path_msa, start_column, end_column,
         Path(path_opt_solution).parent.mkdir(exist_ok=True, parents=True)
         with open(path_opt_solution, "w") as fp:
             blocks = [astuple(block) for block in opt_coverage]
-            blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks] 
+            # blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks]
+            blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2])] for b in blocks] 
             json.dump(blocks, fp)
 
 

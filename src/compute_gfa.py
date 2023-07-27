@@ -22,13 +22,13 @@ def main(args):
     logging.info(f"Computing Pangeblocks for: {Path(path_msa).stem}")
     logging.info("Loading blocks")
     with open(path_vert_blocks) as fp:
-        opt_coverage = [Block(*block) for block in json.load(fp)]
+        opt_coverage = [Block(*b[:3]) for b in json.load(fp)]
 
     name_msa = Path(path_msa).stem    
     for path_subsol in Path(dir_subsols).rglob(f"{name_msa}*.json"):
 
         with open(path_subsol) as fp:
-            opt_coverage.extend([Block(*block) for block in json.load(fp)])
+            opt_coverage.extend([Block(*b[:3]) for b in json.load(fp)])
 
     for block in opt_coverage:
         print(block)

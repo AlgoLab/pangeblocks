@@ -64,6 +64,7 @@ class Optimization:
         self.min_len = kwargs.get("min_len", 1)
         self.min_coverage = kwargs.get("min_coverage", 1)
         self.time_limit = kwargs.get("time_limit", 180)
+        self.threads_ilp = kwargs.get("threads_ilp", 4)
         
     def __call__(self, solve_ilp: bool = False):
         """Generates the ILP model, and solves it if return_model is False
@@ -103,14 +104,14 @@ class Optimization:
                 for pos_block, c in enumerate(range(block.start, block.end + 1)):
                     covering_by_position[(r, c)].append(idx)
 
-                    # sanity check of labels
-                    r = int(r)
-                    start = int(block.start)
-                    end = int(block.end)
-                    char_msa = self.msa[r,c].upper()
-                    char_block = block.label[pos_block].upper() 
-                    if char_msa != char_block:
-                        logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c,block.str()))
+                    # # sanity check of labels
+                    # r = int(r)
+                    # start = int(block.start)
+                    # end = int(block.end)
+                    # char_msa = self.msa[r,c].upper()
+                    # char_block = block.label[pos_block].upper() 
+                    # if char_msa != char_block:
+                    #     logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c))
                                      
         #  ------------------------
         #  --- Create the model ---
@@ -119,7 +120,7 @@ class Optimization:
         model = gp.Model("pangeblocks")
 
         # Threads
-        model.setParam(GRB.Param.Threads, 16)
+        model.setParam(GRB.Param.Threads, self.threads_ilp)
 
         # Time Limit
         model.setParam(GRB.Param.TimeLimit, float(60*self.time_limit))
@@ -133,7 +134,7 @@ class Optimization:
                           vtype=GRB.BINARY, name="C")
         for block in c_variables:
             logging.debug(
-                "variable:C(%s) = %s" % (block, self.input_blocks[block].str()))
+                "variable:C(%s) = %s" % (block, self.input_blocks[block]))
 
         logging.info("adding U variables to the model")
         msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)]
@@ -214,7 +215,7 @@ class Optimization:
 
                 if v > 0:
                     logging.debug(
-                        f"Optimal Solution: {k}, {self.input_blocks[k].str()}")
+                        f"Optimal Solution: {k}, {self.input_blocks[k]}")
                     optimal_coverage.append(self.input_blocks[k])
             
         if self.path_save_ilp:

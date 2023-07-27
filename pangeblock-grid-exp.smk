@@ -15,12 +15,16 @@ MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
 MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
 # path msas
-SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
+# SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
 MSAS = list(Path(PATH_MSAS).glob("*.[fa]*"))
 NAMES = [path.stem for path in MSAS]
 # NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
 EXT_MSA = MSAS[0].suffix
 print(NAMES)
+
+# apply this to avoid generating graphs for some obj functions when no needed
+# https://stackoverflow.com/questions/72686943/snakemake-if-else-statement-within-rule-input
+
 rule all:
     input:
         expand(pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization0-min_len0-min_coverage0-alpha{alpha}", "{name_msa}.gfa"), 
@@ -83,7 +87,7 @@ rule ilp:
     input:
         path_msa=pjoin(PATH_MSAS, "{name_msa}" + EXT_MSA),
         path_submsas_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}_alpha{alpha}.txt"),
-        wild_pbwt="Wild-pBWT/bin/wild-pbwt"
+        bin_wildpbwt="Wild-pBWT/bin/wild-pbwt"
     output:
         auxfile=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log")
     params:
@@ -98,6 +102,8 @@ rule ilp:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log"),
     conda: 
         "envs/pangeblocks.yml"
+    resources: 
+        mem_mb=20000
     shell:
         """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
@@ -146,6 +152,7 @@ rule unchop_gfa:
         "envs/vg.yml"
     shell:
         """
-        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log} 
-        python src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
+        mkdir -p "$(dirname "{output.path_unchop_gfa}")" 
+        /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log}
+        src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
         """

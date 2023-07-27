@@ -14,10 +14,10 @@ import logging
 
 def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
-                           only_vertical: bool = False,
+                           only_vertical: bool = False, #TODO: use it or remove it
                            alphabet_to_ascii: dict = {"-":0,"A":1,"C":2,"G":3,"T":4},
                            bin_wildpbwt: str = "Wild-pBWT/bin/wild-pbwt",
-                           label_blocks: bool = True
+                           label_blocks: bool = False 
                            ):
     "Compute maximal blocks in a submsa"
     

@@ -9,6 +9,7 @@ from collections import defaultdict, namedtuple
 from suffix_tree import Tree
 from typing import Tuple, List, Union, Optional
 import logging
+#TODO: change this | option for pBWT and Suffix Tree
 
 def timer(func):
     "returns output and execution time of 'func'"

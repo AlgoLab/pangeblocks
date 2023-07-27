@@ -25,32 +25,32 @@ def block_decomposition(block1: Block, block2: Block):
         if b1.start == b2.start and b1.end < b2.end:
             # new blocks
             nb1 = b1#Block(b1.K, b1.start, b1.end, b1.label)
-            nb2 = Block(b2.K, b1.end+1, b2.end, b2.label[b1.end-b1.start+1:])
+            nb2 = Block(b2.K, b1.end+1, b2.end)
             nb.extend([nb1, nb2])
 
         # Condition 2
         elif b1.start < b2.start and b2.end < b1.end:
-            nb1 = Block(b1.K, b1.start, b2.start-1, b1.label[:b2.start-1-b1.start+1])
+            nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2
-            nb3 = Block(b1.K, b2.end+1, b1.end, b1.label[b2.end-b1.start+1:])
+            nb3 = Block(b1.K, b2.end+1, b1.end)
             nb.extend([nb1, nb2, nb3])
 
         # Condition 3
         elif b1.start < b2.start and b1.end == b2.end:
-            nb1 = Block(b1.K, b1.start, b2.start-1, b1.label[:b2.start-1-b1.start+1])
+            nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2
             nb.extend([nb1, nb2])
 
         # Condition4
         elif b1.start < b2.start and b2.start < b1.end and b1.end < b2.end:
             # option 1 
-            nb1 = Block(b1.K, b1.start, b2.start-1, b1.label[:b2.start-1-b1.start+1])
+            nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2
             nb.extend([nb1, nb2])
 
             # option 2
             nb1 = b1
-            nb2 = Block(b2.K, b1.end+1, b2.end, b2.label[b1.end+1-b2.start:])
+            nb2 = Block(b2.K, b1.end+1, b2.end)
             nb.extend([nb1, nb2])
             
     return nb

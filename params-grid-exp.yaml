@@ -1,5 +1,15 @@
-PATH_MSAS: "test" # "/data/alessia/covid/small-msa" # "test" #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
-PATH_OUTPUT: "output-test-grid" # "/data/alessia/covid/pangeblocks-small-msa-wildpbwt" # "output-test-grid" # "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"# 
+PATH_MSAS: "/data/alessia/covid/big-msa" 
+# "test" 
+# "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" 
+#"/data/alessia/covid/small-msa" 
+#"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
+
+PATH_OUTPUT: "/data/alessia/covid/output-big-msa" 
+# "output-test-grid" 
+# "/data/pangeblocks-experiments/pbwt/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" 
+#"/data/alessia/covid/pangeblocks-small-msa-wildpbwt" 
+# "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"
+
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
@@ -12,11 +22,11 @@ OPTIMIZATION:
     # - 7 
     - 128
   MIN_LEN: # used only with "weighted"
-    # - 3
+    - 3
     # - 5
-    - 10   
-    - 15
-    - 20
+    # - 10   
+    # - 15
+    # - 20
   MIN_COVERAGE: # used only with "depth"
     # - 0.1
     # - 0.2
@@ -25,10 +35,8 @@ OPTIMIZATION:
     - 1 
     # - 2
     # - 8
-    - 16
-    - 32
-    # - 8
     # - 16
+    # - 32
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
@@ -36,4 +44,3 @@ THREADS:
   SUBMSAS: 8
   ILP: 4
 USE_WILDPBWT: True # to compute maximal blocks, otherwise SuffixTree will be used
-# BIN_WILDPBWT: "/home/avila/Wild-pBWT/bin/wild-pbwt"
