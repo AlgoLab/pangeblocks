@@ -89,7 +89,7 @@ class InputBlockSet:
         new_blocks = []
         blocks_by_start = defaultdict(list)
         for block in list_blocks:
-            logging.info(f"block {block.str()}")
+
             if block.len() == 1: # only one character blocks
                 print(block, block.K[0], block.start)
                 print(self.msa)

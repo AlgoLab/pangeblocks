@@ -53,7 +53,7 @@ class Optimization:
         # K is a tuple of rows,
         # i and j are the first and last column
         # label is the string of the block
-        msa = load_submsa(path_msa)
+        msa = load_submsa(path_msa, start_column=start_column, end_column=end_column)
         self.msa = msa
         self.n_seqs = len(msa)
         self.n_cols = msa.get_alignment_length()
@@ -137,7 +137,7 @@ class Optimization:
                 "variable:C(%s) = %s" % (block, self.input_blocks[block]))
 
         logging.info("adding U variables to the model")
-        msa_positions = [(r,c) for r in range(self.n_seqs) for c in range(self.n_cols)]
+        msa_positions = [(r,c + self.start_column) for r in range(self.n_seqs) for c in range(self.n_cols)]
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
         for pos in msa_positions:
             logging.debug("variable:U(%s)", pos)

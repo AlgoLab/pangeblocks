@@ -103,7 +103,7 @@ rule ilp:
     conda: 
         "envs/pangeblocks.yml"
     resources: 
-        mem_mb=20000
+        mem_mb=60000
     shell:
         """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \

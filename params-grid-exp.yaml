@@ -1,11 +1,13 @@
 PATH_MSAS: "/data/alessia/covid/big-msa" 
+# "/data/alessia/covid/big-msa" 
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" 
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
 
-PATH_OUTPUT: "/data/alessia/covid/output-big-msa" 
-# "output-test-grid" 
+PATH_OUTPUT: "/data/alessia/covid/output-big-msa-2" 
+# "/data/alessia/covid/output-big-msa"
+# "output-test-grid"
 # "/data/pangeblocks-experiments/pbwt/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" 
 #"/data/alessia/covid/pangeblocks-small-msa-wildpbwt" 
 # "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"

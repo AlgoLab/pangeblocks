@@ -9,6 +9,7 @@ test-*/
 *ipynb
 Wild-pBWT/
 .vscode/
+fil-result/
 
 # pandora / make_prg
 make_prg_0.4.0

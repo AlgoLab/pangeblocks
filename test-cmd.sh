@@ -33,4 +33,32 @@
 
 # /home/avila/Wild-pBWT/bin/wild-pbwt -a 5 -f test-gfa/haplotypes.txt -o y
 # > haplotypes_maxblocks.txt
-git clone https://github.com/illoxian/Wild-pBWT.git
+# git clone https://github.com/illoxian/Wild-pBWT.git
+
+
+# fil-profile --no-browser run submsas.py \
+# --path-vertical-blocks output-test-grid/maximal-blocks/test/vertical_blocks_alpha1.json\
+# --path-msa test/test.fa \
+# --output out.txt
+
+
+# ENVIRONMENT
+# mamba activate pangeblocks
+
+# fil-profile --no-browser run src/solve_submsa.py --path-msa /data/alessia/covid/big-msa/500-SARS-CoV2-MSA.fasta \
+# -sc 100 -ec 200 \
+# --obj-function nodes \
+# --path-save-ilp /data/alessia/covid/output-big-msa/ilp/500-SARS-CoV2-MSA/alpha1/500-SARS-CoV2-MSA \
+# --path-opt-solution /data/alessia/covid/output-big-msa/ilp/500-SARS-CoV2-MSA/alpha1/500-SARS-CoV2-MSA \
+# --penalization 0 \
+# --min-len 0 \
+# --min-coverage 0 \
+# --time-limit 30 \
+# --solve-ilp true \
+# --use-wildpbwt True \
+# --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
+# --workers 16 2> profile-100-200-nobug.log
+
+# --submsa-index /data/alessia/covid/output-big-msa/submsas/500-SARS-CoV2-MSA_alpha1.txt \
+
+python src/solve_submsa.py --path-msa test/test.fa -sc 5 -ec 8 --path-save-ilp test-opt --path-opt-solution test-opt 2> test.err.log > test.stdout.log 
