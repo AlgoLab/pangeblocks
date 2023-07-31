@@ -141,7 +141,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[Maximal Blocks] %(asctime)s. %(message)s',
+                    format='[maximal_blocks] %(asctime)s. %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
     logging.info(f"filename MSA: '{args.filename}'") 
     logging.info(f"subMSA columns [start, end] = {[args.start_column, args.end_column]}")

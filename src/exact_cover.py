@@ -24,6 +24,10 @@ from functools import partial
 from collections import namedtuple, defaultdict
 from typing import Optional 
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='[Solve SubMSA] %(asctime)s. %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+
 def label_from_block(block, msa):
     K, start, end = block
     start, end = int(start), int(end)
@@ -77,7 +81,7 @@ def solve_submsa(path_msa, start_column, end_column,
             maximal_blocks = maximal_blocks_pbwt(
                         filename=path_msa,
                         start_column=start_column, end_column=end_column,
-                        alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4},
+                        alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
                         bin_wildpbwt = bin_wildpbwt,
                         label_blocks = True
                     )
@@ -158,7 +162,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[Solve subMSA] %(asctime)s. %(message)s',
+                    format='[solve_submsa] %(asctime)s. %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
     OptArgs=namedtuple("OptArgs",["obj_function", "penalization", "min_len", "min_coverage", "time_limit"])
@@ -180,45 +184,47 @@ if __name__=="__main__":
                 start, end = line.replace("\n","").split("\t")
                 submsa_index.append((int(start),int(end)))
         
-        
-        # def run(argspool):
-        #     "Function to run with ThreadPoolExecutor"
-        #     submsa(start_column=argspool.start_column, end_column=argspool.end_column, path_save_ilp=argspool.path_save_ilp, path_opt_solution=argspool.path_opt_solution)
-        
-        # with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        #     with tqdm(total=len(submsa_index), leave=True, ncols=100, bar_format='{l_bar}{bar}| [{elapsed}{postfix}]') as pbar:
-                
-        #         futures=[]
-        #         for start,end in submsa_index:
-        #             path_save_ilp = args.path_save_ilp + f"_{start}-{end}.mps"
-        #             path_opt_solution = args.path_opt_solution + f"_{start}-{end}.json"
-        #             args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution,)
-        #             future = pool.submit(run, args_submsa)
-        #             future.add_done_callback(lambda p: pbar.update())
-        #             future.add_done_callback(lambda p: pbar.set_description(f"Solved subMSA: [{start},{end}]"))
-        #             futures.append(future)
-                
-        #         for future in futures:
-        #             future.result()
-    
-        for start_column, end_column in tqdm(submsa_index, desc="Solving SubMSAs"): 
+        if args.workers > 1:
+            logging.info("Running with ThreadPoolExecutor: {args.workers} workers")
+            def run(argspool):
+                "Function to run with ThreadPoolExecutor"
+                submsa(start_column=argspool.start_column, end_column=argspool.end_column, path_save_ilp=argspool.path_save_ilp, path_opt_solution=argspool.path_opt_solution)
             
-            solve_submsa(
-            path_msa=args.path_msa,
-            start_column=start_column,
-            end_column=end_column,
-            solve_ilp=args.solve_ilp,
-            path_save_ilp=args.path_save_ilp + f"_{start_column}-{end_column}.mps", 
-            path_opt_solution=args.path_opt_solution + f"_{start_column}-{end_column}.json",
-            obj_function=args.obj_function,
-            penalization=args.penalization,
-            min_len=args.min_len,
-            min_coverage=args.min_coverage,
-            time_limit=args.time_limit,
-            use_wildpbwt=args.use_wildpbwt,
-            bin_wildpbwt=args.bin_wildpbwt,
-            threads_ilp=args.threads_ilp,
-            )
+            with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                with tqdm(total=len(submsa_index), leave=True, ncols=100, bar_format='{l_bar}{bar}| [{elapsed}{postfix}]') as pbar:
+                    
+                    futures=[]
+                    for start,end in submsa_index:
+                        path_save_ilp = args.path_save_ilp + f"_{start}-{end}.mps"
+                        path_opt_solution = args.path_opt_solution + f"_{start}-{end}.json"
+                        args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution,)
+                        future = pool.submit(run, args_submsa)
+                        future.add_done_callback(lambda p: pbar.update())
+                        future.add_done_callback(lambda p: pbar.set_description(f"Solved subMSA: [{start},{end}]"))
+                        futures.append(future)
+                    
+                    for future in futures:
+                        future.result()
+        else:
+            logging.info("Running with sequentially")
+            for start_column, end_column in tqdm(submsa_index, desc="Solving SubMSAs"): 
+                
+                solve_submsa(
+                    path_msa=args.path_msa,
+                    start_column=start_column,
+                    end_column=end_column,
+                    solve_ilp=args.solve_ilp,
+                    path_save_ilp=args.path_save_ilp + f"_{start_column}-{end_column}.mps", 
+                    path_opt_solution=args.path_opt_solution + f"_{start_column}-{end_column}.json",
+                    obj_function=args.obj_function,
+                    penalization=args.penalization,
+                    min_len=args.min_len,
+                    min_coverage=args.min_coverage,
+                    time_limit=args.time_limit,
+                    use_wildpbwt=args.use_wildpbwt,
+                    bin_wildpbwt=args.bin_wildpbwt,
+                    threads_ilp=args.threads_ilp,
+                )
 
     else:
 
@@ -237,5 +243,5 @@ if __name__=="__main__":
             use_wildpbwt=args.use_wildpbwt,
             bin_wildpbwt=args.bin_wildpbwt,
             threads_ilp=args.threads_ilp,
-            )
+        )
         # solve_submsa(**vars(args))

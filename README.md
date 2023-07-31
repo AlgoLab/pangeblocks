@@ -54,7 +54,8 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
 2. `problematic_msas.tsv`: contains a list of MSAs that has no information
 
+[PANGEBLOCKS]
 To construct variation graphs from MSAs, run `PangeBlocks``:
 ```bash
-snakemake -s pangeblock-grid-exp.smk -c16 --use-conda # variation graph as GFA
+snakemake -s pangeblock-grid-exp.smk -c32 --use-conda # variation graph as GFA
 ```

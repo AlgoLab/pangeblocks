@@ -48,9 +48,13 @@ rule install_wild_pbwt:
     shell:
         #TODO: if else to check if binary file already exists and is working (skip installation)
         """
-        rm -rf Wild-pBWT/
-        git clone {params.github} && cd Wild-pBWT
-        make wild-pbwt
+        if [ -f {output}]; then
+            {output} -h
+        else
+            rm -rf Wild-pBWT/
+            git clone {params.github} && cd Wild-pBWT
+            make wild-pbwt
+        fi
         """
 
 rule compute_vertical_blocks:
@@ -105,11 +109,12 @@ rule ilp:
     resources: 
         mem_mb=60000
     shell:
-        """/usr/bin/time --verbose src/solve_submsa.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
+        """/usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
-        --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt}\
+        --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
+        --threads-ilp {params.threads_ilp} \
         --workers {threads} > {output.auxfile} 2> {log.stderr}"""
 
 rule coverage_to_graph:

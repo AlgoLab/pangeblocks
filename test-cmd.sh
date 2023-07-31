@@ -61,4 +61,18 @@
 
 # --submsa-index /data/alessia/covid/output-big-msa/submsas/500-SARS-CoV2-MSA_alpha1.txt \
 
-python src/solve_submsa.py --path-msa test/test.fa -sc 5 -ec 8 --path-save-ilp test-opt --path-opt-solution test-opt 2> test.err.log > test.stdout.log 
+# python src/solve_submsa.py --path-msa test/test.fa -sc 5 -ec 8 --path-save-ilp test-opt --path-opt-solution test-opt 2> test.err.log > test.stdout.log 
+
+/usr/bin/time --verbose src/solve_submsa.py --path-msa /data/alessia/covid/big-msa/1000-SARS-CoV2-MSA.fasta \
+--obj-function depth \
+--path-save-ilp /data/alessia/covid/output-big-msa-2/ilp/1000-SARS-CoV2-MSA/alpha1/1000-SARS-CoV2-MSA-threads \
+--path-opt-solution /data/alessia/covid/output-big-msa-2/ilp/1000-SARS-CoV2-MSA/alpha1/1000-SARS-CoV2-MSA-threads \
+--penalization 128 \
+--min-len 0 \
+--min-coverage 0.3 \
+--submsa-index /data/alessia/covid/output-big-msa-2/submsas/1000-SARS-CoV2-MSA_alpha1.txt \
+--time-limit 30 \
+--solve-ilp true \
+--use-wildpbwt True \
+--bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
+--workers 32 2> exp_threads.err.log > exp_threads.out.log

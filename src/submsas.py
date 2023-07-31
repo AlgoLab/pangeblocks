@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 from Bio import AlignIO
 
+
 def ncols_msa(filename):
     "Return MSA from start_column to end_column (both included)"
     # load MSA
@@ -30,10 +31,10 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[SubMSA] %(asctime)s. %(message)s',
+                    format='[submsas] %(asctime)s. %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
     logging.info(f"filename MSA: '{args.path_msa}'")
-    logging.info(f"filename MSA: '{args.path_vertical_blocks}'") 
+    logging.info(f"filename vertical blocks: '{args.path_vertical_blocks}'") 
     # logging.info(f"subMSA columns [start, end] = {[args.start_column, args.end_column]}")
     # logging.info(f"Output only vertical blocks = {args.only_vertical}")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
@@ -74,6 +75,6 @@ if __name__=="__main__":
 
                 start = left_block[2] + 1 # start submsa = end of left block + 1  
                 end   = right_block[1] - 1 # end submsa = start of right block - 1 
-                print("Vertical Block",left_block, right_block, start, end)
+                logging.info("Vertical Block",left_block, right_block, start, end)
         
                 fp.writelines(f"{start}\t{end}\n")

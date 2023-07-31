@@ -14,8 +14,8 @@ import logging
 
 def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
-                           only_vertical: bool = False, #TODO: use it or remove it
-                           alphabet_to_ascii: dict = {"-":0,"A":1,"C":2,"G":3,"T":4},
+                           only_vertical: bool = False,
+                           alphabet_to_ascii: dict = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
                            bin_wildpbwt: str = "Wild-pBWT/bin/wild-pbwt",
                            label_blocks: bool = False 
                            ):
@@ -38,7 +38,7 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
     try:
         with os.fdopen(fd, 'w') as fileTemp:
             for seq, record in enumerate(msa):
-                row_panel=str(record.seq)
+                row_panel=str(record.seq).upper()
                 for a, c in alphabet_to_ascii.items():
                     row_panel = row_panel.replace(a,str(c))
                 # print(row_panel)
@@ -58,9 +58,14 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
         # print(os.path.exists(path))
         os.remove(path)
 
+    if only_vertical: 
+        max_blocks = [
+            b for b in max_blocks if len(b[0]) == n_seqs
+        ]
+
     if label_blocks: 
         max_blocks_strings = [
-            [b[0], start_column + b[1], start_column + b[2], str(msa[b[0][0], b[1]:b[2]+1].seq) ] for b in max_blocks
+            [b[0], start_column + b[1], start_column + b[2], str(msa[b[0][0], b[1]:b[2]+1].seq).upper() ] for b in max_blocks
         ]
         return max_blocks_strings #, msa
     
