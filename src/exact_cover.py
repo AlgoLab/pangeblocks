@@ -34,7 +34,7 @@ def label_from_block(block, msa):
     return str(msa[int(K[0])].seq[start:end+1])
 
 def solve_submsa(path_msa, start_column, end_column, 
-                 path_save_ilp, path_opt_solution, solve_ilp, 
+                 solve_ilp, path_save_ilp, path_opt_solution, 
                  obj_function, penalization, min_len, min_coverage, 
                  time_limit, threads_ilp=4,
                  use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, **kwargs ):
@@ -152,9 +152,10 @@ if __name__=="__main__":
     parser.add_argument("--time-limit", help="time limit in minutes to run the ILP, after this the best solution so far will be returned", dest="time_limit", type=int, default=180)
     parser.add_argument("--threads-ilp", help="threads used by gurobi to solve an ILPi", dest="threads_ilp", type=int, default=4)
     # outputs
+    parser.add_argument("--prefix-output", help="prefix to save optimization results. Parent folder will be created if it does not exists.", dest="prefix_output")
     parser.add_argument("--solve-ilp", help="decide wether to solve the ILP or just generate the ILP model", type=bool, default=True, dest="solve_ilp")
-    parser.add_argument("--path-save-ilp", help="path to save the ILP formulation", default=None, dest="path_save_ilp")
-    parser.add_argument("--path-opt-solution", help="file to save optimal solution (Blocks)", dest="path_opt_solution")
+    # parser.add_argument("--path-save-ilp", help="path to save the ILP formulation", default=None, dest="path_save_ilp")
+    # parser.add_argument("--path-opt-solution", help="file to save optimal solution (Blocks)", dest="path_opt_solution")
     parser.add_argument("--log-level", help='set log level ERROR/WARNING/INFO/DEBUG', default='ERROR', dest='log_level')
     
     parser.add_argument("--submsa-index", help="file with start-end positions of vertical blocks in the MSA", dest="submsa_index")
@@ -195,8 +196,8 @@ if __name__=="__main__":
                     
                     futures=[]
                     for start,end in submsa_index:
-                        path_save_ilp = args.path_save_ilp + f"_{start}-{end}.mps"
-                        path_opt_solution = args.path_opt_solution + f"_{start}-{end}.json"
+                        path_save_ilp = args.prefix_output + f"_{start}-{end}.mps"
+                        path_opt_solution = args.prefix_output + f"_{start}-{end}.json"
                         args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution,)
                         future = pool.submit(run, args_submsa)
                         future.add_done_callback(lambda p: pbar.update())
@@ -214,8 +215,8 @@ if __name__=="__main__":
                     start_column=start_column,
                     end_column=end_column,
                     solve_ilp=args.solve_ilp,
-                    path_save_ilp=args.path_save_ilp + f"_{start_column}-{end_column}.mps", 
-                    path_opt_solution=args.path_opt_solution + f"_{start_column}-{end_column}.json",
+                    path_save_ilp=args.prefix_output + f"_{start_column}-{end_column}.mps", 
+                    path_opt_solution=args.prefix_output + f"_{start_column}-{end_column}.json",
                     obj_function=args.obj_function,
                     penalization=args.penalization,
                     min_len=args.min_len,
@@ -233,8 +234,8 @@ if __name__=="__main__":
             start_column=args.start_column,
             end_column=args.end_column,
             solve_ilp=args.solve_ilp,
-            path_save_ilp=args.path_save_ilp + f"_{args.start_column}-{args.end_column}.mps", 
-            path_opt_solution=args.path_opt_solution + f"_{args.start_column}-{args.end_column}.json",
+            path_save_ilp=args.prefix_output + f"_{args.start_column}-{args.end_column}.mps", 
+            path_opt_solution=args.prefix_output + f"_{args.start_column}-{args.end_column}.json",
             obj_function=args.obj_function,
             penalization=args.penalization,
             min_len=args.min_len,

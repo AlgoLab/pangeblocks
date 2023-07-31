@@ -9,6 +9,8 @@ LOG_LEVEL = config["LOG_LEVEL"]
 
 ALPHA=config["OPTIMIZATION"]["THRESHOLD_VERTICAL_BLOCKS"]
 
+OBJ_FUNCTIONS=config["OPTIMIZATION"]["OBJECTIVE_FUNCTION"]
+
 # 'weighted' and 'depth' loss functions
 PENALIZATION=config["OPTIMIZATION"]["PENALIZATION"] 
 MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
@@ -25,14 +27,44 @@ print(NAMES)
 # apply this to avoid generating graphs for some obj functions when no needed
 # https://stackoverflow.com/questions/72686943/snakemake-if-else-statement-within-rule-input
 
+
+def get_graphs(wildcards):
+    graphs = []
+    if "nodes" in OBJ_FUNCTIONS:
+        graphs.extend(
+            pjoin(PATH_OUTPUT, "gfa-unchop", "nodes", f"penalization0-min_len0-min_coverage0-alpha{alpha}", f"{name_msa}.gfa")
+            for alpha in ALPHA for name_msa in NAMES
+        )
+            
+    elif "strings" in OBJ_FUNCTIONS:
+        graphs.extend(
+            pjoin(PATH_OUTPUT, "gfa-unchop", "strings", f"penalization0-min_len0-min_coverage0-alpha{alpha}", f"{name_msa}.gfa")
+            for alpha in ALPHA for name_msa in NAMES
+        )
+
+    elif "weighted" in OBJ_FUNCTIONS:
+        graphs.extend(
+            pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", f"penalization{penalization}-min_len{min_len}-min_coverage0-alpha{alpha}", f"{name_msa}.gfa")
+            for alpha in ALPHA for penalization in PENALIZATION for min_len in MIN_LEN for name_msa in NAMES
+        )
+
+    elif "depth" in OBJ_FUNCTIONS:
+        graphs.extend(
+            pjoin(PATH_OUTPUT, "gfa-unchop", "depth", f"penalization{penalization}-min_len0-min_coverage{min_coverage}-alpha{alpha}", f"{name_msa}.gfa")
+            for alpha in ALPHA for penalization in PENALIZATION for min_coverage in MIN_COVERAGE for name_msa in NAMES
+        )
+    
+    return graphs
+
 rule all:
     input:
-        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization0-min_len0-min_coverage0-alpha{alpha}", "{name_msa}.gfa"), 
-        obj_func=["strings","nodes"], name_msa=NAMES, alpha=ALPHA),
-        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", "penalization{penalization}-min_len{min_len}-min_coverage0-alpha{alpha}" ,"{name_msa}.gfa"), 
-        penalization=PENALIZATION, min_len=MIN_LEN, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
-        expand(pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_len0-min_coverage{min_coverage}-alpha{alpha}" ,"{name_msa}.gfa"),
-        penalization=PENALIZATION, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
+        # expand(pjoin(PATH_OUTPUT, "gfa-unchop", "{obj_func}", "penalization0-min_len0-min_coverage0-alpha{alpha}", "{name_msa}.gfa"), 
+        # obj_func=["strings","nodes"], name_msa=NAMES, alpha=ALPHA),
+        # expand(pjoin(PATH_OUTPUT, "gfa-unchop", "weighted", "penalization{penalization}-min_len{min_len}-min_coverage0-alpha{alpha}" ,"{name_msa}.gfa"), 
+        # penalization=PENALIZATION, min_len=MIN_LEN, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
+        # expand(pjoin(PATH_OUTPUT, "gfa-unchop", "depth", "penalization{penalization}-min_len0-min_coverage{min_coverage}-alpha{alpha}" ,"{name_msa}.gfa"),
+        # penalization=PENALIZATION, min_coverage=MIN_COVERAGE, alpha=ALPHA, name_msa=NAMES),
+        get_graphs(NAMES),
         "Wild-pBWT/bin/wild-pbwt"
 
 
@@ -109,8 +141,9 @@ rule ilp:
     resources: 
         mem_mb=60000
     shell:
+    # --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
         """/usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
-        --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
+        --prefix-output {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
         --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
