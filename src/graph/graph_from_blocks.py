@@ -7,7 +7,7 @@ from collections import namedtuple
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s. %(message)s',
+                    format='[Graph from blocks] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
 Node = namedtuple("Node",["K","i","j","label"]) # is a block

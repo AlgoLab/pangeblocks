@@ -6,10 +6,9 @@ from collections import defaultdict, namedtuple
 from pathlib import Path
 
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s. %(message)s',
+logging.basicConfig(level=logging.INFO,
+                    format='[Variation graph parser] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
-
 class asGFA:
 
     def __call__(self, optimal_coverage, path_gfa, path_msa, header="VN:Z:1.0"):

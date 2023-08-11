@@ -15,8 +15,8 @@ from src.blocks.block_decomposer import Decomposer
 # ------
 
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='[Input Set] %(asctime)s. %(message)s',
+logging.basicConfig(level=logging.INFO,
+                    format='[Input] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
 class InputBlockSet:
@@ -39,14 +39,19 @@ class InputBlockSet:
         logging.info("subMSA loaded, nrows:(%s), ncols:(%s)" % (n_seqs, n_cols))
         
         # blocks not covered by maximal blocks
+        logging.info("get coverage panel")
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, maximal_blocks, start_column)
+        
+        logging.info("get missing blocks")
         missing_blocks = self.get_missing_blocks(coverage_panel, self.msa, start_column)
         
         # block decomposition
-        decomposer = Decomposer(row_maximal_decomposition=True)
+        logging.info("decomposer")
+        decomposer = Decomposer(row_maximal_decomposition=True) #False to try another decomposition and avoid blocks_one_char
         decomposed_blocks = decomposer(list_blocks=maximal_blocks)
 
         # glue missing blocks of one character in the same column
+        logging.info("glue missing blocks")
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
         
         # # check missing blocks are correctly labeled
@@ -64,7 +69,7 @@ class InputBlockSet:
         #             if char_msa != char_block:
         #                 logging.debug("incorrect missing block covering position (%s,%s): %s" % (r,c,block.str()))
 
-
+        logging.info("get blocks one char")
         blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
         # # check blocks one char are correctly labeled
         # for block in blocks_one_char:
@@ -80,6 +85,7 @@ class InputBlockSet:
         #                 logging.debug("incorrect block one char covering position (%s,%s): %s" % (r,c,block.str()))
 
         # Input set: input blocks:decomposition of blocks  of one position in the MSA)
+        logging.info("define input set ILP")
         input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
 
         return input_set_ilp
@@ -91,8 +97,8 @@ class InputBlockSet:
         for block in list_blocks:
 
             if block.len() == 1: # only one character blocks
-                print(block, block.K[0], block.start)
-                print(self.msa)
+                # print(block, block.K[0], block.start)
+                # print(self.msa)
                 label = self.msa[int(block.K[0])].seq[int(block.start) - self.start_column]
                 blocks_by_start[(block.start, label)].extend(list(block.K))
             else: 

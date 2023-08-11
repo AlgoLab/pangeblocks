@@ -5,8 +5,10 @@ https://github.com/AlgoLab/RecGraph-exps/blob/main/scripts/clean_gfa_from_ast.py
 from pathlib import Path
 from collections import defaultdict
 import logging
-logging.basicConfig(level=logging.INFO)
-logging.getLogger()
+logging.basicConfig(level=logging.INFO,
+                    format='[Postprocessing] %(asctime)s.%(msecs)03d | %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+                    
 
 def postprocessing(path_gfa, path_save): 
     """

@@ -31,7 +31,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[submsas] %(asctime)s. %(message)s',
+                    format='[submsas] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
     logging.info(f"filename MSA: '{args.path_msa}'")
     logging.info(f"filename vertical blocks: '{args.path_vertical_blocks}'") 

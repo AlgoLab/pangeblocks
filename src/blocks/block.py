@@ -75,3 +75,9 @@ class LightBlock:
     def sort_K(cls, v):
         "sort values in K"
         return tuple(sorted(v))
+
+    # def __hash__(self) -> int:
+    #     pass
+
+    # def __eq__(self, __value: object) -> bool:
+    #     pass

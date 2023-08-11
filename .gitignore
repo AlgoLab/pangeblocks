@@ -10,6 +10,7 @@ test-*/
 Wild-pBWT/
 .vscode/
 fil-result/
+plots/
 
 # pandora / make_prg
 make_prg_0.4.0

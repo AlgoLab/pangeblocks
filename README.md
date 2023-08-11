@@ -1,7 +1,7 @@
 # Pangeblocks (work in progress)
 Pangenome graph construction from maximal blocks in an MSA 
 
-Set the parameters in `params-grid-exp.yaml`:
+Set the parameters in `params.yml`:
 ```yaml
 PATH_MSAS: "msas" # folder containing MSAs in .fasta/.fa format
 PATH_OUTPUT: "output" # folder where to save the results
@@ -33,8 +33,8 @@ OPTIMIZATION:
 LOG_LEVEL: "INFO"
 THREADS: 
   TOTAL: 32
-  SUBMSAS: 8
-  ILP: 4
+  SUBMSAS: 16
+  ILP: 8
 ```
 ___
 
@@ -45,7 +45,20 @@ source .pbenv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Run pipelines
+or
+```bash
+mamba create env -n pangeblocks -f envs/pangeblocks.yml
+mamba activate pangeblocks
+```
+
+### Create Variation Graphs from MSAs
+
+[PANGEBLOCKS]
+To construct variation graphs from MSAs, run `PangeBlocks``:
+```bash
+snakemake -s pangeblock.smk -c32 --use-conda # variation graph as GFA
+```
+___
 [OPTIONAL]
 ```bash
 snakemake -s eda.smk -c16         # compute stats for each MSA
@@ -53,9 +66,3 @@ snakemake -s eda.smk -c16         # compute stats for each MSA
 The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPUT/analysis-msas`:
 1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
 2. `problematic_msas.tsv`: contains a list of MSAs that has no information
-
-[PANGEBLOCKS]
-To construct variation graphs from MSAs, run `PangeBlocks``:
-```bash
-snakemake -s pangeblock-grid-exp.smk -c32 --use-conda # variation graph as GFA
-```

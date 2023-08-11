@@ -25,7 +25,7 @@ def block_between_vertical_blocks(horizontal_block: Block, vertical_block1: Bloc
 from collections import defaultdict
 import logging
 logging.basicConfig(level=logging.ERROR,
-                    format='%(asctime)s. %(message)s',
+                    format='[Block between vertical blocks]%(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
 def decomposition(vertical_blocks: list(Block), n_seqs: int, n_cols: int, msa):

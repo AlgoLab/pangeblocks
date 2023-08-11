@@ -2,6 +2,7 @@
 """
 Compute a Variation Graph from an MSA
 """
+import sys
 import gc
 import os
 import cProfile
@@ -24,8 +25,8 @@ from functools import partial
 from collections import namedtuple, defaultdict
 from typing import Optional 
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='[Solve SubMSA] %(asctime)s. %(message)s',
+logging.basicConfig(level=logging.INFO,
+                    format='[Solve SubMSA] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
 def label_from_block(block, msa):
@@ -36,7 +37,7 @@ def label_from_block(block, msa):
 def solve_submsa(path_msa, start_column, end_column, 
                  solve_ilp, path_save_ilp, path_opt_solution, 
                  obj_function, penalization, min_len, min_coverage, 
-                 time_limit, threads_ilp=4,
+                 time_limit, threads_ilp=8,
                  use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, **kwargs ):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
     
@@ -92,9 +93,12 @@ def solve_submsa(path_msa, start_column, end_column,
                         )
         
         # 2. compute input set of blocks for the ILP (decomposition is included)
-        logging.info("Generating input set")
+        logging.info(f"Generating input set ({start_column},{end_column})")
+        logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
+        logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
         inputset_gen = InputBlockSet()
         inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
+        logging.info(f"Generated input set ({start_column},{end_column})")
         del maximal_blocks
         
         # 3. solve the ILP / output ILP model
@@ -163,7 +167,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[solve_submsa] %(asctime)s. %(message)s',
+                    format='[solve_submsa] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
     OptArgs=namedtuple("OptArgs",["obj_function", "penalization", "min_len", "min_coverage", "time_limit"])
@@ -173,7 +177,8 @@ if __name__=="__main__":
     submsa = partial(solve_submsa, path_msa=args.path_msa, solve_ilp=args.solve_ilp, 
                          obj_function=args.obj_function, penalization=args.penalization,
                          min_len=args.min_len, min_coverage=args.min_coverage, time_limit=args.time_limit,
-                         use_wildpbwt=args.use_wildpbwt, bin_wildpbwt=args.bin_wildpbwt
+                         use_wildpbwt=args.use_wildpbwt, bin_wildpbwt=args.bin_wildpbwt,
+                         threads_ilp=args.threads_ilp
                          )
     
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
@@ -183,7 +188,10 @@ if __name__=="__main__":
         with open(args.submsa_index, "r") as fp:
             for line in fp.readlines():
                 start, end = line.replace("\n","").split("\t")
-                submsa_index.append((int(start),int(end)))
+                start, end = int(start),int(end)
+                
+                if args.start_column <= start and end <= args.end_column:
+                    submsa_index.append((start,end))
         
         if args.workers > 1:
             logging.info("Running with ThreadPoolExecutor: {args.workers} workers")
@@ -208,7 +216,7 @@ if __name__=="__main__":
                         future.result()
         else:
             logging.info("Running with sequentially")
-            for start_column, end_column in tqdm(submsa_index, desc="Solving SubMSAs"): 
+            for start_column, end_column in tqdm(submsa_index, desc="Solving SubMSAs"):
                 
                 solve_submsa(
                     path_msa=args.path_msa,

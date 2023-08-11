@@ -2,6 +2,7 @@
 Given an MSA, and a set of blocks such that the union of them covers all the MSA,
 Find a non-overlapping set the blocks covering the entire MSA
 # """
+import os
 from sys import getsizeof, stderr
 from collections import defaultdict
 from blocks import Block
@@ -17,9 +18,7 @@ from .losses import (
 )
 
 import logging
-logging.basicConfig(level=logging.ERROR,
-                    format='[ILP] - %(asctime)s. %(message)s',
-                    datefmt='%Y-%m-%d@%H:%M:%S')
+
 
 def load_submsa(filename, start_column=0, end_column=-1):
     "Return MSA from start_column to end_column (both included)"
@@ -40,14 +39,17 @@ class Optimization:
     "Generates/solves ILP model for a subMSA, from column start_column to end_column"
     def __init__(self, blocks: list, path_msa: str, 
                  start_column: int, end_column: int,
-                 path_save_ilp: str, log_level=logging.ERROR, **kwargs):
-
+                 path_save_ilp: str, log_level=logging.INFO, **kwargs):
+        
         self.input_blocks=blocks
         self.path_msa=path_msa
         self.start_column=start_column
         self.end_column=end_column
         self.path_save_ilp = path_save_ilp
-        logging.getLogger().setLevel(log_level)
+        logging.basicConfig(level=log_level,
+                    format='[Optimization] %(asctime)s.%(msecs)03d | %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+        # logging.getLogger().setLevel(log_level)
 
         # Each block is a tuple (K, i, j, label) where
         # K is a tuple of rows,
@@ -77,7 +79,7 @@ class Optimization:
             list with blocks in the optimal solution
         """        
         n_blocks = len(self.input_blocks)
-        logging.info("number of blocks %s", n_blocks)
+        logging.info(f"Number of blocks ilp {n_blocks} ({self.start_column},{self.end_column})")
         for idx, block in enumerate(self.input_blocks):
             logging.debug("input block %s: %s" % (idx, block.str()))
 
@@ -87,14 +89,15 @@ class Optimization:
         # block to all the positions it covers
         covering_by_position = defaultdict(list)
         
-        logging.info("collecting c_variables")
+        logging.info(f"collecting c_variables ({self.start_column},{self.end_column})")
         c_variables = list(range(len(self.input_blocks)))
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
         logging.info("covering by position")
         n_cvars = len(c_variables)
-        logging.info(f"MSA: {self.n_seqs} x {self.n_cols}")
+        logging.info(f"Number of C variables {n_cvars} ({self.start_column},{self.end_column})")
+        logging.info(f"MSA: {self.n_seqs} x {self.n_cols} ({self.start_column},{self.end_column})")
         for idx in c_variables:
             block = self.input_blocks[idx]
             logging.debug("block: %s / %s" % (idx, n_cvars))
@@ -116,7 +119,7 @@ class Optimization:
         #  ------------------------
         #  --- Create the model ---
         #  ------------------------
-        logging.info("initializing model pangeblocks")
+        logging.info(f"initializing model pangeblocks ({self.start_column},{self.end_column})")
         model = gp.Model("pangeblocks")
 
         # Threads
@@ -129,50 +132,66 @@ class Optimization:
         # C(b) = 1 if block b is selected
         # U(r,c) = 1 if position (r,c) is covered by at least one block
         # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
-        logging.info("adding C variables to the model")
+        logging.info(f"adding C variables to the model ({self.start_column},{self.end_column})")
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
+        logging.info(f"added C variables to the model ({self.start_column},{self.end_column})")
+        
         for block in c_variables:
             logging.debug(
                 "variable:C(%s) = %s" % (block, self.input_blocks[block]))
 
-        logging.info("adding U variables to the model")
+        logging.info(f"adding U variables to the model ({self.start_column},{self.end_column})")
         msa_positions = [(r,c + self.start_column) for r in range(self.n_seqs) for c in range(self.n_cols)]
         U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
+        logging.info(f"added U variables to the model ({self.start_column},{self.end_column})")
+        logging.info(f"Number of U variables {len(msa_positions)} ({self.start_column},{self.end_column})")
+
         for pos in msa_positions:
             logging.debug("variable:U(%s)", pos)
 
         #  ------------------------
         #  Constraints
         #  ------------------------
-
-        logging.info("adding constraints for each (r,c) position of the MSA")
+        logging.info(f"adding constraints for each (r,c) position of the MSA ({self.start_column},{self.end_column})")
         for r, c in msa_positions:
             logging.debug("MSA position (%s,%s)" % (r, c))
             blocks_rc = covering_by_position[(r, c)]
             if len(blocks_rc) > 0:
+                logging.info(f"position [{r},{c}] is covered by {len(blocks_rc)} blocks ({self.start_column},{self.end_column})")
+        
                 # 1. U[r,c] = 1 implies that at least one block covers the position
-                logging.debug("constraint 1")
+                # logging.debug("constraint 1")
+                logging.info(f"start constraint 1 position [{r},{c}] ({self.start_column},{self.end_column})")
                 logging.debug("blocks_rc: %s" % blocks_rc)
                 logging.debug("C variables: %s" % [C[i] for i in blocks_rc])
                 model.addConstr(
                     U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
                 )
+                logging.info(f"end constraint 1 position [{r},{c}] ({self.start_column},{self.end_column})")
+                
                 # 2. each position in the MSA is covered at most by one block
-                logging.debug("constraint 2")
+                # logging.debug("constraint 2")
+                logging.info(f"start constraint 2 position [{r},{c}] ({self.start_column},{self.end_column})")
                 model.addConstr(
                     1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
                 )
+                logging.info(f"end constraint 2 position [{r},{c}] ({self.start_column},{self.end_column})")
+
                 # logging.debug("constraint2(%s,%s) covered by %s" %
                 #               (r, c, blocks_rc))
                 # 3. each position of the MSA is covered AT LEAST by one block
-                logging.debug("constraint 3")
+                # logging.debug("constraint 3")
+                logging.info(f"start constraint 3 position [{r},{c}] ({self.start_column},{self.end_column})")
                 model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
-                # logging.debug("constraint3(%s,%s" % (r, c))
+                logging.info(f"end constraint 3 position [{r},{c}] ({self.start_column},{self.end_column})")
 
+                # logging.debug("constraint3(%s,%s" % (r, c))
+        logging.info(f"added constraints for each (r,c) position of the MSA ({self.start_column},{self.end_column})")
         #  ------------------------
         #  Objective function
         #  ------------------------
+        logging.info(f"set objective function ({self.start_column},{self.end_column})")
         logging.info("setting objective function to %s", self.obj_function)
         if self.obj_function == "nodes":
             # # minimize the number of blocks (nodes)
@@ -195,14 +214,14 @@ class Optimization:
                                   penalization=self.penalization, min_coverage=self.min_coverage, n_seqs=self.n_seqs)
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum coverage: {self.min_coverage}")
-        
+        logging.info(f"setted objective function ({self.start_column},{self.end_column})")
         #  ------------------------
         #  Solve or save the ILP model
         #  ------------------------
         if solve_ilp:
-            logging.info("solving ILP model")
+            logging.info(f"Start ILP ({self.start_column},{self.end_column})")
             model.optimize()
-            logging.info("End ILP")
+            logging.info(f"End ILP ({self.start_column},{self.end_column})")
             
             try:
                 solution_C = model.getAttr("X", C)

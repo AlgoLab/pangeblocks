@@ -56,7 +56,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level,
-                    format='[Solve subMSA] %(asctime)s. %(message)s',
+                    format='[Solve subMSA] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
     logging.basicConfig(level=args.log_level, )
