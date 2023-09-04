@@ -134,6 +134,6 @@ echo "( starting column , end column ) = ( $sc, $ec )"
 --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
 --threads-ilp 8 \
 --log-level INFO \
---workers 1 > logs/log_covid_threads_sc$sc-ec$ec.log 2>&1
+--workers 1 > logs/log_covid_threads_sc$sc-ec$ec-2.log 2>&1
 
 # --submsa-index /data/pangeblocks-experiments/covid/submsas/1000-SARS-CoV2-MSA_alpha1.txt \

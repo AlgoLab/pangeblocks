@@ -1,11 +1,12 @@
-PATH_MSAS: "/data/alessia/covid/small-msa" 
+PATH_MSAS: "test"
 # "/data/alessia/covid/big-msa" 
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
 
-PATH_OUTPUT: "/data/pangeblocks-experiments/covid/small-msa" 
+PATH_OUTPUT: "output-test"
+# "/data/pangeblocks-experiments/covid/small-msa" 
 # "/data/alessia/covid/output-big-msa"
 # "output-test-grid"
 # "/data/pangeblocks-experiments/pbwt/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" 
@@ -15,8 +16,8 @@ PATH_OUTPUT: "/data/pangeblocks-experiments/covid/small-msa"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     # - "nodes"
-    # - "strings"
-    - "weighted"
+    - "strings"
+    # - "weighted"
     # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
@@ -43,6 +44,6 @@ OPTIMIZATION:
 LOG_LEVEL: "INFO"
 THREADS: 
   TOTAL: 32  # smk
-  SUBMSAS: 32 # ThreadPoolExecutor; 1 -> for loop
+  SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 USE_WILDPBWT: True # to compute maximal blocks, otherwise SuffixTree will be used

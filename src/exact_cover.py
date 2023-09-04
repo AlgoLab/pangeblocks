@@ -25,7 +25,7 @@ from functools import partial
 from collections import namedtuple, defaultdict
 from typing import Optional 
 
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='[Solve SubMSA] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
@@ -183,18 +183,18 @@ if __name__=="__main__":
     
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
     if args.submsa_index:
-
+        logging.info(f"start_column: {args.start_column}, end_column: {args.end_column}")
         submsa_index = []
         with open(args.submsa_index, "r") as fp:
             for line in fp.readlines():
                 start, end = line.replace("\n","").split("\t")
                 start, end = int(start),int(end)
                 
-                if args.start_column <= start and end <= args.end_column:
-                    submsa_index.append((start,end))
+                # if args.start_column <= start and end <= args.end_column: # FIXME: IDK if this is necessary, but it makes the code fail when args.end_column=-1
+                submsa_index.append((start,end))
         
         if args.workers > 1:
-            logging.info("Running with ThreadPoolExecutor: {args.workers} workers")
+            logging.info(f"Running with ThreadPoolExecutor: {args.workers} workers")
             def run(argspool):
                 "Function to run with ThreadPoolExecutor"
                 submsa(start_column=argspool.start_column, end_column=argspool.end_column, path_save_ilp=argspool.path_save_ilp, path_opt_solution=argspool.path_opt_solution)
@@ -204,6 +204,7 @@ if __name__=="__main__":
                     
                     futures=[]
                     for start,end in submsa_index:
+                        logging.info(f"Working on subMSA: {(start,end)}")
                         path_save_ilp = args.prefix_output + f"_{start}-{end}.mps"
                         path_opt_solution = args.prefix_output + f"_{start}-{end}.json"
                         args_submsa = ArgsPool(start, end, path_save_ilp, path_opt_solution,)
@@ -215,9 +216,11 @@ if __name__=="__main__":
                     for future in futures:
                         future.result()
         else:
-            logging.info("Running with sequentially")
+            logging.info("Running sequentially")
+            print(submsa_index)
             for start_column, end_column in tqdm(submsa_index, desc="Solving SubMSAs"):
                 
+                logging.info(f"Working on subMSA: {(start_column,end_column)}")
                 solve_submsa(
                     path_msa=args.path_msa,
                     start_column=start_column,

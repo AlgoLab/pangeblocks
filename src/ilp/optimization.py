@@ -32,7 +32,7 @@ def load_submsa(filename, start_column=0, end_column=-1):
         n_cols = msa.get_alignment_length()
         assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
         msa = msa[:, start_column:end_column+1] # end_column included
-    
+    # logging.info(f"msa ({start_column}, {end_column}): {msa}")
     return msa
 
 class Optimization:
@@ -191,6 +191,7 @@ class Optimization:
         #  ------------------------
         #  Objective function
         #  ------------------------
+        logging.info("##############################################################")
         logging.info(f"set objective function ({self.start_column},{self.end_column})")
         logging.info("setting objective function to %s", self.obj_function)
         if self.obj_function == "nodes":
@@ -199,12 +200,30 @@ class Optimization:
 
         elif self.obj_function == "strings":
             # # minimize the total length of the graph (number of characters)
-            model = loss_strings(model, vars=C, blocks=self.input_blocks, c_variables=c_variables)
+            for idx in c_variables:
+                logging.info(f"{self.msa}")
+                logging.info(f"block: {self.input_blocks[idx]}")
+                k0=int(self.input_blocks[idx].K[0])
+                logging.info(f"K[0]: {k0}")
+                sc = int(self.input_blocks[idx].start - self.start_column)
+                logging.info(f"start column: {sc}")
+                ec = int(self.input_blocks[idx].end+1-self.start_column)
+                logging.info(f"end column: {ec}")
+                logging.info(f"msa[{k0},{sc}:{ec}]")
+                print(self.msa[k0])
+                logging.info(f"type {type(self.msa[int(k0)])}")
+                logging.info(f"type {type(self.msa[int(k0),sc:ec])}")
+
+                logging.info(f"msa[{k0},{sc}:{ec}]: {self.msa[k0,sc:ec]}")
+                # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
+                # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
+            
+            model = loss_strings(model, vars=C, blocks=self.input_blocks, c_variables=c_variables, msa=self.msa, start_column=self.start_column)
 
         elif self.obj_function == "weighted":
             # # minimize the number of blocks penalizing shorter blocks
             model = loss_weighted(model, vars=C, blocks=self.input_blocks, c_variables=c_variables, 
-                                  penalization=self.penalization, min_len=self.min_len)
+                                  penalization=self.penalization, min_len=self.min_len, msa=self.msa, start_column=self.start_column)
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum length: {self.min_len}")
 
