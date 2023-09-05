@@ -11,6 +11,9 @@ Wild-pBWT/
 .vscode/
 fil-result/
 plots/
+*py
+*json
+*txt
 
 # pandora / make_prg
 make_prg_0.4.0

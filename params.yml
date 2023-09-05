@@ -1,11 +1,11 @@
-PATH_MSAS: "test"
+PATH_MSAS: "/home/avila/plasmids/target-fasta/msa"
 # "/data/alessia/covid/big-msa" 
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
 
-PATH_OUTPUT: "output-test"
+PATH_OUTPUT: "output-plasmids"
 # "/data/pangeblocks-experiments/covid/small-msa" 
 # "/data/alessia/covid/output-big-msa"
 # "output-test-grid"
@@ -15,7 +15,7 @@ PATH_OUTPUT: "output-test"
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
-    # - "nodes"
+    - "nodes"
     - "strings"
     # - "weighted"
     # - "depth"
@@ -28,18 +28,20 @@ OPTIMIZATION:
     # - 3
     # - 5
     # - 10   
-    - 15
+    # - 15
     # - 20
+    - 50
   MIN_COVERAGE: # used only with "depth"
     - 0.1
     - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    - 1 
+    # - 1 
     # - 2
     # - 8
     # - 16
     # - 32
+    - 50
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 

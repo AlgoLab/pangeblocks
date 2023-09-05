@@ -64,9 +64,21 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
         ]
 
     if label_blocks: 
-        max_blocks_strings = [
+        max_blocks = [
             [b[0], start_column + b[1], start_column + b[2], str(msa[b[0][0], b[1]:b[2]+1].seq).upper() ] for b in max_blocks
         ]
-        return max_blocks_strings #, msa
+        # return max_blocks #, msa
     
+    if output:
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        if Path(output).suffix == ".txt":
+            with open(output, "w") as fp:
+                for block in max_blocks:
+                    fp.write(str(block))
+                    fp.write("\n")
+        elif Path(output).suffix == ".json":
+            with open(output, "w") as fp:
+                json.dump(max_blocks, fp)
+        else:
+            raise("Output file must be .txt or .json")
     return max_blocks #, msa

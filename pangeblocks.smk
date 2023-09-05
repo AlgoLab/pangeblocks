@@ -120,7 +120,7 @@ rule ilp:
     output:
         auxfile=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log")
     params:
-        dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "alpha{alpha}"),
+        dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "{obj_func}","penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}"),
         log_level=config["LOG_LEVEL"],
         time_limit=config["OPTIMIZATION"]["TIME_LIMIT"],
         threads_ilp=config["THREADS"]["ILP"],
@@ -135,14 +135,15 @@ rule ilp:
     resources: 
         mem_mb=60000
     shell:
-    # --path-save-ilp {params.dir_subsols}/{wildcards.name_msa} --path-opt-solution {params.dir_subsols}/{wildcards.name_msa} \
-        """/usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
+        """
+        /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --prefix-output {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
         --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
         --threads-ilp {params.threads_ilp} \
-        --workers {params.workers} > {output.auxfile} 2> {log.stderr}"""
+        --workers {params.workers} > {output.auxfile} 2> {log.stderr}
+        """
 
 rule coverage_to_graph:
     input:
@@ -152,7 +153,7 @@ rule coverage_to_graph:
     output:
         path_gfa=pjoin(PATH_OUTPUT, "gfa","{obj_func}", "penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}", "{name_msa}.gfa")
     params:
-        dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "alpha{alpha}"),
+        dir_subsols=pjoin(PATH_OUTPUT, "ilp", "{name_msa}", "{obj_func}","penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}"),
     log:
         stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-coverage_to_graph.log")
     conda: 
