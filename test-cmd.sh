@@ -112,28 +112,54 @@
 
 # --- 
 
-sc=11946
-ec=12151
-# sc=12264
-# ec=12441
-# sc=0
-# ec=20
-echo "( starting column , end column ) = ( $sc, $ec )"
+# sc=11946
+# ec=12151
+# # sc=12264
+# # ec=12441
+# # sc=0
+# # ec=20
+# echo "( starting column , end column ) = ( $sc, $ec )"
 
-/usr/bin/time -v src/exact_cover.py --path-msa /data/alessia/covid/big-msa/1000-SARS-CoV2-MSA.fasta \
--sc $sc \
--ec $ec \
---obj-function weighted \
---prefix-output /data/pangeblocks-experiments/covid-threads/ilp \
---penalization 128 \
---min-len 15 \
---min-coverage 0 \
---time-limit 30 \
---solve-ilp true \
---use-wildpbwt true \
---bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
---threads-ilp 8 \
---log-level INFO \
---workers 1 > logs/log_covid_threads_sc$sc-ec$ec-2.log 2>&1
+# /usr/bin/time -v src/exact_cover.py --path-msa /data/alessia/covid/big-msa/1000-SARS-CoV2-MSA.fasta \
+# -sc $sc \
+# -ec $ec \
+# --obj-function weighted \
+# --prefix-output /data/pangeblocks-experiments/covid-threads/ilp \
+# --penalization 128 \
+# --min-len 15 \
+# --min-coverage 0 \
+# --time-limit 30 \
+# --solve-ilp true \
+# --use-wildpbwt true \
+# --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
+# --threads-ilp 8 \
+# --log-level INFO \
+# --workers 1 > logs/log_covid_threads_sc$sc-ec$ec-2.log 2>&1
 
 # --submsa-index /data/pangeblocks-experiments/covid/submsas/1000-SARS-CoV2-MSA_alpha1.txt \
+
+#########################################
+
+# compute maximal blocks with pBWT
+sc=14551
+ec=14900
+path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
+maximal_blocks=debug/$(basename $path_msa .fasta)/maximal_blocks-sc$sc-ec$ec.json # to save blocks
+mkdir -p output
+python blocks_with_pbwt.py $path_msa \
+--start-column $sc \
+--end-column $ec \
+--output $maximal_blocks
+
+# compute value of objective functions
+path_opt_values=debug/$(basename $path_msa .fasta)/values_obj_functions-sc$sc-ec$ec.json # to save values of the different objective functions
+path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/nodes/penalization0-min_len0-min_coverage0-alpha50/all_plasmids_14551-14900.json
+python compute_obj_function.py $path_msa \
+--path-blocks $path_blocks_ilp \
+--start-column $sc \
+--end-column $ec \
+--nodes \
+--strings \
+--weighted \
+--depth \
+# --output $path_opt_values \
