@@ -1,11 +1,11 @@
-PATH_MSAS: "/home/avila/plasmids/target-fasta/msa"
+PATH_MSAS: "/data/plasmids/target-fasta/seqs-for-msa"
 # "/data/alessia/covid/big-msa" 
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
 
-PATH_OUTPUT: "output-plasmids"
+PATH_OUTPUT: "output-plasmids2"
 # "/data/pangeblocks-experiments/covid/small-msa" 
 # "/data/alessia/covid/output-big-msa"
 # "output-test-grid"
@@ -17,7 +17,7 @@ OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
     - "strings"
-    # - "weighted"
+    - "weighted"
     # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
@@ -42,10 +42,11 @@ OPTIMIZATION:
     # - 16
     # - 32
     - 50
+    # - 53837
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
-  TOTAL: 32  # smk
+  TOTAL: 16  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 USE_WILDPBWT: True # to compute maximal blocks, otherwise SuffixTree will be used

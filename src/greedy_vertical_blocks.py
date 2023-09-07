@@ -60,6 +60,7 @@ def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[st
 
         if len(chars_col) == 1: 
             chars_block.append(chars_col[0])
+
         else:
             
             if len(chars_block)>= args.threshold_vertical_blocks:
@@ -71,7 +72,13 @@ def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[st
             start_col = col+1 # update starting column for the next iteration
             # update initial values for a new block
             chars_block = []
-            
+        
+    # special case for block ending in the last column
+    if len(chars_block)>= args.threshold_vertical_blocks:
+        end_col = col-1 # end column is included
+        vertical_blocks.append(
+            (list(range(n_seqs)), start_col, end_col, "".join(chars_block))
+        )
 
     # Save maximal blocks
     if output:
