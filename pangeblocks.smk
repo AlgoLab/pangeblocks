@@ -126,6 +126,7 @@ rule ilp:
         threads_ilp=config["THREADS"]["ILP"],
         workers=config["THREADS"]["SUBMSAS"],
         use_wildpbwt=config["USE_WILDPBWT"],
+        standard_decomposition=config["DECOMPOSITION"]["STANDARD"],
     threads:
         config["THREADS"]["TOTAL"]
     log:
@@ -139,9 +140,9 @@ rule ilp:
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --prefix-output {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
-        --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp true \
+        --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp True \
         --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
-        --threads-ilp {params.threads_ilp} \
+        --standard-decomposition {params.standard_decomposition} --threads-ilp {params.threads_ilp} \
         --workers {params.workers} > {output.auxfile} 2> {log.stderr}
         """
 

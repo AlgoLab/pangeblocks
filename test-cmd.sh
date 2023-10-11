@@ -152,25 +152,25 @@ path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
 # --end-column $ec \
 # --output $maximal_blocks
 
-# ilp nodes
-path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/nodes/penalization0-min_len0-min_coverage0-alpha50/all_plasmids_14551-14900.json
+# # ilp nodes
+# path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/nodes/penalization0-min_len0-min_coverage0-alpha50/all_plasmids_14551-14900.json
 
-# # ilp strings
-path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/strings/penalization0-min_len0-min_coverage0-alpha50/all_plasmids_14551-14900.json
+# # # ilp strings
+# path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/strings/penalization0-min_len0-min_coverage0-alpha50/all_plasmids_14551-14900.json
 
-# # ilp weighted
-path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/weighted/penalization128-min_len50-min_coverage0-alpha50/all_plasmids_14551-14900.json
+# # # ilp weighted
+# path_blocks_ilp=/home/avila/pangeblocks/output-plasmids/ilp/all_plasmids/weighted/penalization128-min_len50-min_coverage0-alpha50/all_plasmids_14551-14900.json
 
-# compute value of objective functions
-obj_function=$(basename $(dirname $(dirname $path_blocks_ilp)))
-path_opt_values=debug/$(basename $path_msa .fasta)/values_obj_functions-$obj_function-sc$sc-ec$ec.json # to save values of the different objective functions
+# # compute value of objective functions
+# obj_function=$(basename $(dirname $(dirname $path_blocks_ilp)))
+# path_opt_values=debug/$(basename $path_msa .fasta)/values_obj_functions-$obj_function-sc$sc-ec$ec.json # to save values of the different objective functions
 
-python compute_obj_function.py $path_msa \
---path-blocks $path_blocks_ilp \
---start-column $sc \
---end-column $ec \
---nodes \
---strings \
---weighted \
---depth \
---output $path_opt_values
+# python compute_obj_function.py $path_msa \
+# --path-blocks $path_blocks_ilp \
+# --start-column $sc \
+# --end-column $ec \
+# --nodes \
+# --strings \
+# --weighted \
+# --depth \
+# --output $path_opt_values

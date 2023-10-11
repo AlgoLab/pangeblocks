@@ -12,7 +12,8 @@ import argparse
 from Bio import AlignIO
 from blocks import Block
 from ilp.input import InputBlockSet
-from ilp.optimization import Optimization
+# from ilp.optimization import Optimization
+from ilp.optimization_notU import Optimization
 from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree # FIXME: did not touch this
 from blocks.maximal_blocks.wild_pbwt import compute_maximal_blocks as maximal_blocks_pbwt
 from pathlib import Path
@@ -118,7 +119,6 @@ def solve_submsa(path_msa, start_column, end_column,
                         log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
         opt_coverage = opt(solve_ilp=solve_ilp)
 
-    logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
     for b in opt_coverage:
         logging.info(f"Optimal Coverage block {b.str()}")
 

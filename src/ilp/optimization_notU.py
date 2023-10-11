@@ -97,6 +97,7 @@ class Optimization:
         # of indices of the blocks that cover the position (r,c)
         logging.info("covering by position")
         n_cvars = len(c_variables)
+        logging.info(f"Number of C variables {n_cvars} ({self.start_column},{self.end_column})")
         logging.info(f"MSA: {self.n_seqs} x {self.n_cols} ({self.start_column},{self.end_column})")
         for idx in c_variables:
             block = self.input_blocks[idx]
@@ -130,31 +131,19 @@ class Optimization:
 
         # define variables
         # C(b) = 1 if block b is selected
-        # U(r,c) = 1 if position (r,c) is covered by at least one block
-        # S(r,c) = 1 if position (r,c) is covered by a 1-cell block
-        logging.info(f"Number of C variables {n_cvars} ({self.start_column},{self.end_column})")
         logging.info(f"adding C variables to the model ({self.start_column},{self.end_column})")
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
         logging.info(f"added C variables to the model ({self.start_column},{self.end_column})")
+        
         logging.info(f"Size [bytes] of C variables {sys.getsizeof(C)} ({self.start_column},{self.end_column})")
-
         for block in c_variables:
             logging.debug(
                 "variable:C(%s) = %s" % (block, self.input_blocks[block]))
 
-
+        # logging.info(f"adding U variables to the model ({self.start_column},{self.end_column})")
         msa_positions = [(r,c + self.start_column) for r in range(self.n_seqs) for c in range(self.n_cols)]
-        logging.info(f"Number of U variables {len(msa_positions)} ({self.start_column},{self.end_column})")
-        logging.info(f"adding U variables to the model ({self.start_column},{self.end_column})")
-        U = model.addVars(msa_positions, vtype=GRB.BINARY, name="U")
-        logging.info(f"added U variables to the model ({self.start_column},{self.end_column})")
-        logging.info(f"Size [bytes] of U variables {sys.getsizeof(U)} ({self.start_column},{self.end_column})")
-
-
-        for pos in msa_positions:
-            logging.debug("variable:U(%s)", pos)
-
+   
         #  ------------------------
         #  Constraints
         #  ------------------------
@@ -165,33 +154,13 @@ class Optimization:
             if len(blocks_rc) > 0:
                 logging.debug(f"position [{r},{c}] is covered by {len(blocks_rc)} blocks ({self.start_column},{self.end_column})")
         
-                # 1. U[r,c] = 1 implies that at least one block covers the position
-                # logging.debug("constraint 1")
-                logging.debug(f"start constraint 1 position [{r},{c}] ({self.start_column},{self.end_column})")
-                logging.debug("blocks_rc: %s" % blocks_rc)
-                logging.debug("C variables: %s" % [C[i] for i in blocks_rc])
+                # 1. each position in the MSA is covered by one block
+                logging.debug(f"start constraint position [{r},{c}] ({self.start_column},{self.end_column})")
                 model.addConstr(
-                    U[r, c] <= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint1({r},{c})"
+                    1 == gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint({r},{c})"
                 )
-                logging.debug(f"end constraint 1 position [{r},{c}] ({self.start_column},{self.end_column})")
-                
-                # 2. each position in the MSA is covered at most by one block
-                # logging.debug("constraint 2")
-                logging.debug(f"start constraint 2 position [{r},{c}] ({self.start_column},{self.end_column})")
-                model.addConstr(
-                    1 >= gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint2({r},{c})"
-                )
-                logging.debug(f"end constraint 2 position [{r},{c}] ({self.start_column},{self.end_column})")
+                logging.debug(f"end constraint position [{r},{c}] ({self.start_column},{self.end_column})")
 
-                # logging.debug("constraint2(%s,%s) covered by %s" %
-                #               (r, c, blocks_rc))
-                # 3. each position of the MSA is covered AT LEAST by one block
-                # logging.debug("constraint 3")
-                logging.debug(f"start constraint 3 position [{r},{c}] ({self.start_column},{self.end_column})")
-                model.addConstr(U[r, c] >= 1, name=f"constraint3({r},{c})")
-                logging.debug(f"end constraint 3 position [{r},{c}] ({self.start_column},{self.end_column})")
-
-                # logging.debug("constraint3(%s,%s" % (r, c))
         logging.info(f"added constraints for each (r,c) position of the MSA ({self.start_column},{self.end_column})")
         #  ------------------------
         #  Objective function
@@ -206,20 +175,20 @@ class Optimization:
         elif self.obj_function == "strings":
             # # minimize the total length of the graph (number of characters)
             for idx in c_variables:
-                logging.info(f"{self.msa}")
-                logging.info(f"block: {self.input_blocks[idx]}")
+                logging.debug(f"{self.msa}")
+                logging.debug(f"block: {self.input_blocks[idx]}")
                 k0=int(self.input_blocks[idx].K[0])
-                logging.info(f"K[0]: {k0}")
+                logging.debug(f"K[0]: {k0}")
                 sc = int(self.input_blocks[idx].start - self.start_column)
-                logging.info(f"start column: {sc}")
+                logging.debug(f"start column: {sc}")
                 ec = int(self.input_blocks[idx].end+1-self.start_column)
-                logging.info(f"end column: {ec}")
-                logging.info(f"msa[{k0},{sc}:{ec}]")
+                logging.debug(f"end column: {ec}")
+                logging.debug(f"msa[{k0},{sc}:{ec}]")
                 print(self.msa[k0])
-                logging.info(f"type {type(self.msa[int(k0)])}")
-                logging.info(f"type {type(self.msa[int(k0),sc:ec])}")
+                logging.debug(f"type {type(self.msa[int(k0)])}")
+                logging.debug(f"type {type(self.msa[int(k0),sc:ec])}")
 
-                logging.info(f"msa[{k0},{sc}:{ec}]: {self.msa[k0,sc:ec]}")
+                logging.debug(f"msa[{k0},{sc}:{ec}]: {self.msa[k0,sc:ec]}")
                 # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
                 # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
             

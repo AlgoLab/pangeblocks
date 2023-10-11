@@ -63,11 +63,15 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
             b for b in max_blocks if len(b[0]) == n_seqs
         ]
 
+    # adjust start and end columns
     if label_blocks: 
         max_blocks = [
             [b[0], start_column + b[1], start_column + b[2], str(msa[b[0][0], b[1]:b[2]+1].seq).upper() ] for b in max_blocks
         ]
-        # return max_blocks #, msa
+    else:
+        max_blocks = [
+            [b[0], start_column + b[1], start_column + b[2]] for b in max_blocks
+        ]
     
     if output:
         Path(output).parent.mkdir(parents=True, exist_ok=True)

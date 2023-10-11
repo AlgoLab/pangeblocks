@@ -1,11 +1,16 @@
-PATH_MSAS: "/data/plasmids/target-fasta/seqs-for-msa"
+PATH_MSAS: "/data/msas-pangeblocks/mini-experiments"
+# "/data/msas-pangeblocks/sars-cov-2"
+# "/data/msas-plasmids/fftnsi-op1.53-ep0.123" 
+# "/data/plasmids/target-fasta/seqs-for-msa"
 # "/data/alessia/covid/big-msa" 
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
 
-PATH_OUTPUT: "output-plasmids2"
+PATH_OUTPUT: "/data/analysis-paper/mini-experiments-standard-decomposition" 
+# "/data/pangeblocks-experiments/sars-cov-2"
+# "/data/pangeblocks-experiments/plasmids-fftnsi"
 # "/data/pangeblocks-experiments/covid/small-msa" 
 # "/data/alessia/covid/output-big-msa"
 # "output-test-grid"
@@ -18,12 +23,14 @@ OPTIMIZATION:
     - "nodes"
     - "strings"
     - "weighted"
-    # - "depth"
+    - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
     # - 7 
-    - 128
+    # - 100
+    # - 500
+    - 1000
   MIN_LEN: # used only with "weighted"
     # - 3
     # - 5
@@ -32,21 +39,31 @@ OPTIMIZATION:
     # - 20
     - 50
   MIN_COVERAGE: # used only with "depth"
-    - 0.1
-    - 0.2
+    # - 0.1
+    # - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    # - 1 
-    # - 2
-    # - 8
-    # - 16
-    # - 32
+    - 1 
+    - 5
+    - 10
+    - 15
+    - 20
+    - 25
+    - 30
+    - 35
+    - 40
+    - 45
     - 50
     # - 53837
   TIME_LIMIT: 30 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
-  TOTAL: 16  # smk
+  TOTAL: 32  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
-USE_WILDPBWT: True # to compute maximal blocks, otherwise SuffixTree will be used
+DECOMPOSITION:
+  STANDARD: False
+USE_WILDPBWT: True
+
+# to compute maximal blocks, otherwise SuffixTree will be used
+# standard decomposition . If False, use row-maximal-decomposition

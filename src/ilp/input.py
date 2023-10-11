@@ -23,6 +23,10 @@ class InputBlockSet:
     """Given a set of maximal blocks and the subMSA they come from,
     generate the Input set of block to be used in the ILP
     """    
+
+    def __init__(self, standard_decomposition=False):
+        self.standard_decomposition=standard_decomposition 
+
     def __call__(self, path_msa: Union[str,Path], maximal_blocks: list[Block],
                  start_column: int, end_column: int) -> list[Block]:
         
@@ -39,55 +43,39 @@ class InputBlockSet:
         logging.info("subMSA loaded, nrows:(%s), ncols:(%s)" % (n_seqs, n_cols))
         
         # blocks not covered by maximal blocks
-        logging.info("get coverage panel")
+        logging.info(f"get coverage panel ({self.start_column},{self.end_column})")
         coverage_panel = self.get_coverage_panel(n_seqs, n_cols, maximal_blocks, start_column)
-        
-        logging.info("get missing blocks")
+        logging.info(f"end coverage panel ({self.start_column},{self.end_column})")
+
+        logging.info(f"get missing blocks ({self.start_column},{self.end_column})")
         missing_blocks = self.get_missing_blocks(coverage_panel, self.msa, start_column)
+        logging.info(f"end missing blocks ({self.start_column},{self.end_column})")
         
         # block decomposition
-        logging.info("decomposer")
-        decomposer = Decomposer(row_maximal_decomposition=True) #False to try another decomposition and avoid blocks_one_char
-        decomposed_blocks = decomposer(list_blocks=maximal_blocks)
+        logging.info(f"decomposer ({self.start_column},{self.end_column})")
+        decomposer = Decomposer(
+                                standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used 
+                                ) 
+        decomposed_blocks = decomposer(list_blocks=maximal_blocks, 
+                                       start=start_column, end=end_column )                        # to track with logging)
+        logging.info(f"end decomposer ({self.start_column},{self.end_column})")
+        logging.info(f"Number of decomposed blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
 
         # glue missing blocks of one character in the same column
-        logging.info("glue missing blocks")
+        logging.info(f"glue missing blocks ({self.start_column},{self.end_column})")
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
+        logging.info(f"Number of missing blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
+
+        if not self.standard_decomposition:
+            logging.info(f"get blocks one char ({self.start_column},{self.end_column})")
+            blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
+            logging.info(f"Number of blocks one char {len(blocks_one_char)} ({self.start_column},{self.end_column})")
+
+            # Input set: input blocks:decomposition of blocks  of one position in the MSA)
+            input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
+        else: 
+            input_set_ilp = decomposed_blocks + missing_blocks
         
-        # # check missing blocks are correctly labeled
-        # for block in missing_blocks: 
-        #     # logging.debug("missing block %s", block)
-        #     for r in block.K:
-        #         r=int(r)
-        #         start=int(block.start)
-        #         end=int(block.end)
-        #         label_msa = msa[r].seq[start:end+1].upper()
-
-        #         for pos_block, c in enumerate(range(start, end+1)):
-        #             char_msa = str(msa[r,start:end+1].seq)[pos_block].upper()
-        #             char_block = block.label[pos_block].upper() 
-        #             if char_msa != char_block:
-        #                 logging.debug("incorrect missing block covering position (%s,%s): %s" % (r,c,block.str()))
-
-        logging.info("get blocks one char")
-        blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
-        # # check blocks one char are correctly labeled
-        # for block in blocks_one_char:
-        #     # logging.debug("block one char %s", block)
-        #     for r in block.K:
-        #         r=int(r)
-        #         start=int(block.start)
-        #         end=int(block.end)
-        #         for pos_block, c in enumerate(range(start, end+1)):
-        #             char_msa = msa[r].seq[c-start_column].upper()
-        #             char_block = block.label[pos_block].upper() 
-        #             if char_msa != char_block:
-        #                 logging.debug("incorrect block one char covering position (%s,%s): %s" % (r,c,block.str()))
-
-        # Input set: input blocks:decomposition of blocks  of one position in the MSA)
-        logging.info("define input set ILP")
-        input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
-
         return input_set_ilp
     
     def glue_vertical_blocks(self,list_blocks,):

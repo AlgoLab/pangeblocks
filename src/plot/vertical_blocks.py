@@ -10,51 +10,6 @@ import logging
 
 _Path = Union[str, Path]
 
-
-# path_msa="/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0/B-3106.fa"
-# path_blocks="/data/pangeblocks-experiments/HLA/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0/maximal-blocks/B-3106/vertical_blocks_alpha1.json"
-# path_submsas="/data/pangeblocks-experiments/HLA/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0/submsas/B-3106_alpha1.txt"
-# alpha=1
-# path_img=f"img-alpha{alpha}.png"
-# rows_plot=400
-
-# msa=AlignIO.read(path_msa, "fasta")
-# n_cols = msa.get_alignment_length()
-# n_seqs = len(msa)
-
-# with open(path_blocks) as fp:
-#     blocks = json.load(fp) 
-
-# # SUBMSAS
-# # create image. 0 (black) subMSA, 255 (white) vertical block
-# numpy_image = np.full((1, n_cols), COLOR_SUBMSA)
-
-# # VERTICAL BLOCKS
-# # Filter vertical blocks of len at least alpha
-# for b in blocks:
-#     try:
-#         K, start, end, label = b
-#     except:
-#         K, start, end = b
-    
-#     if len(K) == n_seqs and (end-start+1) >= alpha:
-#         # for col in range(start, end+1):
-#         numpy_image[:,start:end+1] = COLOR_VERT_BLOCK
-
-# # ONE COLUMN SUBMSAS
-# with open(path_submsas) as fp:
-#     for line in fp:
-#         start, end = line.replace("\n","").split("\t")
-#         start, end=int(start), int(end)
-#         if start == end:
-#             numpy_image[:, start] = COLOR_ONE_COL
-
-# img_array = np.tile(numpy_image, rows_plot).reshape(rows_plot,-1)
-# img = Image.fromarray(img_array.astype('uint8')) #, 'RGB')
-
-# if path_img: 
-#     img.save(path_img)
-
 def vertical_blocks(
                     path_msa: _Path, 
                     path_blocks: _Path, 
@@ -73,9 +28,9 @@ def vertical_blocks(
         alpha (int, optional): minimum length (columns) threshold to consider a vertical block. Defaults to 1.
     """    
     if gray:
-        COLOR_VERT_BLOCK = 255    # white (fixed blocks of length at least alpha)
-        COLOR_SUBMSA     = 125    # gray  (ILP acts)
-        COLOR_ONE_COL    = 0      # black (one column subMSA, no ILP, greedy solution)
+        COLOR_VERT_BLOCK = 0     # black (one column subMSA, no ILP, greedy solution)
+        COLOR_SUBMSA     = 125   # gray  (ILP acts)
+        COLOR_ONE_COL    = 255   # white (fixed blocks of length at least alpha)
     else:
         COLOR_VERT_BLOCK = (255,255,255)    # white (fixed blocks of length at least alpha)
         COLOR_SUBMSA     = (128,128,128)    # gray  (ILP acts)

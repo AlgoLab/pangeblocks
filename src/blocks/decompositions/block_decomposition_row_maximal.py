@@ -33,7 +33,7 @@ def block_decomposition(block1: Block, block2: Block):
 
         # Condition 1
         if b1.start == b2.start and b1.end < b2.end:
-            logging.info("decomposition 1")
+            logging.debug("decomposition 1")
             # new blocks
             nb1 = b1#Block(b1.K, b1.start, b1.end, b1.label)
             nb2 = Block(b2.K, b1.end+1, b2.end)
@@ -41,7 +41,7 @@ def block_decomposition(block1: Block, block2: Block):
 
         # Condition 2
         elif b1.start < b2.start and b2.end < b1.end:
-            logging.info("decomposition 2")
+            logging.debug("decomposition 2")
             nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2
             nb3 = Block(b1.K, b2.end+1, b1.end)
@@ -49,14 +49,14 @@ def block_decomposition(block1: Block, block2: Block):
 
         # Condition 3
         elif b1.start < b2.start and b1.end == b2.end:
-            logging.info("decomposition 3")
+            logging.debug("decomposition 3")
             nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2
             nb.extend([nb1, nb2])
 
         # Condition4
         elif b1.start < b2.start and b2.start < b1.end and b1.end < b2.end:
-            logging.info("decomposition 4")
+            logging.debug("decomposition 4")
             # option 1 
             nb1 = Block(b1.K, b1.start, b2.start-1)
             nb2 = b2

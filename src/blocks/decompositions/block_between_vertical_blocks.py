@@ -24,7 +24,7 @@ def block_between_vertical_blocks(horizontal_block: Block, vertical_block1: Bloc
 
 from collections import defaultdict
 import logging
-logging.basicConfig(level=logging.ERROR,
+logging.basicConfig(level=logging.INFO,
                     format='[Block between vertical blocks]%(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 

@@ -7,6 +7,7 @@ from .analyzer import BlockAnalyzer
 from .decompositions import (
     block_decomposition_row_maximal,
     block_decomposition_not_row_maximal,
+    block_decomposition_standard
 )
 
 from dataclasses import astuple
@@ -19,36 +20,36 @@ logging.basicConfig(level=logging.INFO,
 
 class Decomposer(BlockAnalyzer):
 
-    def __init__(self, return_positional_strings: bool=False, row_maximal_decomposition: bool = True):
+    def __init__(self, return_positional_strings: bool=False, standard_decomposition: bool = False):
         self.return_positional_strings=return_positional_strings
-        self.row_maximal_decomposition=row_maximal_decomposition
-
-        if row_maximal_decomposition:
+        self.standard_decomposition=standard_decomposition
+        if standard_decomposition:
+            logging.info("Using standard decomposition")
+            self.block_decomposition=block_decomposition_standard
+        else:
             logging.info("Using row maximal decomposition")
             self.block_decomposition=block_decomposition_row_maximal
-        else:
-            logging.info("Using not row maximal decomposition")
-            self.block_decomposition=block_decomposition_not_row_maximal
 
     def __call__(self, list_blocks: Optional[list[Block]] = None, path_blocks: Optional[Union[str, Path]] = None, **kwargs) -> dict:
-        
+        start,end = kwargs.get("start",0), kwargs.get("end",0)
+
         if path_blocks:
             list_blocks = self._load_list_blocks(path_blocks)
             logging.info(f"Blocks loaded from {str(path_blocks)}")
 
         # compute list with (idx1,idx2) of intersected blocks
-        logging.info(f"Computing pairs of overlapping blocks")
+        logging.info(f"Computing pairs of overlapping blocks ({start},{end})")
         inter_blocks, list_blocks=self._list_inter_blocks(list_blocks, return_sorted_list=True) 
-        logging.info(f"Computed pairs of overlapping blocks")
-        logging.info(f"Number of pairs of overlapping blocks {len(inter_blocks)}")
-        logging.info(f"Size [bytes] list of pairs indexes of overlapping blocks {sys.getsizeof(inter_blocks)}")
-        logging.info(f"Size [bytes] list of blocks {sys.getsizeof(list_blocks)}")
+        logging.info(f"Computed pairs of overlapping blocks ({start},{end})")
+        logging.info(f"Number of pairs of overlapping blocks {len(inter_blocks)} ({start},{end})")
+        logging.info(f"Size [bytes] list of pairs indexes of overlapping blocks {sys.getsizeof(inter_blocks)} ({start},{end})")
+        logging.info(f"Size [bytes] list of blocks {sys.getsizeof(list_blocks)} ({start},{end})")
         
         # decompose blocks
-        logging.info(f"Computing decomposition from intersections of blocks")
+        logging.info(f"Computing decomposition from intersections of blocks ({start},{end})")
         decomposed_blocks=self.decomposition_from_inter_blocks(list_blocks, inter_blocks) 
-        logging.info(f"Computed decomposition from intersections of blocks")
-        logging.info(f"Size [bytes] list of decomposed blocks {sys.getsizeof(list_blocks)}")
+        logging.info(f"Computed decomposition from intersections of blocks ({start},{end})")
+        logging.info(f"Size [bytes] list of decomposed blocks {sys.getsizeof(list_blocks)} ({start},{end})")
         
         if self.return_positional_strings is True:
             return [block.to_positional_string() for block in decomposed_blocks]        
