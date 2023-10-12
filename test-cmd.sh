@@ -174,3 +174,4 @@ path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
 # --weighted \
 # --depth \
 # --output $path_opt_values
+

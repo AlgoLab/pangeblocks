@@ -10,7 +10,7 @@ def block_decomposition(block1: Block, block2: Block):
     """Decomposition of maximal blocks
     two cases according to lemma 1 in the manuscript
     """
-    logging.info("standard decomposition")
+    logging.debug("standard decomposition")
     # sort blocks by starting positions
     B = [block1, block2]
     l2, l1 = list(sorted(B, key=lambda l: (l.start,len(l.K))))
@@ -21,8 +21,8 @@ def block_decomposition(block1: Block, block2: Block):
     
     if common_rows and common_cols: 
 
-        logging.info(l1)
-        logging.info(l2)
+        logging.debug(l1)
+        logging.debug(l2)
     
         # Lemma 1: [b1,e1] subset of [b2,e2] <=> K2 subset of K1 (l2 is the most one to the left)
         blocks = []

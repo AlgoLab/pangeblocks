@@ -56,12 +56,12 @@ class InputBlockSet:
         decomposer = Decomposer(
                                 standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used 
                                 ) 
-        decomposed_blocks = decomposer(list_blocks=maximal_blocks, 
-                                       start=start_column, end=end_column )                        # to track with logging)
+        decomposed_blocks = decomposer(list_blocks=maximal_blocks,                         # NOTE: decomposed_blocks contains the maximal blocks, check Decomposer.decomposition_from_inter_blocks()
+                                       start=start_column, end=end_column )                # to track with logging)
         logging.info(f"end decomposer ({self.start_column},{self.end_column})")
-        logging.info(f"Number of decomposed blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
+        logging.info(f"Number of decomposed blocks {len(decomposed_blocks)} ({self.start_column},{self.end_column})")        
 
-        # glue missing blocks of one character in the same column
+        # glue missing blocks of one character in the same column 
         logging.info(f"glue missing blocks ({self.start_column},{self.end_column})")
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
         logging.info(f"Number of missing blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
@@ -72,7 +72,13 @@ class InputBlockSet:
             logging.info(f"Number of blocks one char {len(blocks_one_char)} ({self.start_column},{self.end_column})")
 
             # Input set: input blocks:decomposition of blocks  of one position in the MSA)
-            input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char
+            # to avoid having duplicated one_char blocks
+            from dataclasses import astuple
+            decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
+            for block in blocks_one_char:
+                decomposed_blocks.add(astuple(block))
+            decomposed_blocks = [Block(*b) for b in decomposed_blocks]
+            input_set_ilp = decomposed_blocks + missing_blocks #+ blocks_one_char
         else: 
             input_set_ilp = decomposed_blocks + missing_blocks
         

@@ -1,4 +1,7 @@
-PATH_MSAS: "/data/msas-pangeblocks/mini-experiments"
+PATH_MSAS: /data/msas-pangeblocks/mini-experiments/
+
+# "/data/msas-pangeblocks/sars-cov-2"
+# "/data/msas-pangeblocks/sars-cov-2"
 # "/data/msas-pangeblocks/sars-cov-2"
 # "/data/msas-plasmids/fftnsi-op1.53-ep0.123" 
 # "/data/plasmids/target-fasta/seqs-for-msa"
@@ -6,9 +9,10 @@ PATH_MSAS: "/data/msas-pangeblocks/mini-experiments"
 # "test" 
 # "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
 #"/data/alessia/covid/small-msa" 
-#"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #   
+#"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
-PATH_OUTPUT: "/data/analysis-paper/mini-experiments-standard-decomposition" 
+PATH_OUTPUT: /data/analysis-paper/experiments/mini-experiment-old-decomp-alpha-consistent2
+# /data/analysis-paper/experiments/alpha-consistent 
 # "/data/pangeblocks-experiments/sars-cov-2"
 # "/data/pangeblocks-experiments/plasmids-fftnsi"
 # "/data/pangeblocks-experiments/covid/small-msa" 
@@ -21,9 +25,9 @@ PATH_OUTPUT: "/data/analysis-paper/mini-experiments-standard-decomposition"
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    - "strings"
-    - "weighted"
-    - "depth"
+    # - "strings"
+    # - "weighted"
+    # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -44,26 +48,26 @@ OPTIMIZATION:
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
     - 1 
-    - 5
+    # - 5
     - 10
-    - 15
-    - 20
+    # - 15
+    # - 20
     - 25
-    - 30
-    - 35
-    - 40
-    - 45
+    # - 30
+    # - 35
+    # - 40
+    # - 45
     - 50
     # - 53837
-  TIME_LIMIT: 30 # time limit to run each ILP (minutes)
+  TIME_LIMIT: 60 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
-  TOTAL: 32  # smk
+  TOTAL: 16  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 DECOMPOSITION:
   STANDARD: False
+  ALPHA_CONSISTENT: True
 USE_WILDPBWT: True
-
 # to compute maximal blocks, otherwise SuffixTree will be used
 # standard decomposition . If False, use row-maximal-decomposition

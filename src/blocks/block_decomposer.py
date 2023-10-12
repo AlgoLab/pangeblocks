@@ -68,16 +68,5 @@ class Decomposer(BlockAnalyzer):
             blocks_from_inter = [block for block in self.block_decomposition(block1, block2) if block not in [block1,block2]]
             for b in blocks_from_inter:
                 decomposed_blocks.add(astuple(b))
-            # decomposed_blocks.extend(
-            #     blocks_from_inter       
-            # )
 
-        
-        # # join decomposed blocks and input blocks
-        # decomposed_blocks.extend(list_blocks)
-
-        # decomposed_blocks = set([astuple(b) for b in decomposed_blocks])
-        
-        # return non-duplicated blocks
-        # return list([Block(*b) for b in set(decomposed_blocks)])
         return [Block(*b) for b in decomposed_blocks]

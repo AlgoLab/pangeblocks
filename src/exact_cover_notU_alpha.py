@@ -42,100 +42,6 @@ def label_from_block(block, msa):
     start, end = int(start), int(end)
     return str(msa[int(K[0])].seq[start:end+1])
 
-def solve_submsa(path_msa, start_column, end_column, 
-                 solve_ilp, path_save_ilp, path_opt_solution, 
-                 obj_function, penalization, min_len, min_coverage, 
-                 time_limit, threads_ilp=8,
-                 use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, 
-                 standard_decomposition=False, **kwargs ):
-    logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
-    
-    # # Load set of decomposed blocks
-    kwargs_opt = dict(
-        obj_function=obj_function,
-        penalization=penalization,
-        min_len=min_len,
-        min_coverage=min_coverage,
-        time_limit=time_limit,
-        threads_ilp=threads_ilp
-    )
-
-    # if only one column is involved, return the blocks with one character
-    if start_column==end_column:
-        logging.info("start and end columns are the same, skipping ILP")
-        msa = load_submsa(path_msa, start_column, end_column)
-
-        blocks_one_char = []
-        n_cols=msa.get_alignment_length()
-        n_seqs=len(msa)
-
-        for col in range(n_cols):
-            seq_by_char = defaultdict(list)
-            for row in range(n_seqs):
-                seq_by_char[msa[row,col]].append(row)
-
-            for c, K in seq_by_char.items():
-                # ommit vertical blocks, they will be part of a maximal one
-                if len(K) < n_seqs:
-                    blocks_one_char.append(
-                            # Block(K=K, start=col+start_column, end=col+start_column, label=c) # FIXME: Block
-                            Block(K=K, start=col+start_column, end=col+start_column)
-                    )
-        opt_coverage = blocks_one_char
-
-    else:
-
-        # 1. compute maximal blocks
-        logging.info(f"Computing maximal blocks")
-        # Return positions w.r.t. the full MSA
-        if use_wildpbwt:
-            maximal_blocks = maximal_blocks_pbwt(
-                        filename=path_msa,
-                        start_column=start_column, end_column=end_column,
-                        alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
-                        bin_wildpbwt = bin_wildpbwt,
-                        label_blocks = True
-                    )
-        else:
-            maximal_blocks = maximal_blocks_suffixtree(
-                        filename=path_msa, 
-                        start_column=start_column, end_column=end_column, only_vertical=False
-                        )
-        
-        # 2. compute input set of blocks for the ILP (decomposition is included)
-        # TODO: generar input set para el MSA completo: start_column=0, end_column=-1
-        logging.info(f"Generating input set ({start_column},{end_column})")
-        logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
-        logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
-        inputset_gen = InputBlockSet(
-            standard_decomposition
-        )
-        inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
-        logging.info(f"Generated input set ({start_column},{end_column})")
-        del maximal_blocks # maximal blocks are part of the inputset
-            
-        # 3. solve the ILP / output ILP model
-        # find optimal coverage of the MSA by blocks
-        logging.info("Starting optimization")
-        opt = Optimization(blocks=inputset, path_msa=path_msa, start_column=start_column, end_column=end_column,
-                        log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
-        opt_coverage = opt(solve_ilp=solve_ilp)
-
-    logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
-    for b in opt_coverage:
-        logging.info(f"Optimal Coverage block {b.str()}")
-
-    if path_opt_solution:
-        full_msa = load_submsa(path_msa)
-        Path(path_opt_solution).parent.mkdir(exist_ok=True, parents=True)
-        with open(path_opt_solution, "w") as fp:
-            blocks = [astuple(block) for block in opt_coverage]
-            # blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks]
-            blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]), label_from_block(b, full_msa)] for b in blocks] 
-            json.dump(blocks, fp)
-
-    del blocks, opt_coverage
-    gc.collect()
 
 def load_submsa(filename, start_column=0, end_column=-1):
     "Return 0-indexed MSA from start_column to end_column (both included)"
@@ -152,6 +58,118 @@ def load_submsa(filename, start_column=0, end_column=-1):
         else:
             msa = msa[:, start_column:end_column+1] # end_column included
     return msa
+
+def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition):
+    # 1. compute maximal blocks
+    logging.info(f"Computing maximal blocks")
+    # Return positions w.r.t. the full MSA
+    if use_wildpbwt:
+        maximal_blocks = maximal_blocks_pbwt(
+                    filename=path_msa,
+                    start_column=start_column, end_column=end_column,
+                    alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
+                    bin_wildpbwt = bin_wildpbwt,
+                    label_blocks = True
+                )
+    else:
+        maximal_blocks = maximal_blocks_suffixtree(
+                    filename=path_msa, 
+                    start_column=start_column, end_column=end_column, only_vertical=False
+                    )
+    
+    # 2. compute input set of blocks for the ILP (decomposition is included)
+    # TODO: generar input set para el MSA completo: start_column=0, end_column=-1
+    logging.info(f"Generating input set ({start_column},{end_column})")
+    logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
+    logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
+    inputset_gen = InputBlockSet(
+        standard_decomposition
+    )
+    inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
+
+    return inputset
+
+def solve_submsa(path_msa, start_column, end_column, 
+                 solve_ilp, path_save_ilp, path_opt_solution, 
+                 obj_function, penalization, min_len, min_coverage, 
+                 time_limit, threads_ilp=8,
+                 use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, 
+                 standard_decomposition=False, blocks_msa = None, **kwargs ):
+    logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
+    
+    # # Load set of decomposed blocks
+    kwargs_opt = dict(
+        obj_function=obj_function,
+        penalization=penalization,
+        min_len=min_len,
+        min_coverage=min_coverage,
+        time_limit=time_limit,
+        threads_ilp=threads_ilp
+    )
+
+    msa = load_submsa(path_msa, start_column, end_column)
+    n_cols=msa.get_alignment_length()
+    n_seqs=len(msa)
+
+    # if only one column is involved, return the blocks with one character
+    if start_column==end_column:
+        logging.info("start and end columns are the same, skipping ILP")
+
+        blocks_one_char = []
+
+        for col in range(n_cols):
+            seq_by_char = defaultdict(list)
+            for row in range(n_seqs):
+                seq_by_char[msa[row,col]].append(row)
+
+            for c, K in seq_by_char.items():
+                # ommit vertical blocks, they will be part of a maximal one
+                if len(K) < n_seqs:
+                    blocks_one_char.append(
+                            # Block(K=K, start=col+start_column, end=col+start_column, label=c) # FIXME: Block
+                            Block(K=K, start=col+start_column, end=col+start_column)
+                    )
+        opt_coverage = blocks_one_char
+
+    else:
+        
+        # solve subMSA with blocks computed in the entire MSA
+        if blocks_msa:
+            logging.info(f"alpha consistent: filtering blocks for ({start_column},{end_column})")
+            # we assume block_msa is the input set to solve the entire MSA
+            # filter blocks_msa based on starting and end position of the blocks
+            inputset = [b for b in blocks_msa if  start_column <= b[1] and b[2] <= end_column]
+
+        else:
+            logging.info(f"computing blocks for ({start_column},{end_column})")
+            inputset = generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition)    
+        
+        logging.info(f"blocks in input set {len(inputset)} ({start_column},{end_column})")        
+        logging.info(f"vertical blocks in input set {len([b for b in inputset if len(b[0])==n_seqs])} ({start_column},{end_column})")        
+        
+        # 3. solve the ILP / output ILP model
+        # find optimal coverage of the MSA by blocks
+        logging.info("Starting optimization")
+        opt = Optimization(blocks=inputset, path_msa=path_msa, start_column=start_column, end_column=end_column,
+                        log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
+        opt_coverage = opt(solve_ilp=solve_ilp)
+
+    logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
+    for b in opt_coverage:
+        logging.info(f"Optimal Coverage block {b.str()}")
+
+    if path_opt_solution:
+        full_msa = load_submsa(path_msa) # to obtain labels from blocks
+        Path(path_opt_solution).parent.mkdir(exist_ok=True, parents=True)
+        with open(path_opt_solution, "w") as fp:
+            blocks = [astuple(block) for block in opt_coverage]
+            # blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks]
+            blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]), label_from_block(b, full_msa)] for b in blocks] 
+            json.dump(blocks, fp)
+
+    del blocks, opt_coverage
+    gc.collect()
+
 
 if __name__=="__main__":
     ## Command line options
@@ -172,13 +190,15 @@ if __name__=="__main__":
     parser.add_argument("--threads-ilp", help="threads used by gurobi to solve an ILPi", dest="threads_ilp", type=int, default=4)
     # outputs
     parser.add_argument("--prefix-output", help="prefix to save optimization results. Parent folder will be created if it does not exists.", dest="prefix_output")
-    parser.add_argument("--solve-ilp", help="decide wether to solve the ILP or just generate the ILP model", type=bool, default=True, dest="solve_ilp")
+    parser.add_argument("--solve-ilp", help="decide wether to solve the ILP or just generate the ILP model", type=boolean_string, default=True, dest="solve_ilp")
     # parser.add_argument("--path-save-ilp", help="path to save the ILP formulation", default=None, dest="path_save_ilp")
     # parser.add_argument("--path-opt-solution", help="file to save optimal solution (Blocks)", dest="path_opt_solution")
     parser.add_argument("--log-level", help='set log level ERROR/WARNING/INFO/DEBUG', default='ERROR', dest='log_level')
     
     parser.add_argument("--submsa-index", help="file with start-end positions of vertical blocks in the MSA", dest="submsa_index")
     parser.add_argument("--workers", help="Workers for ThreadPoolExecutor to solve subMSAs", dest="workers", type=int, default=16)
+
+    parser.add_argument("--alpha-consistent", type=boolean_string, default=True, dest="alpha_consistent")
     args = parser.parse_args()
 
     
@@ -187,6 +207,7 @@ if __name__=="__main__":
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
     logging.info("args")
+    logging.info(f"alpha_consistent {args.alpha_consistent}")
     logging.info(f"standard_decomposition {args.standard_decomposition}")
     logging.info(f"pBWT {args.use_wildpbwt}")
 
@@ -201,6 +222,20 @@ if __name__=="__main__":
                          threads_ilp=args.threads_ilp, 
                          standard_decomposition=args.standard_decomposition,
                          )
+
+    # compute input set of the entire MSA if alpha_consistent is set as true
+    blocks_msa = None
+    if args.alpha_consistent:
+        logging.info("alpha consistent: Computing blocks for the entire MSA")
+        blocks_msa = generate_input_set(
+            path_msa=args.path_msa, 
+            start_column=0, 
+            end_column=-1, 
+            bin_wildpbwt=args.bin_wildpbwt, 
+            use_wildpbwt=args.use_wildpbwt, 
+            standard_decomposition=args.standard_decomposition
+            )
+
     
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
     if args.submsa_index:
@@ -222,7 +257,8 @@ if __name__=="__main__":
                     start_column=argspool.start_column, 
                     end_column=argspool.end_column, 
                     path_save_ilp=None, #argspool.path_save_ilp, 
-                    path_opt_solution=argspool.path_opt_solution
+                    path_opt_solution=argspool.path_opt_solution,
+                    blocks_msa=blocks_msa
                     )
             
             with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -262,6 +298,7 @@ if __name__=="__main__":
                     use_wildpbwt=args.use_wildpbwt,
                     bin_wildpbwt=args.bin_wildpbwt,
                     threads_ilp=args.threads_ilp,
+                    blocks_msa=blocks_msa
                 )
 
     else:
@@ -281,5 +318,6 @@ if __name__=="__main__":
             use_wildpbwt=args.use_wildpbwt,
             bin_wildpbwt=args.bin_wildpbwt,
             threads_ilp=args.threads_ilp,
+            blocks_msa=blocks_msa
         )
         # solve_submsa(**vars(args))

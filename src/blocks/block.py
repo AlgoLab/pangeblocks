@@ -75,6 +75,14 @@ class LightBlock:
     def sort_K(cls, v):
         "sort values in K"
         return tuple(sorted(v))
+    
+    def __getitem__(self, item):
+        if item==0:
+            return self.K
+        elif item==1 or item==-2: 
+            return self.start 
+        elif item==2 or item == -1: 
+            return self.start
 
     # def __hash__(self) -> int:
     #     pass
