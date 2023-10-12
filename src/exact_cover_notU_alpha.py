@@ -135,11 +135,12 @@ def solve_submsa(path_msa, start_column, end_column,
         
         # solve subMSA with blocks computed in the entire MSA
         if blocks_msa:
+            if end_column == -1: end_column = n_cols-1
+            logging.info(f"end_column: {end_column}")
             logging.info(f"alpha consistent: filtering blocks for ({start_column},{end_column})")
             # we assume block_msa is the input set to solve the entire MSA
             # filter blocks_msa based on starting and end position of the blocks
-            inputset = [b for b in blocks_msa if  start_column <= b[1] and b[2] <= end_column]
-
+            inputset = [b for b in blocks_msa if all([start_column <= b.start, b.end <= end_column])]
         else:
             logging.info(f"computing blocks for ({start_column},{end_column})")
             inputset = generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition)    
@@ -147,6 +148,8 @@ def solve_submsa(path_msa, start_column, end_column,
         logging.info(f"blocks in input set {len(inputset)} ({start_column},{end_column})")        
         logging.info(f"vertical blocks in input set {len([b for b in inputset if len(b[0])==n_seqs])} ({start_column},{end_column})")        
         
+        for b in inputset:
+            logging.info(f"block in inputset: {b}")
         # 3. solve the ILP / output ILP model
         # find optimal coverage of the MSA by blocks
         logging.info("Starting optimization")

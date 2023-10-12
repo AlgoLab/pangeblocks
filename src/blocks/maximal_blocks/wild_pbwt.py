@@ -6,9 +6,13 @@ import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Union, Optional
-from src.blocks.maximal_blocks.utils import (
-    load_submsa,
-) 
+
+# import sys
+# sys.path.append("../../../..")
+from .utils import load_submsa
+# from src.blocks.maximal_blocks.utils import (
+#     load_submsa,
+# ) 
 
 import logging
 

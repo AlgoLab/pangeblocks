@@ -82,7 +82,7 @@ class LightBlock:
         elif item==1 or item==-2: 
             return self.start 
         elif item==2 or item == -1: 
-            return self.start
+            return self.end
 
     # def __hash__(self) -> int:
     #     pass
