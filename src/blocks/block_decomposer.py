@@ -23,7 +23,8 @@ class Decomposer(BlockAnalyzer):
     def __init__(self, return_positional_strings: bool=False, standard_decomposition: bool = False):
         self.return_positional_strings=return_positional_strings
         self.standard_decomposition=standard_decomposition
-        if standard_decomposition:
+        logging.info(f">>>> Decomposer standard_decomposition={standard_decomposition}")
+        if standard_decomposition is True:
             logging.info("Using standard decomposition")
             self.block_decomposition=block_decomposition_standard
         else:

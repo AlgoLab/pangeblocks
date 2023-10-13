@@ -25,11 +25,13 @@ name="100-SARS-CoV2-MSA"
 start=0
 # end=400
 
-dirout="output-ram-standard_decomp"
+# decomposition="row-maximal" 
+decomposition="standard"
+dirout="/data/analysis-paper/experiments/ram-usage/sarscov2-$decomposition-decomp"
 mkdir -p $dirout/logs
 
-#  10 20 
-for end in 50 100 200 300 500 700 1000 1500 2000 2500
+#  10 20 50 100 200 300 500 700 1000 1500 2000
+for end in 50 100 200 300 500 700 1000
 do 
     echo $start,$end
     # /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
@@ -40,11 +42,11 @@ do
     #     --standard-decomposition False --threads-ilp 8 \
     #     --workers 1 > $dirout/logs/$name-$start-$end.std.log 2> $dirout/logs/$name-$start-$end.err.log
 
-    /usr/bin/time --verbose src/exact_cover_notU.py --path-msa $path_msa --obj-function nodes \
-        --prefix-output $dirout/opt-$name-notU \
+    /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
+        --prefix-output $dirout/100seqs \
         --penalization 1000 --min-len 0 --min-coverage 0 \
         --start-column $start --end-column $end --time-limit 1800 --solve-ilp True \
         --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-        --standard-decomposition True --threads-ilp 8 \
-        --workers 1 > $dirout/logs/$name-notU-$start-$end.std.log 2> $dirout/logs/$name-notU-$start-$end.err.log
+        --standard-decomposition True --alpha-consistent False --threads-ilp 8 \
+        --workers 1 > $dirout/logs/$name-$decomposition-$start-$end.std.log 2> $dirout/logs/$name-$decomposition-$start-$end.err.log
 done

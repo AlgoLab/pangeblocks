@@ -38,11 +38,10 @@ OPTIMIZATION:
     # - 500
     - 1000
   MIN_LEN: # used only with "weighted"
-    # - 3
-    # - 5
-    # - 10   
-    # - 15
+    # - 10
     # - 20
+    # - 30
+    # - 40
     - 50
   MIN_COVERAGE: # used only with "depth"
     # - 0.1

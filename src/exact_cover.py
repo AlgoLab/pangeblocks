@@ -83,10 +83,10 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
     logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
     logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
     inputset_gen = InputBlockSet(
-        standard_decomposition
+        standard_decomposition=standard_decomposition
     )
     inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
-
+    logging.info(f"Generated input set ({start_column},{end_column})")
     return inputset
 
 def solve_submsa(path_msa, start_column, end_column, 
@@ -94,9 +94,10 @@ def solve_submsa(path_msa, start_column, end_column,
                  obj_function, penalization, min_len, min_coverage, 
                  time_limit, threads_ilp=8,
                  use_wildpbwt: bool = True, bin_wildpbwt: Optional[str] = None, 
-                 standard_decomposition=False, blocks_msa = None, **kwargs ):
+                 standard_decomposition: bool =False, blocks_msa: Optional[list] = None, **kwargs ):
     logging.info(f"Working on: {Path(path_msa).stem} | columns [{start_column},{end_column}]")
     
+    logging.info(f">>>> solve_submsa standard_decomposition={standard_decomposition}")
     # # Load set of decomposed blocks
     kwargs_opt = dict(
         obj_function=obj_function,
@@ -126,7 +127,6 @@ def solve_submsa(path_msa, start_column, end_column,
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            # Block(K=K, start=col+start_column, end=col+start_column, label=c) # FIXME: Block
                             Block(K=K, start=col+start_column, end=col+start_column)
                     )
         opt_coverage = blocks_one_char
@@ -210,8 +210,9 @@ if __name__=="__main__":
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
     logging.info("args")
-    logging.info(f"alpha_consistent {args.alpha_consistent}")
-    logging.info(f"standard_decomposition {args.standard_decomposition}")
+    logging.info(f"alpha_consistent {args.alpha_consistent} {type(args.alpha_consistent)}")
+    logging.info(f"standard_decomposition {args.standard_decomposition} {type(args.alpha_consistent)}")
+    logging.info(f"standard_decomposition {args.standard_decomposition} {type(args.alpha_consistent)}")
     logging.info(f"pBWT {args.use_wildpbwt}")
 
     OptArgs=namedtuple("OptArgs",["obj_function", "penalization", "min_len", "min_coverage", "time_limit"])
@@ -321,6 +322,7 @@ if __name__=="__main__":
             use_wildpbwt=args.use_wildpbwt,
             bin_wildpbwt=args.bin_wildpbwt,
             threads_ilp=args.threads_ilp,
-            blocks_msa=blocks_msa
+            standard_decomposition=args.standard_decomposition,
+            blocks_msa=blocks_msa,
         )
         # solve_submsa(**vars(args))

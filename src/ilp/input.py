@@ -24,9 +24,10 @@ class InputBlockSet:
     generate the Input set of block to be used in the ILP
     """    
 
-    def __init__(self, standard_decomposition=False):
+    def __init__(self, standard_decomposition):
         self.standard_decomposition=standard_decomposition 
-
+        logging.info(f">>>> InputBlockSet standard_decomposition={standard_decomposition}")
+        
     def __call__(self, path_msa: Union[str,Path], maximal_blocks: list[Block],
                  start_column: int, end_column: int) -> list[Block]:
         
