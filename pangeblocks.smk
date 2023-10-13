@@ -138,7 +138,7 @@ rule ilp:
         mem_mb=30000
     shell:
         """
-        /usr/bin/time --verbose src/exact_cover_notU_alpha.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
+        /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
         --prefix-output {params.dir_subsols}/{wildcards.name_msa} \
         --penalization {wildcards.penalization} --min-len {wildcards.min_len} --min-coverage {wildcards.min_coverage} \
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp True \
