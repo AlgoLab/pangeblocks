@@ -1,4 +1,5 @@
-PATH_MSAS: /data/msas-pangeblocks/mini-experiments/
+PATH_MSAS: test
+#/data/msas-pangeblocks/mini-experiments/
 
 # test/alpha
 # "/data/msas-pangeblocks/sars-cov-2"
@@ -13,7 +14,8 @@ PATH_MSAS: /data/msas-pangeblocks/mini-experiments/
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
 # Format: /path/to/directory/<name-experiment>-<standard/old>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
+PATH_OUTPUT: /data/analysis-paper/experiments/test-row-maximal-decomp-not-alpha-consistent
+# /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
 # "/data/pangeblocks-experiments/sars-cov-2"
 # "/data/pangeblocks-experiments/plasmids-fftnsi"
@@ -27,9 +29,9 @@ PATH_OUTPUT: /data/analysis-paper/experiments/mini-experiment-standard-decomp-no
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    - "strings"
-    - "weighted"
-    - "depth"
+    # - "strings"
+    # - "weighted"
+    # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -48,17 +50,17 @@ OPTIMIZATION:
     # - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    - 1 
-    - 5
-    - 10
-    - 15
-    - 20
+    # - 1 
+    # - 5
+    # - 10
+    # - 15
+    # - 20
     - 25
-    - 30
-    - 35
-    - 40
-    - 45
-    - 50
+    # - 30
+    # - 35
+    # - 40
+    # - 45
+    # - 50
     # - 53837
   TIME_LIMIT: 60 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
@@ -67,7 +69,7 @@ THREADS:
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 DECOMPOSITION:
-  STANDARD: True
+  STANDARD: False
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 # to compute maximal blocks, otherwise SuffixTree will be used

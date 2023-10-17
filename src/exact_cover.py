@@ -240,7 +240,6 @@ if __name__=="__main__":
             standard_decomposition=args.standard_decomposition
             )
 
-    
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
     if args.submsa_index:
         logging.info(f"start_column: {args.start_column}, end_column: {args.end_column}")
@@ -302,6 +301,7 @@ if __name__=="__main__":
                     use_wildpbwt=args.use_wildpbwt,
                     bin_wildpbwt=args.bin_wildpbwt,
                     threads_ilp=args.threads_ilp,
+                    standard_decomposition=args.standard_decomposition,
                     blocks_msa=blocks_msa
                 )
 
@@ -325,4 +325,3 @@ if __name__=="__main__":
             standard_decomposition=args.standard_decomposition,
             blocks_msa=blocks_msa,
         )
-        # solve_submsa(**vars(args))

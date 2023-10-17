@@ -81,6 +81,10 @@ class InputBlockSet:
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
             input_set_ilp = decomposed_blocks + missing_blocks #+ blocks_one_char
         else: 
+            from dataclasses import astuple
+            logging.info(f"# decomposed blocks {len(decomposed_blocks)}")
+            decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
+            decomposed_blocks = [Block(*b) for b in decomposed_blocks]
             input_set_ilp = decomposed_blocks + missing_blocks
         
         return input_set_ilp

@@ -21,22 +21,22 @@ def block_decomposition(block1: Block, block2: Block):
     
     if common_rows and common_cols: 
 
-        logging.debug(l1)
-        logging.debug(l2)
-    
+        logging.debug(f"l1: {l1}")
+        logging.debug(f"l2: {l2}")
+
         # Lemma 1: [b1,e1] subset of [b2,e2] <=> K2 subset of K1 (l2 is the most one to the left)
         blocks = []
         if l2.start <= l1.start and l1.end <= l2.end: 
-            
+
             if l2.start <= l1.start -1: blocks.append( Block(l2.K , l2.start, l1.start - 1))
-            elif l1.end + 1 <= l2.end:  blocks.append( Block(l2.K, l1.end + 1, l2.end))
-            else:
-                blocks.extend(
-                    [
-                    Block(set(l1.K).intersection(l2.K), l1.start, l1.end),
-                    Block(set(l1.K).difference(l2.K))
-                    ]
-                    )
+            if l1.end + 1 <= l2.end:  blocks.append( Block(l2.K, l1.end + 1, l2.end))
+        
+            blocks.extend(
+                [
+                Block(set(l1.K).intersection(l2.K), l1.start, l1.end),
+                Block(set(l1.K).difference(l2.K), l1.start, l1.end)
+                ]
+                )
         else:
             l1, l2 = list(sorted(B, key=lambda l: (l.start, len(l.K)))) # l1 es el de mas a la izquierda
             blocks = [
