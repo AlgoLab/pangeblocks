@@ -54,11 +54,15 @@ class InputBlockSet:
         
         # block decomposition
         logging.info(f"decomposer ({self.start_column},{self.end_column})")
+        
+        #  FIXME: uncomment this, justr trying without decomposition
         decomposer = Decomposer(
                                 standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used 
                                 ) 
         decomposed_blocks = decomposer(list_blocks=maximal_blocks,                         # NOTE: decomposed_blocks contains the maximal blocks, check Decomposer.decomposition_from_inter_blocks()
                                        start=start_column, end=end_column )                # to track with logging)
+        # decomposed_blocks = maximal_blocks
+
         logging.info(f"end decomposer ({self.start_column},{self.end_column})")
         logging.info(f"Number of decomposed blocks {len(decomposed_blocks)} ({self.start_column},{self.end_column})")        
 
@@ -67,6 +71,7 @@ class InputBlockSet:
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
         logging.info(f"Number of missing blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
 
+        # row maximal decomposition
         if not self.standard_decomposition:
             logging.info(f"get blocks one char ({self.start_column},{self.end_column})")
             blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
@@ -79,8 +84,12 @@ class InputBlockSet:
             for block in blocks_one_char:
                 decomposed_blocks.add(astuple(block))
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            input_set_ilp = decomposed_blocks + missing_blocks #+ blocks_one_char
-        else: 
+            
+            # FIXME: uncomment this, just trying without decompostion
+            input_set_ilp = decomposed_blocks + missing_blocks #+ blocks_one_char 
+            # input_set_ilp = missing_blocks + blocks_one_char
+        else:
+            # standard decomposition 
             from dataclasses import astuple
             logging.info(f"# decomposed blocks {len(decomposed_blocks)}")
             decomposed_blocks=set(astuple(b) for b in decomposed_blocks)

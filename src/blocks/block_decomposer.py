@@ -1,4 +1,4 @@
-import numpy as np
+import json
 from pathlib import Path
 from typing import Optional, Union
 from . import Block
@@ -6,7 +6,6 @@ from .analyzer import BlockAnalyzer
 # from .block_decomposition import block_decomposition
 from .decompositions import (
     block_decomposition_row_maximal,
-    block_decomposition_not_row_maximal,
     block_decomposition_standard
 )
 
@@ -18,7 +17,7 @@ logging.basicConfig(level=logging.INFO,
                     format='[Block Decomposer] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
-class Decomposer(BlockAnalyzer):
+class Decomposer:
 
     def __init__(self, return_positional_strings: bool=False, standard_decomposition: bool = False):
         self.return_positional_strings=return_positional_strings
@@ -33,7 +32,7 @@ class Decomposer(BlockAnalyzer):
 
     def __call__(self, list_blocks: Optional[list[Block]] = None, path_blocks: Optional[Union[str, Path]] = None, **kwargs) -> dict:
         start,end = kwargs.get("start",0), kwargs.get("end",0)
-
+        self.start, self.end = start, end # only for logging 
         if path_blocks:
             list_blocks = self._load_list_blocks(path_blocks)
             logging.info(f"Blocks loaded from {str(path_blocks)}")
@@ -71,3 +70,51 @@ class Decomposer(BlockAnalyzer):
                 decomposed_blocks.add(astuple(b))
 
         return [Block(*b) for b in decomposed_blocks]
+    
+    def _list_inter_blocks(self, list_blocks: list[Block], return_sorted_list: bool = False) -> list[tuple]:
+        "list of indexes (in a sorted list by i) of pairs of blocks with non-empty intersection"
+        blocks = sorted(list_blocks, key=lambda block: (block.start, block.end))
+        
+        # save pairs of indexes for the sorted blocks that intersect
+        intersections = [] 
+
+        # Lemma1: given two overlapping maximal blocks (K1,b1,e1) and (K2,b2,e2) 
+        # [b1,e1] subset [b2,e2] iff K2 subset K1
+        # primary intersection: the one that fits the above equivalence, secondary intersection: negation of the equivalence
+
+        n_primary_intersections = 0
+        n_secondary_intersections = 0            
+
+        for pos1, block1 in enumerate(blocks[:-1]):
+            # compare against the next blocks in the sorted list 
+            for rel_pos, block2 in enumerate(blocks[pos1+1:]):
+                pos2 = rel_pos + pos1 + 1
+                block2 = blocks[pos2]
+
+                # check for not empty intersection
+                common_rows = list(set(block1.K).intersection(set(block2.K))) # intersection set K
+                common_cols = list(set(range(block1.start,block1.end+1)).intersection(set(range(block2.start,block2.end+1)))) # intersection columns [i,j]
+
+                if (common_rows and common_cols):
+                    intersections.append((pos1,pos2))
+
+                    # count primary and second intersections
+                    if set(block1.K).issubset(block2.K) or set(block2.K).issubset(block1.K):
+                        n_primary_intersections +=1                        
+                    else:
+                        n_secondary_intersections +=1
+
+
+        logging.info(f"Number of primary intersections {n_primary_intersections} ({self.start},{self.end})")
+        logging.info(f"Number of secondary intersections {n_secondary_intersections} ({self.start},{self.end})")
+
+        if return_sorted_list is True:
+            return intersections, blocks
+        return intersections
+
+    @staticmethod
+    def _load_list_blocks(path_list_blocks: Union[str,Path]) -> list[Block]:
+        "load blocks in a list from a json file"
+        with open(path_list_blocks,"r") as fp:
+            list_blocks=[Block(*args) for args in json.load(fp)]
+        return list_blocks

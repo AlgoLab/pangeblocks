@@ -10,15 +10,16 @@ import time
 import json
 import argparse
 from Bio import AlignIO
-from blocks import Block
-from ilp.input import InputBlockSet
-# from ilp.optimization import Optimization
-from ilp.optimization_notU import Optimization
-from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree # FIXME: did not touch this
-from blocks.maximal_blocks.wild_pbwt import compute_maximal_blocks as maximal_blocks_pbwt
 from pathlib import Path
 from dataclasses import astuple
 import logging
+
+# pangeblocks
+from blocks import Block
+from ilp.input import InputBlockSet
+from ilp.optimization import Optimization
+from maximal_blocks import compute_maximal_blocks as maximal_blocks_suffixtree # FIXME: did not touch this
+from blocks.maximal_blocks.wild_pbwt import compute_maximal_blocks as maximal_blocks_pbwt
 
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
@@ -149,7 +150,8 @@ def solve_submsa(path_msa, start_column, end_column,
         logging.info(f"vertical blocks in input set {len([b for b in inputset if len(b[0])==n_seqs])} ({start_column},{end_column})")        
         
         for b in inputset:
-            logging.info(f"block in inputset: {b}")
+            logging.debug(f"block in inputset: {b}")
+
         # 3. solve the ILP / output ILP model
         # find optimal coverage of the MSA by blocks
         logging.info("Starting optimization")

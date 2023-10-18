@@ -1,52 +1,40 @@
 #!/bin/bash
-# path_submsas_index="output-test/submsas/test3_alpha50.txt" # "/data/pangeblocks-experiments/sars-cov-2/submsas/100-SARS-CoV2-MSA_alpha50.txt"  
-path_msa="/data/msas-pangeblocks/sars-cov-2/100-SARS-CoV2-MSA.fasta" # "test/test3.fa"
-name="100-SARS-CoV2-MSA"
 
-# cat $path_submsas_index |\
-# while read start end; do 
-#     echo "start: $start, end: $end";
-#     # run exact cover in the current submsa
-
-#     /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
-#         --prefix-output {params.dir_subsols}/{wildcards.name_msa} \
-#         --penalization 1000 --min-len 0 --min-coverage 0 \
-#         --start-column $start --end-column $end --time-limit {params.time_limit} --solve-ilp True \
-#         --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-#         --standard-decomposition False --threads-ilp {params.threads_ilp} \
-#         --workers {params.workers} > {output.auxfile} 2> {log.stderr}
-
-# done
-
-# TODO: identify other subMSAs that are long enough, or where the previous implementation crushed and try them
-
-# start=18957
-# end=21681
 start=0
-# end=400
+standard_decomposition=True
+if [ $standard_decomposition = "True" ]; then
+    decomposition="standard"
+else    
+    decomposition="row-maximal"
+fi
 
-# decomposition="row-maximal" 
-decomposition="standard"
-dirout="/data/analysis-paper/experiments/ram-usage/sarscov2-$decomposition-decomp"
-mkdir -p $dirout/logs
+# Define a list of file paths
+file_paths=(
+    "/data/msas-pangeblocks/sars-cov-2/20-SARS-CoV2-MSA.fa"
+    "/data/msas-pangeblocks/sars-cov-2/50-SARS-CoV2-MSA.fa"
+    # "/data/msas-pangeblocks/sars-cov-2/100-SARS-CoV2-MSA.fa"
+)
 
 #  10 20 50 100 200 300 500 700 1000 1500 2000
-for end in 50 100 200 300 500 700 1000
-do 
-    echo $start,$end
-    # /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
-    #     --prefix-output $dirout/opt-$name \
-    #     --penalization 1000 --min-len 0 --min-coverage 0 \
-    #     --start-column $start --end-column $end --time-limit 1800 --solve-ilp True \
-    #     --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-    #     --standard-decomposition False --threads-ilp 8 \
-    #     --workers 1 > $dirout/logs/$name-$start-$end.std.log 2> $dirout/logs/$name-$start-$end.err.log
+for path_msa in "${file_paths[@]}"
+do
+    name_ext="${path_msa##*/}"
+    name="${name_ext%.*}"
+    echo $name    
 
-    /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
-        --prefix-output $dirout/100seqs \
-        --penalization 1000 --min-len 0 --min-coverage 0 \
-        --start-column $start --end-column $end --time-limit 1800 --solve-ilp True \
-        --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-        --standard-decomposition True --alpha-consistent False --threads-ilp 8 \
-        --workers 1 > $dirout/logs/$name-$decomposition-$start-$end.std.log 2> $dirout/logs/$name-$decomposition-$start-$end.err.log
+    dirout="/data/analysis-paper/experiments/ram-usage/$name-$decomposition-decomp-not-alpha-consistent"
+    mkdir -p $dirout/logs
+
+    for end in 50 100 200 300 500 700 1000 1500 2000 2500
+    do 
+        echo $start,$end,$decomposition
+
+        /usr/bin/time --verbose src/exact_cover.py --path-msa $path_msa --obj-function nodes \
+            --prefix-output $dirout/$name \
+            --penalization 1000 --min-len 0 --min-coverage 0 \
+            --start-column $start --end-column $end --time-limit 10800 --solve-ilp True \
+            --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
+            --standard-decomposition $standard_decomposition --alpha-consistent False --threads-ilp 8 \
+            --workers 1 > $dirout/logs/$name-$decomposition-$start-$end.std.log 2> $dirout/logs/$name-$decomposition-$start-$end.err.log
+    done
 done

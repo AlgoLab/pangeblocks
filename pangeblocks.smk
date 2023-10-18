@@ -18,12 +18,13 @@ MIN_LEN=config["OPTIMIZATION"]["MIN_LEN"]
 MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
 # path msas
-MSAS = list(Path(PATH_MSAS).glob("*.[fa]*"))
+MSAS = list(Path(PATH_MSAS).glob("*.fa"))
 NAMES = [path.stem for path in MSAS]
 # SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
 # NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
-EXT_MSA = MSAS[0].suffix
 print(NAMES)
+EXT_MSA = MSAS[0].suffix
+
 
 
 def get_graphs(wildcards):
@@ -189,5 +190,5 @@ rule unchop_gfa:
         """
         mkdir -p "$(dirname "{output.path_unchop_gfa}")" 
         /usr/bin/time --verbose vg mod -u {input} > {output.path_unchop_gfa} 2> {log}
-        src/graph/bandage_labels_from_gfa.py --path_gfa {output.path_unchop_gfa} --path_save {output.path_labels}
+        src/graph/bandage_labels_from_gfa.py --path-gfa {output.path_unchop_gfa} --path-save {output.path_labels}
         """

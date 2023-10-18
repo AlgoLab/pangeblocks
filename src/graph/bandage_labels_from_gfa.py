@@ -48,7 +48,7 @@ def bandage_labels(path_gfa: str, path_save_labels= str):
 
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()
-    parser.add_argument("--path_gfa")
-    parser.add_argument("--path_save")
+    parser.add_argument("--path-gfa")
+    parser.add_argument("--path-save")
     args = parser.parse_args()
     bandage_labels(args.path_gfa, args.path_save)

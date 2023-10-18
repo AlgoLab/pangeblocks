@@ -1,4 +1,4 @@
-PATH_MSAS: test
+PATH_MSAS: /data/msas-pangeblocks/msas-diagonals
 #/data/msas-pangeblocks/mini-experiments/
 
 # test/alpha
@@ -13,8 +13,8 @@ PATH_MSAS: test
 #"/data/alessia/covid/small-msa" 
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
-# Format: /path/to/directory/<name-experiment>-<standard/old>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/test-row-maximal-decomp-not-alpha-consistent
+# Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
+PATH_OUTPUT: /data/analysis-paper/experiments/msas-diagonals-not-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
 # "/data/pangeblocks-experiments/sars-cov-2"
@@ -62,7 +62,7 @@ OPTIMIZATION:
     # - 45
     # - 50
     # - 53837
-  TIME_LIMIT: 60 # time limit to run each ILP (minutes)
+  TIME_LIMIT: 180 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
   TOTAL: 16  # smk
