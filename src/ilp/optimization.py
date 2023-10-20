@@ -92,6 +92,7 @@ class Optimization:
         
         logging.info(f"collecting c_variables ({self.start_column},{self.end_column})")
         c_variables = list(range(len(self.input_blocks)))
+        logging.info(f"Size bytes of c_variables list {sys.getsizeof(c_variables)} ({self.start_column},{self.end_column})")
 
         # covering_by_position is a dictionary with key (r,c) and value the list
         # of indices of the blocks that cover the position (r,c)
@@ -116,16 +117,17 @@ class Optimization:
                     # char_block = block.label[pos_block].upper() 
                     # if char_msa != char_block:
                     #     logging.info("incorrect labeled block covering position (%s,%s): %s" % (r,c))
-                                     
+        logging.info(f"Size bytes of covering_by_position dict {sys.getsizeof(covering_by_position)} ({self.start_column},{self.end_column})")
+
         #  ------------------------
         #  --- Create the model ---
         #  ------------------------
         logging.info(f"initializing model pangeblocks ({self.start_column},{self.end_column})")
         model = gp.Model("pangeblocks")
-
+        logging.info(f"Size bytes of model initialized {sys.getsizeof(model)} ({self.start_column},{self.end_column})")
         # Threads
         model.setParam(GRB.Param.Threads, self.threads_ilp)
-
+        
         # Time Limit
         model.setParam(GRB.Param.TimeLimit, float(60*self.time_limit))
 
@@ -135,15 +137,16 @@ class Optimization:
         C = model.addVars(c_variables,
                           vtype=GRB.BINARY, name="C")
         logging.info(f"added C variables to the model ({self.start_column},{self.end_column})")
-        
-        logging.info(f"Size [bytes] of C variables {sys.getsizeof(C)} ({self.start_column},{self.end_column})")
+        logging.info(f"Size bytes of C variables {sys.getsizeof(C)} ({self.start_column},{self.end_column})")        
+
         for block in c_variables:
             logging.debug(
                 "variable:C(%s) = %s" % (block, self.input_blocks[block]))
 
         # logging.info(f"adding U variables to the model ({self.start_column},{self.end_column})")
+        # FIXME: exclude positions covered by missing blocks
         msa_positions = [(r,c + self.start_column) for r in range(self.n_seqs) for c in range(self.n_cols)]
-   
+    
         #  ------------------------
         #  Constraints
         #  ------------------------
@@ -160,8 +163,23 @@ class Optimization:
                     1 == gp.quicksum([C[i] for i in blocks_rc]), name=f"constraint({r},{c})"
                 )
                 logging.debug(f"end constraint position [{r},{c}] ({self.start_column},{self.end_column})")
-
         logging.info(f"added constraints for each (r,c) position of the MSA ({self.start_column},{self.end_column})")
+        
+        model.update()  # to make the constraint take effect https://www.gurobi.com/documentation/current/refman/py_constr.html
+
+        # Get a list of all constraints in the model
+        all_constraints = model.getConstrs()
+
+        # Calculate the size of constraints in bytes
+        total_size_bytes = 0
+        for constr in all_constraints:
+            # Use the __sizeof__() method to get the size of the constraint in bytes
+            size_bytes = getsizeof(constr) #.__sizeof__()
+            total_size_bytes += size_bytes
+
+        # size_constraints=sum([constr.__sizeof__() for constr in model.getConstrs()])
+        logging.info(f"Size bytes of constraints {total_size_bytes} ({self.start_column},{self.end_column})")
+        
         #  ------------------------
         #  Objective function
         #  ------------------------

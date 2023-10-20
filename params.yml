@@ -29,9 +29,9 @@ PATH_OUTPUT: /data/analysis-paper/experiments/msas-diagonals-not-decomp-not-alph
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    # - "strings"
-    # - "weighted"
-    # - "depth"
+    - "strings"
+    - "weighted"
+    - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -44,7 +44,8 @@ OPTIMIZATION:
     # - 20
     # - 30
     # - 40
-    - 50
+    - 5
+    - 10
   MIN_COVERAGE: # used only with "depth"
     # - 0.1
     # - 0.2

@@ -18,6 +18,8 @@ MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 # path msas
 MSAS = list(Path(PATH_MSAS).glob("*.fa"))
 NAMES = [path.stem for path in MSAS]
+NAMES = [path.stem for path in MSAS if "83" in path.stem]
+
 print(NAMES)
 EXT_MSA = MSAS[0].suffix
 

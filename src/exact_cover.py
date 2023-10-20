@@ -86,6 +86,7 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
     inputset_gen = InputBlockSet(
         standard_decomposition=standard_decomposition
     )
+    # FIXME: return missing blocks separated from the inputset=maximal blocks + decomposed blocks
     inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
     logging.info(f"Generated input set ({start_column},{end_column})")
     return inputset

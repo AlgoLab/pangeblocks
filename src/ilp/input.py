@@ -85,9 +85,9 @@ class InputBlockSet:
                 decomposed_blocks.add(astuple(block))
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
             
-            # FIXME: uncomment this, just trying without decompostion
-            input_set_ilp = decomposed_blocks + missing_blocks #+ blocks_one_char 
-            # input_set_ilp = missing_blocks + blocks_one_char
+            # FIXME: separate missing blocks from the input set
+            input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char 
+            
         else:
             # standard decomposition 
             from dataclasses import astuple
