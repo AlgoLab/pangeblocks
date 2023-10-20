@@ -39,14 +39,14 @@
 #     done
 # done
 
-/urs/bint/time -v src/exact_cover.py --path-msa /data/msas-pangeblocks/sars-cov-2-clean/83-SARS-CoV2-MSA.fa \
+/usr/bin/time -v src/exact_cover.py --path-msa /data/msas-pangeblocks/sars-cov-2-clean/10-SARS-CoV2-MSA.fa \
     --obj-function nodes \
-    --prefix-output /data/analysis-paper/experiments/ram-usage/83-sars-cov-2-clean-standard-decomp/ilp/83-SARS-CoV2-MSA/nodes/penalization0-min_len0-min_coverage0/83-SARS-CoV2-MSA \
+    --prefix-output test-ram \
     --penalization 0 --min-len 0 --min-coverage 0 \
     --start-column 0 --end-column 100 \
     --time-limit 180 --solve-ilp True  \
     --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-    --standard-decomposition True \
+    --standard-decomposition False \
     --alpha-consistent False \
     --threads-ilp 8 --workers 1 2> test_ram.log
     

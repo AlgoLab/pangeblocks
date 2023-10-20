@@ -6,14 +6,36 @@ from pathlib import Path
 from Bio import AlignIO
 
 
-def ncols_msa(filename):
+def info_msa(filename):
     "Return MSA from start_column to end_column (both included)"
     # load MSA
     msa = AlignIO.read(filename, "fasta")
-    n_cols = msa.get_alignment_length()
-    
-    return n_cols
+    ncols = msa.get_alignment_length()
+    nrows = len(msa)
+    return nrows, ncols
 
+def split_submsa(max_positions_msa, nrows, start_column, end_column):
+    """Divide a subMSA in smaller subMSAs based on the number of positions it can have given by
+    max_positions_msa. Returns a list with new subMSAs
+    """
+    cols_submsa = max_positions_msa // nrows
+    end_submsa = 0 
+    start_end = []
+
+    start_submsa = start_column
+    while end_submsa < end_column:  
+        end_submsa = start_submsa + cols_submsa - 1 
+        if end_submsa > end_column:
+            end_submsa = end_column
+        print(start_submsa, end_submsa)
+        start_end.append(
+            [start_submsa, end_submsa]
+        )
+        # update next start of the submsa
+        start_submsa = end_submsa + 1 
+
+    return start_end
+    
 if __name__=="__main__":
     """
     Return plain text with starting and ending column for each subMSA to be computed.
@@ -27,6 +49,8 @@ if __name__=="__main__":
     parser.add_argument("-o","--output", help="output file .txt", dest="output")
     parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length greather or equal than the threshold \
                         will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
+    parser.add_argument("--max-positions-msa", help="subMSAs with more than this number of positions will be divided into \
+                        smaller subMSAs", type=int, dest="max_positions_msa", default=100000)
     parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG). Default ERROR", dest="log_level")
     args = parser.parse_args()
 
@@ -42,7 +66,7 @@ if __name__=="__main__":
     with open(args.path_vertical_blocks, "r") as fp:
         vertical_blocks = [vb for vb in json.load(fp) if vb[2]-vb[1]+1 >= args.threshold_vertical_blocks] 
 
-    ncols = ncols_msa(args.path_msa)
+    nrows, ncols = info_msa(args.path_msa)
 
     if len(vertical_blocks) == 0:
         
@@ -74,7 +98,11 @@ if __name__=="__main__":
                 left_block, right_block = pair
 
                 start = left_block[2] + 1 # start submsa = end of left block + 1  
-                end   = right_block[1] - 1 # end submsa = start of right block - 1 
-                logging.info("Vertical Block",left_block, right_block, start, end)
+                end   = right_block[1] - 1 # end submsa = start of right block - 1
+
+                submsas = split_submsa(max_positions_msa=args.max_positions_msa, nrows=nrows, start_column=start, end_column=end)
+                for submsa in submsas:
+                    _start, _end = submsa
+                    logging.info("Vertical Block",left_block, right_block, _start, _end)
         
-                fp.writelines(f"{start}\t{end}\n")
+                    fp.writelines(f"{_start}\t{_end}\n")

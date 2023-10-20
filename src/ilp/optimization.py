@@ -244,8 +244,7 @@ class Optimization:
             for k, v in solution_C.items():
 
                 if v > 0:
-                    logging.debug(
-                        f"Optimal Solution: {k}, {self.input_blocks[k]}")
+                    logging.debug(f"Optimal Solution: {k}, {self.input_blocks[k]}")
                     optimal_coverage.append(self.input_blocks[k])
             
         if self.path_save_ilp:

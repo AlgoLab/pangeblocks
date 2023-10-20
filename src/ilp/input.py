@@ -54,14 +54,11 @@ class InputBlockSet:
         
         # block decomposition
         logging.info(f"decomposer ({self.start_column},{self.end_column})")
-        
-        #  FIXME: uncomment this, justr trying without decomposition
         decomposer = Decomposer(
                                 standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used 
                                 ) 
         decomposed_blocks = decomposer(list_blocks=maximal_blocks,                         # NOTE: decomposed_blocks contains the maximal blocks, check Decomposer.decomposition_from_inter_blocks()
                                        start=start_column, end=end_column )                # to track with logging)
-        # decomposed_blocks = maximal_blocks
 
         logging.info(f"end decomposer ({self.start_column},{self.end_column})")
         logging.info(f"Number of decomposed blocks {len(decomposed_blocks)} ({self.start_column},{self.end_column})")        
@@ -84,9 +81,7 @@ class InputBlockSet:
             for block in blocks_one_char:
                 decomposed_blocks.add(astuple(block))
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            
-            # FIXME: separate missing blocks from the input set
-            input_set_ilp = decomposed_blocks + missing_blocks + blocks_one_char 
+            input_set_ilp = decomposed_blocks + blocks_one_char 
             
         else:
             # standard decomposition 
@@ -94,9 +89,9 @@ class InputBlockSet:
             logging.info(f"# decomposed blocks {len(decomposed_blocks)}")
             decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            input_set_ilp = decomposed_blocks + missing_blocks
+            input_set_ilp = decomposed_blocks
         
-        return input_set_ilp
+        return input_set_ilp , missing_blocks
     
     def glue_vertical_blocks(self,list_blocks,):
         "Glue blocks of length 1 that shares column"
@@ -148,11 +143,11 @@ class InputBlockSet:
         for row, cols in idx_missing_blocks_by_seq.items():
             consecutive_pos = self.get_list_consecutive_pos(cols)
             for pos in consecutive_pos: 
-                start_submsa = pos[0] - start_column
-                end_submsa = pos[-1] - start_column
-                # label = str(msa[int(row)].seq[start_submsa:end_submsa+1])
+                # start_submsa = pos[0] - start_column
+                # end_submsa = pos[-1] - start_column
+                # # label = str(msa[int(row)].seq[start_submsa:end_submsa+1])
                 missing_blocks.append(
-                    Block(K=(row,), start=pos[0],end=pos[-1]) # FIXME: Block
+                    Block(K=(row,), start=pos[0],end=pos[-1])
                 )
 
         return missing_blocks

@@ -87,9 +87,9 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
         standard_decomposition=standard_decomposition
     )
     # FIXME: return missing blocks separated from the inputset=maximal blocks + decomposed blocks
-    inputset = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
+    inputset, missing_blocks = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
     logging.info(f"Generated input set ({start_column},{end_column})")
-    return inputset
+    return inputset, missing_blocks
 
 def solve_submsa(path_msa, start_column, end_column, 
                  solve_ilp, path_save_ilp, path_opt_solution, 
@@ -133,6 +133,10 @@ def solve_submsa(path_msa, start_column, end_column,
                     )
         opt_coverage = blocks_one_char
 
+        for b in opt_coverage:
+            logging.info(f"Optimal Coverage block {b.str()}")
+        logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
+
     else:
         
         # solve subMSA with blocks computed in the entire MSA
@@ -145,7 +149,8 @@ def solve_submsa(path_msa, start_column, end_column,
             inputset = [b for b in blocks_msa if all([start_column <= b.start, b.end <= end_column])]
         else:
             logging.info(f"computing blocks for ({start_column},{end_column})")
-            inputset = generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition)    
+            #FIXME: missing blocks not included in inputset
+            inputset, missing_blocks = generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition)    
         
         logging.info(f"blocks in input set {len(inputset)} ({start_column},{end_column})")        
         logging.info(f"vertical blocks in input set {len([b for b in inputset if len(b[0])==n_seqs])} ({start_column},{end_column})")        
@@ -160,9 +165,14 @@ def solve_submsa(path_msa, start_column, end_column,
                         log_level=args.log_level, path_save_ilp=path_save_ilp, **kwargs_opt)
         opt_coverage = opt(solve_ilp=solve_ilp)
 
-    logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
-    for b in opt_coverage:
-        logging.info(f"Optimal Coverage block {b.str()}")
+        for b in opt_coverage:
+            logging.info(f"Optimal Coverage block {b.str()}")
+        logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
+
+        opt_coverage.extend(missing_blocks)
+        logging.info(f"Number of blocks optimal solution plus missing blocks {len(opt_coverage)} ({start_column},{end_column})")
+        for b in missing_blocks:
+            logging.info(f"Optimal Coverage block (missing_block) {b.str()}")
 
     if path_opt_solution:
         full_msa = load_submsa(path_msa) # to obtain labels from blocks

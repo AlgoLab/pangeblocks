@@ -1,4 +1,4 @@
-PATH_MSAS: /data/msas-pangeblocks/msas-diagonals
+PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean
 #/data/msas-pangeblocks/mini-experiments/
 
 # test/alpha
@@ -14,7 +14,7 @@ PATH_MSAS: /data/msas-pangeblocks/msas-diagonals
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/msas-diagonals-not-decomp-not-alpha-consistent
+PATH_OUTPUT: /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
 # "/data/pangeblocks-experiments/sars-cov-2"
@@ -29,9 +29,9 @@ PATH_OUTPUT: /data/analysis-paper/experiments/msas-diagonals-not-decomp-not-alph
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    - "strings"
-    - "weighted"
-    - "depth"
+    # - "strings"
+    # - "weighted"
+    # - "depth"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5

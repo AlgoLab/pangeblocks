@@ -136,7 +136,7 @@ rule ilp:
     conda: 
         "envs/pangeblocks.yml"
     resources: 
-        mem_mb=30000
+        mem_mb=80000
     shell:
         """
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
