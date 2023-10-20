@@ -15,7 +15,8 @@ from .losses import (
     loss_nodes,
     loss_strings,
     loss_weighted,
-    loss_depth
+    loss_depth,
+    loss_depth_and_len,
 )
 
 import logging
@@ -225,6 +226,12 @@ class Optimization:
                                   penalization=self.penalization, min_coverage=self.min_coverage, n_seqs=self.n_seqs)
             logging.info(f"penalization: {self.penalization}")
             logging.info(f"minimum coverage: {self.min_coverage}")
+
+        elif self.obj_function == "depth_and_len":
+            # # minimize the number of blocks with a weighted cost between node depth and len of the string (no indels) spelt by the block
+            model = loss_depth_and_len(model, vars=C, blocks=self.input_blocks, c_variables=c_variables,
+                                       start_column=self.start_column, msa=self.msa, n_seqs=self.n_seqs)
+            
         logging.info(f"setted objective function ({self.start_column},{self.end_column})")
         #  ------------------------
         #  Solve or save the ILP model
