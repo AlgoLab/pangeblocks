@@ -79,14 +79,14 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
                     )
     
     # 2. compute input set of blocks for the ILP (decomposition is included)
-    # TODO: generar input set para el MSA completo: start_column=0, end_column=-1
     logging.info(f"Generating input set ({start_column},{end_column})")
     logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
     logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
     inputset_gen = InputBlockSet(
         standard_decomposition=standard_decomposition
     )
-    # FIXME: return missing blocks separated from the inputset=maximal blocks + decomposed blocks
+    # inputset is a list with blocks to be used by the ILP
+    # missing blocks is a list of one-row blocks with the positions not covered by maximal blocks 
     inputset, missing_blocks = inputset_gen(path_msa, maximal_blocks, start_column, end_column)
     logging.info(f"Generated input set ({start_column},{end_column})")
     return inputset, missing_blocks
@@ -149,7 +149,6 @@ def solve_submsa(path_msa, start_column, end_column,
             inputset = [b for b in blocks_msa if all([start_column <= b.start, b.end <= end_column])]
         else:
             logging.info(f"computing blocks for ({start_column},{end_column})")
-            #FIXME: missing blocks not included in inputset
             inputset, missing_blocks = generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wildpbwt, standard_decomposition)    
         
         logging.info(f"blocks in input set {len(inputset)} ({start_column},{end_column})")        
@@ -262,7 +261,7 @@ if __name__=="__main__":
                 start, end = line.replace("\n","").split("\t")
                 start, end = int(start),int(end)
                 
-                # if args.start_column <= start and end <= args.end_column: # FIXME: IDK if this is necessary, but it makes the code fail when args.end_column=-1
+                # if args.start_column <= start and end <= args.end_column:
                 submsa_index.append((start,end))
         
         if args.workers > 1:

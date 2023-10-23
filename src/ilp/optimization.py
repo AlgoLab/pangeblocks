@@ -193,24 +193,6 @@ class Optimization:
 
         elif self.obj_function == "strings":
             # # minimize the total length of the graph (number of characters)
-            for idx in c_variables:
-                logging.debug(f"{self.msa}")
-                logging.debug(f"block: {self.input_blocks[idx]}")
-                k0=int(self.input_blocks[idx].K[0])
-                logging.debug(f"K[0]: {k0}")
-                sc = int(self.input_blocks[idx].start - self.start_column)
-                logging.debug(f"start column: {sc}")
-                ec = int(self.input_blocks[idx].end+1-self.start_column)
-                logging.debug(f"end column: {ec}")
-                logging.debug(f"msa[{k0},{sc}:{ec}]")
-                print(self.msa[k0])
-                logging.debug(f"type {type(self.msa[int(k0)])}")
-                logging.debug(f"type {type(self.msa[int(k0),sc:ec])}")
-
-                logging.debug(f"msa[{k0},{sc}:{ec}]: {self.msa[k0,sc:ec]}")
-                # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
-                # logging.info(f"{self.msa[self.input_blocks[idx].K[0], self.input_blocks[idx].start - self.start_column:self.input_blocks[idx].end+1-self.start_column]}")
-            
             model = loss_strings(model, vars=C, blocks=self.input_blocks, c_variables=c_variables, msa=self.msa, start_column=self.start_column)
 
         elif self.obj_function == "weighted":
@@ -230,7 +212,7 @@ class Optimization:
         elif self.obj_function == "depth_and_len":
             # # minimize the number of blocks with a weighted cost between node depth and len of the string (no indels) spelt by the block
             model = loss_depth_and_len(model, vars=C, blocks=self.input_blocks, c_variables=c_variables,
-                                       start_column=self.start_column, msa=self.msa, n_seqs=self.n_seqs)
+                                       start_column=self.start_column, msa=self.msa)
             
         logging.info(f"setted objective function ({self.start_column},{self.end_column})")
         #  ------------------------

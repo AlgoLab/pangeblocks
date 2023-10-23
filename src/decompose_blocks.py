@@ -1,4 +1,3 @@
-# TODO: move to src folder
 import argparse
 import json
 import time
