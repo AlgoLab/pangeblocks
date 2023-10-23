@@ -28,10 +28,10 @@ def load_blocks(filename: Union[str,Path]):
     elif extension == ".txt":
         blocks = []
         with open(filename, "r") as fp:
-            for line in fp.readlines:
-                block = eval(line.replace("\n"))
+            for line in fp.readlines():
+                block = eval(line.replace("\n",""))
                 blocks.append(block)
-                
+
     else:
         raise Exception("Valid format for blocks are .json and .txt")
 
