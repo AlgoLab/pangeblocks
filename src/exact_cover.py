@@ -66,7 +66,7 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
     # Return positions w.r.t. the full MSA
     if use_wildpbwt:
         maximal_blocks = maximal_blocks_pbwt(
-                    filename=path_msa,
+                    msa=path_msa,
                     start_column=start_column, end_column=end_column,
                     alphabet_to_ascii = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
                     bin_wildpbwt = bin_wildpbwt,
