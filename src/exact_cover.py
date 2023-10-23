@@ -206,8 +206,6 @@ if __name__=="__main__":
     # outputs
     parser.add_argument("--prefix-output", help="prefix to save optimization results. Parent folder will be created if it does not exists.", dest="prefix_output")
     parser.add_argument("--solve-ilp", help="decide wether to solve the ILP or just generate the ILP model", type=boolean_string, default=True, dest="solve_ilp")
-    # parser.add_argument("--path-save-ilp", help="path to save the ILP formulation", default=None, dest="path_save_ilp")
-    # parser.add_argument("--path-opt-solution", help="file to save optimal solution (Blocks)", dest="path_opt_solution")
     parser.add_argument("--log-level", help='set log level ERROR/WARNING/INFO/DEBUG', default='ERROR', dest='log_level')
     
     parser.add_argument("--submsa-index", help="file with start-end positions of vertical blocks in the MSA", dest="submsa_index")

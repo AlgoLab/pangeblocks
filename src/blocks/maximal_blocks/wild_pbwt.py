@@ -7,6 +7,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Union, Optional
 
+from Bio.AlignIO import MultipleSeqAlignment as MSA
+
 # import sys
 # sys.path.append("../../../..")
 from .utils import load_submsa
@@ -16,7 +18,7 @@ from .utils import load_submsa
 
 import logging
 
-def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str,Path]] = None, 
+def compute_maximal_blocks(msa: Union[str,Path, MSA], output: Optional[Union[str,Path]] = None, 
                            start_column: int = 0, end_column: int = -1, 
                            only_vertical: bool = False,
                            alphabet_to_ascii: dict = {"-":0,"A":1,"C":2,"G":3,"T":4,"N":5},
@@ -31,8 +33,10 @@ def compute_maximal_blocks(filename: Union[str,Path], output: Optional[Union[str
         assert os.path.isfile(PATH_WILD_PBWT), f"it seems that {PATH_WILD_PBWT} is not the correct path to the binary 'wild-pbwt'"
     SIZE_ALPHABET=len(alphabet_to_ascii)
     
-    # load subMSA
-    msa=load_submsa(filename, start_column, end_column)
+    if type(msa) in (str,Path):
+        # load subMSA
+        msa=load_submsa(msa, start_column, end_column)
+        
     n_cols=msa.get_alignment_length()
     n_seqs=len(msa)
 

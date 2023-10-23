@@ -72,7 +72,6 @@ rule install_wild_pbwt:
     conda:
         "envs/wild-pbwt.yml"
     shell:
-        #TODO: if else to check if binary file already exists and is working (skip installation)
         """
         if ! [ -f "Wild-pBWT/bin/wild-pbwt"]; then
             rm -rf Wild-pBWT/
@@ -104,13 +103,16 @@ rule submsa_index:
         path_vertical_blocks=pjoin(PATH_OUTPUT, "maximal-blocks", "{name_msa}", "vertical_blocks_alpha{alpha}.json"),
     output:
         path_submsa_index=pjoin(PATH_OUTPUT, "submsas", "{name_msa}_alpha{alpha}.txt")
+    params:
+        max_positions=config["MAX_POSITIONS_SUBMSAS"]
     log: 
         stdout=pjoin(PATH_OUTPUT, "logs", "{name_msa}-alpha{alpha}-rule-submsa_index.out.log"),
     conda: 
         "envs/pangeblocks.yml"
     shell:
         """/usr/bin/time --verbose src/submsas.py --path-msa {input.path_msa} \
-        --path-vertical-blocks {input.path_vertical_blocks} --threshold-vertical-blocks {wildcards.alpha} --output {output} > {log.stdout} 2>&1
+        --path-vertical-blocks {input.path_vertical_blocks} --threshold-vertical-blocks {wildcards.alpha} \
+        --max-positions-submsas {params.max_positions} --output {output} > {log.stdout} 2>&1
         """
 
 rule ilp:
@@ -136,7 +138,7 @@ rule ilp:
     conda: 
         "envs/pangeblocks.yml"
     resources: 
-        mem_mb=80000
+        mem_mb=config["RESOURCES"]["MEM_MB"]
     shell:
         """
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
