@@ -14,7 +14,10 @@ from Bio.Seq import Seq, MutableSeq
 from Bio.SeqRecord import SeqRecord
 
 # pangeblocks
-from ..blocks import Block
+import sys
+PATH=Path(__file__).parent.parent.parent
+sys.path.append(str(PATH))
+from src.blocks import Block
 
 CHAR="X"
 
