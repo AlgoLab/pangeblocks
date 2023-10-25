@@ -1,10 +1,8 @@
-# TODO: move to src folder
 import argparse
 import json
 import time
 from dataclasses import astuple
 from pathlib import Path
-from blocks import Block
 from blocks import BlockAnalyzer, block_decomposition, Decomposer
 from utils import MonitorValuesPlus
 

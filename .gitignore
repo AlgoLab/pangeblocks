@@ -1,12 +1,18 @@
 .snakemake/
 out*/
-msa*/
+# msa*/
 *msas/
 panels*/
 experiment*/
 *experiment/
 test-*/
 *ipynb
+Wild-pBWT/
+.vscode/
+fil-result/
+plots/
+*json
+*txt
 
 # pandora / make_prg
 make_prg_0.4.0
