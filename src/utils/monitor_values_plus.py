@@ -14,7 +14,8 @@ class MonitorValuesPlus(MonitorValues):
         if out_file:
 
             if Path(out_file).exists() and overwrite is False:
-                assert self._read_colnames(out_file) == list_vars,f"{out_file} exists and has different variables"
+                assert self._read_colnames(out_file) == list_vars, \
+                    f"{out_file} exists and has different variables. Set overwrite=True if previous results can be discarded."
             self._create_file(out_file)
         
     def __call__(self,):

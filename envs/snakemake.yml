@@ -1,0 +1,7 @@
+name: snakemake
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snakemake-minimal
+  - pandas

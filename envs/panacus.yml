@@ -1,0 +1,6 @@
+name: panacus
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - panacus

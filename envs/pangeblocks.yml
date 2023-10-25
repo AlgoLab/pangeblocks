@@ -1,0 +1,18 @@
+name: pangeblocks
+channels:
+  - conda-forge
+  - gurobi
+dependencies:
+  - gurobi=9.5.2 
+  - pip
+  - pip:
+    - numpy==1.23.2
+    - pandas==1.5.1
+    - suffix-tree==0.1.0
+    - graphviz==0.20.1
+    - networkx==2.8.5
+    - rich==12.6.0
+    - biopython==1.79
+    - seaborn==0.12.1
+    - pydantic==1.10.2
+    - tqdm

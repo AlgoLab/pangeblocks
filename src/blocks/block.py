@@ -48,18 +48,53 @@ class Block:
         "sort values in K"
         return tuple(sorted(v))
 
-@dataclass
+@pydataclass(eq=True, frozen=True)
 class LightBlock:
     "class for keeping track a block without the label"
     K: tuple
     start: int
     end: int
-
-    def to_positional_string(self,) -> PositionalString:
-        return PositionalString(self.label, self.start, self.end)
-
+        
     def str(self):
-        return "%s,%s,%s,%s" % (self.K,self.start,self.end,self.label)
+        return "%s,%s,%s" % (self.K,self.start,self.end)
 
     def len(self):
         return self.end-self.start+1
+
+    def nrows(self):
+        return len(self.K)
+    
+    def ncols(self):
+        return self.end-self.start+1
+    
+    def ncells(self):
+        return self.nrows()*self.ncols()
+    
+    @root_validator
+    def check_start_less_or_equal_end(cls, values):
+        "start <=end"
+        start = values.get("start")
+        end = values.get("end")
+
+        if start > end:
+            raise ValueError(f"start must be <= than end, start={start} and end={end}")
+        return values
+
+    @validator("K")
+    def sort_K(cls, v):
+        "sort values in K"
+        return tuple(sorted(v))
+    
+    def __getitem__(self, item):
+        if item==0:
+            return self.K
+        elif item==1 or item==-2: 
+            return self.start 
+        elif item==2 or item == -1: 
+            return self.end
+
+    # def __hash__(self) -> int:
+    #     pass
+
+    # def __eq__(self, __value: object) -> bool:
+    #     pass

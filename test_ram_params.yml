@@ -1,0 +1,52 @@
+PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean
+
+# Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
+PATH_OUTPUT: /data/analysis-paper/experiments/ram-usage/83-sars-cov-2-clean-standard-decomp
+
+OPTIMIZATION:
+  OBJECTIVE_FUNCTION:
+    - "nodes"
+    # - "strings"
+    # - "weighted"
+    # - "depth"
+  PENALIZATION: # used only with "weighted" and "depth"
+    - 1000
+  MIN_LEN: # used only with "weighted"
+    - 50
+  MIN_COVERAGE: # used only with "depth"
+    - 0.3
+  TIME_LIMIT: 180 # time limit to run each ILP (minutes)
+LOG_LEVEL: "INFO"
+THREADS: 
+  TOTAL: 16  # smk
+  SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
+  ILP: 8    # gurobi threads
+DECOMPOSITION:
+  STANDARD: True
+  ALPHA_CONSISTENT: False
+USE_WILDPBWT: True
+SUBMSAS: # (start, end)
+  # - - start 
+  #   - end
+  - - 0 
+    - 50
+  - - 0
+    - 100
+  - - 0 
+    - 200
+  - - 0
+    - 300
+  - - 0 
+    - 400
+  - - 0
+    - 500
+  - - 0 
+    - 700
+  - - 0
+    - 1000
+  - - 0 
+    - 1500
+  - - 0
+    - 2000
+  - - 0 
+    - 2500
