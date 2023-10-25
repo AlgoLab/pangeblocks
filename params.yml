@@ -32,6 +32,7 @@ OPTIMIZATION:
     # - "strings"
     # - "weighted"
     # - "depth"
+    # - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -73,8 +74,16 @@ DECOMPOSITION:
   STANDARD: False
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
-MAX_POSITIONS_SUBMSAS: 100000 # positions (r,c), will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions  
+
+# When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
+# this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
+MAX_POSITIONS_SUBMSAS: 100000   
+
 RESOURCES:
   MEM_MB: 80000 # maximum memory in MB
+
+# Maximal blocks with at least the following number of rows and columns will be fixed in the solution
+MIN_ROWS_FIX_BLOCK: 0
+MIN_COLS_FIX_BLOCK: 0
 # to compute maximal blocks, otherwise SuffixTree will be used
 # standard decomposition . If False, use row-maximal-decomposition

@@ -53,6 +53,11 @@ def get_graphs(wildcards):
             pjoin(PATH_OUTPUT, "gfa-unchop", "depth", f"penalization{penalization}-min_len0-min_coverage{min_coverage}-alpha{alpha}", f"{name_msa}.gfa")
             for alpha in ALPHA for penalization in PENALIZATION for min_coverage in MIN_COVERAGE for name_msa in NAMES
         )
+    if "depth_and_len" in OBJ_FUNCTIONS:
+        graph.extend(
+            pjoin(PATH_OUTPUT, "gfa-unchop", "depth_and_len", f"penalization0-min_len0-min_coverage0-alpha{alpha}", f"{name_msa}.gfa")
+            for alpha in ALPHA for name_msa in NAMES
+        )
     
     return graphs
 
@@ -130,7 +135,9 @@ rule ilp:
         workers=config["THREADS"]["SUBMSAS"],
         use_wildpbwt=config["USE_WILDPBWT"],
         standard_decomposition=config["DECOMPOSITION"]["STANDARD"],
-        alpha_consistent=config["DECOMPOSITION"]["ALPHA_CONSISTENT"]
+        alpha_consistent=config["DECOMPOSITION"]["ALPHA_CONSISTENT"],
+        min_nrows_fix_block=config["MIN_ROWS_FIX_BLOCK"],
+        min_ncols_fix_block=config["MIN_COLS_FIX_BLOCK"]
     threads:
         config["THREADS"]["TOTAL"]
     log:
@@ -147,7 +154,8 @@ rule ilp:
         --submsa-index {input.path_submsas_index} --time-limit {params.time_limit} --solve-ilp True \
         --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
         --standard-decomposition {params.standard_decomposition} --threads-ilp {params.threads_ilp} \
-        --workers {params.workers} --alpha-consistent {params.alpha_consistent} > {output.auxfile} 2> {log.stderr}
+        --workers {params.workers} --alpha-consistent {params.alpha_consistent} \
+        --min-rows-fixblock {params.min_nrows_fix_block} --min-columns-fixblock {params.min_ncols_fix_block} > {output.auxfile} 2> {log.stderr}
         """
 
 rule coverage_to_graph:
