@@ -38,15 +38,16 @@
 #             --workers 1 > $dirout/logs/$name-$decomposition-$start-$end.std.log 2> $dirout/logs/$name-$decomposition-$start-$end.err.log
 #     done
 # done
-
+decomp="standard"
 /usr/bin/time -v src/exact_cover.py --path-msa /data/msas-pangeblocks/sars-cov-2-clean/10-SARS-CoV2-MSA.fa \
     --obj-function nodes \
-    --prefix-output test-ram \
+    --prefix-output test-ram_$decomp \
     --penalization 0 --min-len 0 --min-coverage 0 \
     --start-column 0 --end-column 100 \
     --time-limit 180 --solve-ilp True  \
     --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
-    --standard-decomposition False \
+    --standard-decomposition True \
     --alpha-consistent False \
-    --threads-ilp 8 --workers 1 2> test_ram.log
+    --threads-ilp 8 --workers 1 \
+    --min-rows-fixblock 9 --min-columns-fixblock 20 2> test_ram_fixedblocks_$decomp.log
     

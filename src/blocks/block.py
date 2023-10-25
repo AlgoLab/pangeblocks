@@ -61,6 +61,15 @@ class LightBlock:
     def len(self):
         return self.end-self.start+1
 
+    def nrows(self):
+        return len(self.K)
+    
+    def ncols(self):
+        return self.end-self.start+1
+    
+    def ncells(self):
+        return self.nrows()*self.ncols()
+    
     @root_validator
     def check_start_less_or_equal_end(cls, values):
         "start <=end"

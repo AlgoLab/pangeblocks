@@ -24,19 +24,23 @@ class InputBlockSet:
     generate the Input set of block to be used in the ILP
     """    
 
-    def __init__(self, standard_decomposition):
+    def __init__(self, standard_decomposition,
+                 min_nrows_to_fix_block=0, min_ncols_to_fix_block=0):
         self.standard_decomposition=standard_decomposition 
         logging.info(f">>>> InputBlockSet standard_decomposition={standard_decomposition}")
         
+        # criteria to fix some maximal blocks
+        self.min_nrows_to_fix_block=min_nrows_to_fix_block
+        self.min_ncols_to_fix_block=min_ncols_to_fix_block
+
     def __call__(self, path_msa: Union[str,Path], maximal_blocks: list[Block],
                  start_column: int, end_column: int) -> list[Block]:
-        
         
         self.start_column = start_column
         self.end_column = end_column
 
         # parse maximal blocks as Block objects
-        maximal_blocks = [Block(*b[:3]) for b in maximal_blocks] # FIXME: Block
+        maximal_blocks = [Block(*b[:3]) for b in maximal_blocks]
         # load MSA
         self.msa = self.load_submsa(path_msa, start_column, end_column)
         n_seqs = len(self.msa) 
@@ -55,23 +59,30 @@ class InputBlockSet:
         # block decomposition
         logging.info(f"decomposer ({self.start_column},{self.end_column})")
         decomposer = Decomposer(
-                                standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used 
+                                standard_decomposition=self.standard_decomposition,        #  if False, row maximal decomposition is used
+                                min_nrows_to_fix_block=self.min_nrows_to_fix_block,        #  minimum number of rows to fix a maximal block
+                                min_ncols_to_fix_block=self.min_ncols_to_fix_block         #  minimum number of columns to fix a maximal block
                                 ) 
-        decomposed_blocks = decomposer(list_blocks=maximal_blocks,                         # NOTE: decomposed_blocks contains the maximal blocks, check Decomposer.decomposition_from_inter_blocks()
-                                       start=start_column, end=end_column )                # to track with logging)
+        decomposed_blocks, fixed_blocks = decomposer(
+                                                    list_blocks=maximal_blocks,            # NOTE: decomposed_blocks contains the maximal blocks, check Decomposer.decomposition_from_inter_blocks()
+                                                    start=start_column, end=end_column     # to track with logging
+                                                    )                
 
         logging.info(f"end decomposer ({self.start_column},{self.end_column})")
         logging.info(f"Number of decomposed blocks {len(decomposed_blocks)} ({self.start_column},{self.end_column})")        
-
+        logging.info(f"Number of fixed blocks {len(fixed_blocks)} ({self.start_column},{self.end_column})")
         # glue missing blocks of one character in the same column 
         logging.info(f"glue missing blocks ({self.start_column},{self.end_column})")
         missing_blocks = self.glue_vertical_blocks(missing_blocks)
         logging.info(f"Number of missing blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")        
 
+        # missing blocks and fixed blocks will be joined to ommit them from the ILP
+        missing_blocks.extend(fixed_blocks)
+
         # row maximal decomposition
         if not self.standard_decomposition:
             logging.info(f"get blocks one char ({self.start_column},{self.end_column})")
-            blocks_one_char = self.get_blocks_one_char(self.msa, start_column)
+            blocks_one_char = self.get_blocks_one_char(self.msa, start_column, missing_blocks)
             logging.info(f"Number of blocks one char {len(blocks_one_char)} ({self.start_column},{self.end_column})")
 
             # Input set: input blocks:decomposition of blocks  of one position in the MSA)
@@ -173,11 +184,19 @@ class InputBlockSet:
         sublists.append(curr)
         return sublists
 
-    def get_blocks_one_char(self, msa, start_column):
+    def get_blocks_one_char(self, msa, start_column, ommit_blocks):
         """
-        generate trivial blocks, one seq and one col
+        generate trivial blocks: one character in each column
         'start_column' is used to generate the blocks w.r.t. original MSA
+        'ommit_blocks' is used to ommit positions (r,c) that are covered by any of these blocks
+        which are meant to be removed from the ILP
         """
+        pos_ommit_blocks = []
+        for block in ommit_blocks:
+            pos_ommit_blocks.extend(
+                (row,col) for row in block.K for col in range(block.start, block.end+1)  
+            )
+
         blocks_one_char = []
         n_cols=msa.get_alignment_length()
         n_seqs=len(msa)
@@ -185,13 +204,14 @@ class InputBlockSet:
         for col in range(n_cols):
             seq_by_char = defaultdict(list)
             for row in range(n_seqs):
-                seq_by_char[msa[row,col]].append(row)
+                if (row,col) not in pos_ommit_blocks: 
+                    seq_by_char[msa[row,col]].append(row)
 
             for c, K in seq_by_char.items():
                 # ommit vertical blocks, they will be part of a maximal one
                 if len(K) < n_seqs:
                     blocks_one_char.append(
-                            Block(K=K, start=col+start_column, end=col+start_column) # FIXME: Block
+                            Block(K=K, start=col+start_column, end=col+start_column) 
                     )
 
         return blocks_one_char
