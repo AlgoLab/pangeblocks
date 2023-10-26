@@ -30,9 +30,6 @@ def main(args):
         with open(path_subsol) as fp:
             opt_coverage.extend([Block(*b[:3]) for b in json.load(fp)])
 
-    for block in opt_coverage:
-        print(block)
-
     # parse optimal coverage as GFA
     ti = time.time()
     logging.info("Parsing graph as GFA")

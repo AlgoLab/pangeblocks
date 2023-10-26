@@ -1,4 +1,4 @@
-PATH_MSAS: test
+PATH_MSAS: /data/msas-pangeblocks/msas-experiments-paper
 # /data/msas-pangeblocks/sars-cov-2-clean
 #/data/msas-pangeblocks/mini-experiments/
 
@@ -15,7 +15,7 @@ PATH_MSAS: test
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: output-test 
+PATH_OUTPUT: /data/analysis-paper/experiments/paper-row_maximal-not_alpha-not_fixblock
 # /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
@@ -31,40 +31,44 @@ PATH_OUTPUT: output-test
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    # - "strings"
-    # - "weighted"
-    # - "depth"
+    - "strings"
+    - "weighted"
+    - "depth"
     - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
     # - 7 
-    # - 100
-    # - 500
+    - 100
+    - 500
     - 1000
   MIN_LEN: # used only with "weighted"
-    # - 10
-    # - 20
-    # - 30
-    # - 40
     - 5
     - 10
+    - 15
+    - 20
+    - 25
+    - 30 
+    - 35 
+    - 40 
+    - 45
+    - 50
   MIN_COVERAGE: # used only with "depth"
-    # - 0.1
-    # - 0.2
+    - 0.1
+    - 0.2
     - 0.3
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    # - 1 
-    # - 5
-    # - 10
-    # - 15
-    # - 20
+    - 1 
+    - 5
+    - 10
+    - 15
+    - 20
     - 25
-    # - 30
-    # - 35
-    # - 40
-    # - 45
-    # - 50
+    - 30
+    - 35
+    - 40
+    - 45
+    - 50
     # - 53837
   TIME_LIMIT: 180 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
@@ -85,7 +89,8 @@ RESOURCES:
   MEM_MB: 80000 # maximum memory in MB
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
-MIN_ROWS_FIX_BLOCK: 2
-MIN_COLS_FIX_BLOCK: 4
+MIN_ROWS_FIX_BLOCK: 0
+MIN_COLS_FIX_BLOCK: 0
+# hacer experimentos with min rows = 0.1 0.2 and  0.3, like with MIN_COVERAGE
 # to compute maximal blocks, otherwise SuffixTree will be used
 # standard decomposition . If False, use row-maximal-decomposition
