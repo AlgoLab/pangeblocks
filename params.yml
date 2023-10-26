@@ -1,4 +1,5 @@
-PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean
+PATH_MSAS: test
+# /data/msas-pangeblocks/sars-cov-2-clean
 #/data/msas-pangeblocks/mini-experiments/
 
 # test/alpha
@@ -14,7 +15,8 @@ PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
+PATH_OUTPUT: output-test 
+# /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
 # "/data/pangeblocks-experiments/sars-cov-2"
@@ -32,7 +34,7 @@ OPTIMIZATION:
     # - "strings"
     # - "weighted"
     # - "depth"
-    # - "depth_and_len"
+    - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
     # - 5
@@ -83,7 +85,7 @@ RESOURCES:
   MEM_MB: 80000 # maximum memory in MB
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
-MIN_ROWS_FIX_BLOCK: 0
-MIN_COLS_FIX_BLOCK: 0
+MIN_ROWS_FIX_BLOCK: 2
+MIN_COLS_FIX_BLOCK: 4
 # to compute maximal blocks, otherwise SuffixTree will be used
 # standard decomposition . If False, use row-maximal-decomposition

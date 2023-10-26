@@ -196,12 +196,15 @@ class Decomposer:
         potential_blocks_to_fix = [pos for pos,block in enumerate(list_blocks) if block.nrows() >= self.min_nrows_to_fix_block and block.ncols() >= self.min_ncols_to_fix_block]
         blocks_to_discard = [] # list of (positions in the list of) blocks that will be discarded
         
+        logging.info(f"Number of potential blocks to fix {len(potential_blocks_to_fix)}")
         # idx<n>: index in the current list | pos<n>: index in the list of blocks
         for idx1, pos1 in enumerate(potential_blocks_to_fix[:-1]):
+            logging.info(f"{idx1}, {pos1}")
             block1 = list_blocks[pos1]
             
             for rel_pos, pos2 in enumerate(potential_blocks_to_fix[idx1+1:]):
-                idx2 = rel_pos + pos1 + 1
+                idx2 = rel_pos + idx1 + 1
+                logging.info(f"{idx2}, {pos2}")
                 pos2 = potential_blocks_to_fix[idx2]
                 block2 = list_blocks[pos2]
 

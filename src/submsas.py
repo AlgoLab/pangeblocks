@@ -49,7 +49,7 @@ if __name__=="__main__":
     parser.add_argument("-o","--output", help="output file .txt", dest="output")
     parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length greather or equal than the threshold \
                         will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
-    parser.add_argument("--max-positions-msa", help="subMSAs with more than this number of positions will be divided into \
+    parser.add_argument("--max-positions-submsas", help="subMSAs with more than this number of positions will be divided into \
                         smaller subMSAs", type=int, dest="max_positions_msa", default=100000)
     parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG). Default ERROR", dest="log_level")
     args = parser.parse_args()

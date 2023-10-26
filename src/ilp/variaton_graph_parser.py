@@ -29,8 +29,9 @@ class asGFA:
 
         sorted_solution = sorted(optimal_coverage, key=lambda block: block.start )
         for pos1, block1 in enumerate(sorted_solution[:-1]):
-
+            
             for rel_pos, block2 in enumerate(sorted_solution[pos1+1:]):
+                logging.info(f"Comparing blocks {block1} and {block2}")
                 pos2 = rel_pos + pos1 + 1
 
                 if block2.start > block1.end + 1:
@@ -47,8 +48,15 @@ class asGFA:
                     logging.debug("blocks not connected: %s and %s " % (block1, block2))
 
         logging.debug("Number of nodes: %s", len(list_nodes))
-        list_nodes = list(set([(node.K,node.i,node.j,
-                                str(self.msa[int(node.K[0]),int(node.i):int(node.j)+1].seq) ) for node in list_nodes]))
+    
+        list_nodes = [(node.K,node.i,node.j,
+                                str(self.msa[int(node.K[0]),int(node.i):int(node.j)+1].seq) ) for node in list_nodes]
+        nodes = [ self.block_to_node(b) for b in optimal_coverage]
+        list_nodes.extend(nodes)
+        list_nodes = nodes
+
+        list_nodes = list(set(nodes))
+
         logging.debug("Number of unique nodes %s", len(list_nodes))
         
         _list_edges = []
@@ -84,19 +92,25 @@ class asGFA:
 
             node2id[node]=id_node
 
+        nodes_in_edges = []
         # links (edges)
         lines_links=[]
         data_paths = defaultdict(list)
         for edge in list_edges:
+            
             node1, node2, idxseqs = edge[0], edge[1], edge[2]
             lines_links.append(
                 f"L\t{node2id[node1]}\t+\t{node2id[node2]}\t+\t0M"
             )
-
+            nodes_in_edges.extend([node1,node2])
             # paths
             for idx in idxseqs:
                 data_paths[self.idx2seqid[idx]].extend([node1,node2])
 
+        for node in set(list_nodes).difference(nodes_in_edges):
+            logging.info(f"node with no connections {node}")
+            for idx in node.K:
+                data_paths[self.idx2seqid[idx]].extend([node])
         lines_paths=[]
         paths = dict()
         for seqid, nodes_seq in data_paths.items():
@@ -127,6 +141,10 @@ class asGFA:
 
         return align, n_seqs, n_cols
 
+    
+    def block_to_node(self, block):
+        Node = namedtuple("Node",["K","i","j","label"])
+        return Node(block.K, block.start, block.end,self.msa[block.K[0],block.start:block.end+1].seq) 
     def nodes_edges_from_blocks(self, block1, block2):
         Node = namedtuple("Node",["K","i","j","label"]) # is a block
         Edge = namedtuple("Edge",["node1","node2","seqs"])
@@ -141,6 +159,8 @@ class asGFA:
         K.sort()
 
         if b1.end == b2.start-1 and len(K)>0:
+            logging.info("blocks are consecutives")
+            logging.info(f"{b1}, {b2}")
             b1_label = self.msa[b1.K[0]].seq[b1.start:b1.end+1]
             b2_label = self.msa[b2.K[0]].seq[b2.start:b2.end+1]
 
@@ -149,8 +169,8 @@ class asGFA:
             node2 = Node(b2.K, b2.start, b2.end, b2_label)
             nodes.extend([node1, node2])
             edges.append(Edge(node1, node2, K))
-        
-        if b2.end == b1.start-1 and len(K)>0:
+        else:
+         #if b2.end == b1.start-1 and len(K)>0:
             logging.debug("block %s and block %s not connected" % (b1.str(), b2.str()))
         # else: 
         #     # print("Not consecutive blocks")

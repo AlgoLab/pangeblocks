@@ -206,7 +206,7 @@ if __name__=="__main__":
     parser.add_argument("--bin-wildpbwt", help="path to bin/wild-pbwt", dest="bin_wildpbwt", default="Wild-pBWT/bin/wild-pbwt")
     parser.add_argument("-sd","--standard-decomposition", default=True, type=boolean_string, dest="standard_decomposition")
     # ILP
-    parser.add_argument("--obj-function", help="objective function", dest="obj_function", choices=["nodes","strings","weighted","depth"])
+    parser.add_argument("--obj-function", help="objective function", dest="obj_function", choices=["nodes","strings","weighted","depth","depth_and_len"])
     parser.add_argument("--penalization", help="penalization for shorter blocks when using 'weighted', and under-covered blocks when using 'depth' as obj_function", dest="penalization", type=int)
     parser.add_argument("--min-len", help="minimum length of shorter blocks when using 'weighted' as obj_function to be penalized", dest="min_len", type=int)
     parser.add_argument("--min-coverage", help="minimum percentage of sequence when using 'depth' as obj_function to be penalized", dest="min_coverage", type=float)

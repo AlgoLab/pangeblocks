@@ -54,7 +54,7 @@ def get_graphs(wildcards):
             for alpha in ALPHA for penalization in PENALIZATION for min_coverage in MIN_COVERAGE for name_msa in NAMES
         )
     if "depth_and_len" in OBJ_FUNCTIONS:
-        graph.extend(
+        graphs.extend(
             pjoin(PATH_OUTPUT, "gfa-unchop", "depth_and_len", f"penalization0-min_len0-min_coverage0-alpha{alpha}", f"{name_msa}.gfa")
             for alpha in ALPHA for name_msa in NAMES
         )
