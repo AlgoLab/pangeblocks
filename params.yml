@@ -91,6 +91,7 @@ RESOURCES:
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
 MIN_ROWS_FIX_BLOCK: 0
 MIN_COLS_FIX_BLOCK: 0
-# hacer experimentos with min rows = 0.1 0.2 and  0.3, like with MIN_COVERAGE
+# do experiments with min rows = 0.1 0.2 and  0.3, like with MIN_COVERAGE. Compare against depth loss function
+# do experiments with min cols = 10 15 20 like with MIN_LEN. Compare against 
 # to compute maximal blocks, otherwise SuffixTree will be used
 # standard decomposition . If False, use row-maximal-decomposition

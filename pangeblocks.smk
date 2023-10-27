@@ -1,6 +1,6 @@
 configfile: "params.yml"
 from pathlib import Path
-import pandas as pd
+import json
 from os.path import join as pjoin
 
 PATH_OUTPUT = config["PATH_OUTPUT"]
@@ -25,7 +25,8 @@ NAMES = [path.stem for path in MSAS]
 print(NAMES)
 EXT_MSA = MSAS[0].suffix
 
-
+with open(PATH_OUTPUT.joinpath("config"), "w") as fp:
+    json.dump(config, fp, indent=1)
 
 def get_graphs(wildcards):
     "Return a list of graphs to be generated based on parameters provided in the config file"

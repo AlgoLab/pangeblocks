@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from typing import Union
+from typing import Union, Optional
 from pathlib import Path
 from Bio import AlignIO
 
@@ -25,11 +25,25 @@ class InputBlockSet:
     """    
 
     def __init__(self, standard_decomposition,
-                 min_nrows_to_fix_block=0, min_ncols_to_fix_block=0):
+                 min_nrows_to_fix_block: Union[int, float] = 0, min_ncols_to_fix_block: Union[int,float] = 0,
+                 nrows: Optional[int] = None, ncols: Optional[int] = None,
+                 ):
         self.standard_decomposition=standard_decomposition 
         logging.info(f">>>> InputBlockSet standard_decomposition={standard_decomposition}")
         
         # criteria to fix some maximal blocks
+        if 0 < min_nrows_to_fix_block < 1:
+            if nrows>0:
+                min_nrows_to_fix_block = int(min_nrows_to_fix_block * nrows)
+            else:
+                raise Exception("nrows must be > 0 to compute the minimum number of rows")
+            
+        if 0 < min_ncols_to_fix_block < 1:
+            if ncols>0:
+                min_ncols_to_fix_block = int(min_ncols_to_fix_block * ncols)
+            else:
+                raise Exception("nrows must be > 0 to compute the minimum number of columns")
+            
         self.min_nrows_to_fix_block=min_nrows_to_fix_block
         self.min_ncols_to_fix_block=min_ncols_to_fix_block
 

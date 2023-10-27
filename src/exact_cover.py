@@ -78,13 +78,19 @@ def generate_input_set(path_msa, start_column, end_column, bin_wildpbwt, use_wil
                     start_column=start_column, end_column=end_column, only_vertical=False
                     )
     
+    msa = load_submsa(path_msa, start_column, end_column)
+    nrows_msa=len(msa)
+    ncols_msa=msa.get_alignment_length()
+    
+
     # 2. compute input set of blocks for the ILP (decomposition is included)
     logging.info(f"Generating input set ({start_column},{end_column})")
     logging.info(f"Number of maximal blocks {len(maximal_blocks)} ({start_column},{end_column})")
     logging.info(f"Size [bytes] of maximal blocks {sys.getsizeof(maximal_blocks)} ({start_column},{end_column})")
     inputset_gen = InputBlockSet(
         standard_decomposition=standard_decomposition,
-        min_nrows_to_fix_block=min_nrows_to_fix_block, min_ncols_to_fix_block=min_ncols_to_fix_block                             # to fix a maximal block in the solution
+        min_nrows_to_fix_block=min_nrows_to_fix_block, min_ncols_to_fix_block=min_ncols_to_fix_block,       # to fix a maximal block in the solution
+        nrows=nrows_msa, ncols=ncols_msa                                                                    # to compute min_rows and min_cols in case they are percentage in (0,1)
     )
     # inputset is a list with blocks to be used by the ILP
     # missing blocks is a list of one-row blocks with the positions not covered by maximal blocks 
