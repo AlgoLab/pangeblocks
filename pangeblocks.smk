@@ -26,6 +26,7 @@ print(NAMES)
 EXT_MSA = MSAS[0].suffix
 
 Path(PATH_OUTPUT).mkdir(parents=True, exist_ok=True)
+config["NAMES"] = NAMES
 with open(Path(PATH_OUTPUT).joinpath("config.json"), "w") as fp:
     json.dump(config, fp, indent=1)
 

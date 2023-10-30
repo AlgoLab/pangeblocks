@@ -39,8 +39,8 @@ OPTIMIZATION:
     # - 3
     # - 5
     # - 7 
-    - 100
-    - 500
+    # - 100
+    # - 500
     - 1000
   MIN_LEN: # used only with "weighted"
     - 5

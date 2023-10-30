@@ -18,7 +18,7 @@ MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 # path msas
 MSAS = list(Path(PATH_MSAS).glob("*.fa"))
 NAMES = [path.stem for path in MSAS]
-NAMES = [path.stem for path in MSAS if "83" in path.stem]
+# NAMES = [path.stem for path in MSAS if "83" in path.stem]
 
 print(NAMES)
 EXT_MSA = MSAS[0].suffix
@@ -27,6 +27,11 @@ EXT_MSA = MSAS[0].suffix
 SUBMSAS = config["SUBMSAS"]
 for submsa in SUBMSAS:
     print(submsa)
+
+Path(PATH_OUTPUT).mkdir(parents=True, exist_ok=True)
+config["NAMES"] = NAMES
+with open(Path(PATH_OUTPUT).joinpath("config.json"), "w") as fp:
+    json.dump(config, fp, indent=1)
 
 def get_files(wildcards):
     "Return a list of files to be generated based on parameters provided in the config file"
