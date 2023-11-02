@@ -128,7 +128,7 @@ class Decomposer:
             
             for block in list_blocks_decomposition:
                 if not any([self._blocks_intersect(block,fix_block) for fix_block in [list_blocks[pos] for pos in pos_blocks_to_fix]]):
-                    logging.info(f"> > block from decomposition in input set {block}")
+                    # logging.info(f"> > block from decomposition in input set {block}")
                     decomposed_blocks.add(astuple(block))
         
         # add maximal blocks not intersecting fixed blocks
@@ -136,7 +136,7 @@ class Decomposer:
 
         for pos,block in enumerate(list_blocks):
             if pos not in pos_discard_block:
-                logging.info(f"> > maximal block in input set {block}")
+                # logging.info(f"> > maximal block in input set {block}")
                 decomposed_blocks.add(astuple(block))
 
         return [Block(*b) for b in decomposed_blocks]
@@ -199,12 +199,12 @@ class Decomposer:
         logging.info(f"Number of potential blocks to fix {len(potential_blocks_to_fix)}")
         # idx<n>: index in the current list | pos<n>: index in the list of blocks
         for idx1, pos1 in enumerate(potential_blocks_to_fix[:-1]):
-            logging.info(f"{idx1}, {pos1}")
+            # logging.info(f"{idx1}, {pos1}")
             block1 = list_blocks[pos1]
             
             for rel_pos, pos2 in enumerate(potential_blocks_to_fix[idx1+1:]):
                 idx2 = rel_pos + idx1 + 1
-                logging.info(f"{idx2}, {pos2}")
+                # logging.info(f"{idx2}, {pos2}")
                 pos2 = potential_blocks_to_fix[idx2]
                 block2 = list_blocks[pos2]
 

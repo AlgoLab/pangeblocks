@@ -1,4 +1,5 @@
-PATH_MSAS: /data/msas-pangeblocks/msas-experiments-paper
+PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean/
+# /data/msas-pangeblocks/mini-experiments
 # /data/msas-pangeblocks/sars-cov-2-clean
 #/data/msas-pangeblocks/mini-experiments/
 
@@ -15,7 +16,8 @@ PATH_MSAS: /data/msas-pangeblocks/msas-experiments-paper
 #"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/paper-row_maximal-not_alpha-not_fixblock
+PATH_OUTPUT: /data/analysis-paper/experiments/sars-cov-2-row_maximal-alpha_consistent-not_fixblock
+#/data/analysis-paper/experiments/mini-experiments-row_maximal-not_alpha-not_fixblock
 # /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
 # /data/analysis-paper/experiments/alpha-consistent 
@@ -32,8 +34,8 @@ OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
     - "strings"
-    - "weighted"
-    - "depth"
+    # - "weighted"
+    # - "depth"
     - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
     # - 3
@@ -78,7 +80,7 @@ THREADS:
   ILP: 8    # gurobi threads
 DECOMPOSITION:
   STANDARD: False
-  ALPHA_CONSISTENT: False
+  ALPHA_CONSISTENT: True
 USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 

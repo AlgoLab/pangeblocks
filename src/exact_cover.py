@@ -267,7 +267,8 @@ if __name__=="__main__":
             end_column=-1, 
             bin_wildpbwt=args.bin_wildpbwt, 
             use_wildpbwt=args.use_wildpbwt, 
-            standard_decomposition=args.standard_decomposition
+            standard_decomposition=args.standard_decomposition,
+            min_nrows_to_fix_block=args.min_nrows_to_fix_block, min_ncols_to_fix_block=args.min_ncols_to_fix_block
             )
 
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
