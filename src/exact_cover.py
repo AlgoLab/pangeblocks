@@ -156,6 +156,7 @@ def solve_submsa(path_msa, start_column, end_column,
             # we assume block_msa is the input set to solve the entire MSA
             # filter blocks_msa based on starting and end position of the blocks
             inputset = [b for b in blocks_msa if all([start_column <= b.start, b.end <= end_column])]
+            missing_blocks = []
         else:
             logging.info(f"computing blocks for ({start_column},{end_column})")
             inputset, missing_blocks = generate_input_set(
@@ -261,7 +262,7 @@ if __name__=="__main__":
     blocks_msa = None
     if args.alpha_consistent:
         logging.info("alpha consistent: Computing blocks for the entire MSA")
-        blocks_msa = generate_input_set(
+        blocks_msa, missing_blocks = generate_input_set(
             path_msa=args.path_msa, 
             start_column=0, 
             end_column=-1, 
@@ -270,6 +271,8 @@ if __name__=="__main__":
             standard_decomposition=args.standard_decomposition,
             min_nrows_to_fix_block=args.min_nrows_to_fix_block, min_ncols_to_fix_block=args.min_ncols_to_fix_block
             )
+        blocks_msa.extend(missing_blocks)
+        missing_blocks=[]
 
     # If index with start-end pairs in between vertical blocks is given, run in parallel all subMSAs 
     if args.submsa_index:

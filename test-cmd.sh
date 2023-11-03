@@ -141,9 +141,9 @@
 #########################################
 
 # # compute maximal blocks with pBWT
-sc=14551
-ec=14900
-path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
+# sc=14551
+# ec=14900
+# path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
 
 # maximal_blocks=debug/$(basename $path_msa .fasta)/maximal_blocks-sc$sc-ec$ec.json # to save blocks
 # mkdir -p output
@@ -175,3 +175,15 @@ path_msa=/home/avila/plasmids/target-fasta/msa/all_plasmids.fasta
 # --depth \
 # --output $path_opt_values
 
+/usr/bin/time -v python src/exact_cover.py --path-msa /data/msas-pangeblocks/mini-experiments/DQB1-3119.fa \
+    --obj-function nodes \
+    --prefix-output /data/analysis-paper/experiments/mini-experiment-row_maximal-not_alpha-not_fixblock/ilp/DQB1-3119/nodes/penalization0-min_len0-min_coverage0-alpha40/DQB1-3119 \
+    --penalization 0 --min-len 0 --min-coverage 0 \
+    -sc 461 -ec 1397 \
+    --time-limit 180 --solve-ilp True --use-wildpbwt True --bin-wildpbwt Wild-pBWT/bin/wild-pbwt \
+    --standard-decomposition False \
+    --threads-ilp 8 --workers 1 \
+    --alpha-consistent False \
+    --min-rows-fixblock 0 --min-columns-fixblock 0 2> test-DQB1-3119.log
+
+# --submsa-index /data/analysis-paper/experiments/mini-experiment-row_maximal-not_alpha-not_fixblock/submsas/DQB1-3119_alpha40.txt \

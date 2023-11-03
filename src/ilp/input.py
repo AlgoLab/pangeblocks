@@ -92,24 +92,29 @@ class InputBlockSet:
 
         # missing blocks and fixed blocks will be joined to ommit them from the ILP
         missing_blocks.extend(fixed_blocks)
+        # for enum, block in enumerate(missing_blocks):
+        #     logging.info(f"Missing block #{enum}: {block}")
 
         # row maximal decomposition
         if not self.standard_decomposition:
             logging.info(f"get blocks one char ({self.start_column},{self.end_column})")
             blocks_one_char = self.get_blocks_one_char(self.msa, start_column, missing_blocks)
             logging.info(f"Number of blocks one char {len(blocks_one_char)} ({self.start_column},{self.end_column})")
+            blocks_one_char = sorted(blocks_one_char, key=lambda b: b.start)
 
             # Input set: input blocks:decomposition of blocks  of one position in the MSA)
             # to avoid having duplicated one_char blocks
             from dataclasses import astuple
             decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
-            for block in blocks_one_char:
+            for enum, block in enumerate(blocks_one_char):
+                logging.debug(f"Block one-char #{enum}: {block}")
                 decomposed_blocks.add(astuple(block))
             decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            input_set_ilp = decomposed_blocks + blocks_one_char 
+            input_set_ilp = decomposed_blocks
             
         else:
             # standard decomposition 
+            # TODO: add one character blocks to ensure solution 
             from dataclasses import astuple
             logging.info(f"# decomposed blocks {len(decomposed_blocks)}")
             decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
@@ -211,6 +216,9 @@ class InputBlockSet:
                 (row,col) for row in block.K for col in range(block.start, block.end+1)  
             )
 
+        # for row_col in pos_ommit_blocks:
+        #     logging.info(f"Ommit-blocks (row,col) {row_col}")
+
         blocks_one_char = []
         n_cols=msa.get_alignment_length()
         n_seqs=len(msa)
@@ -218,15 +226,16 @@ class InputBlockSet:
         for col in range(n_cols):
             seq_by_char = defaultdict(list)
             for row in range(n_seqs):
-                if (row,col) not in pos_ommit_blocks: 
+                
+                if (row,col+start_column) not in pos_ommit_blocks: 
                     seq_by_char[msa[row,col]].append(row)
 
             for c, K in seq_by_char.items():
                 # ommit vertical blocks, they will be part of a maximal one
-                if len(K) < n_seqs:
-                    blocks_one_char.append(
-                            Block(K=K, start=col+start_column, end=col+start_column) 
-                    )
+                # if len(K) < n_seqs:
+                blocks_one_char.append(
+                        Block(K=K, start=col+start_column, end=col+start_column) 
+                )
 
         return blocks_one_char
 
