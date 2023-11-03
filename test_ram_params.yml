@@ -1,7 +1,7 @@
-PATH_MSAS: /data/msas-pangeblocks/sars-cov-2-clean
+PATH_MSAS: /data/msas-pangeblocks/mini-experiments
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments-ram-usage/sars-cov-2-standard-not_alpha
+PATH_OUTPUT: /data/analysis-paper/experiments-ram-usage/mini-experiment-row_maximal-not_alpha
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -22,7 +22,7 @@ THREADS:
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 DECOMPOSITION:
-  STANDARD: True
+  STANDARD: False
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 SUBMSAS: # (start, end)
@@ -50,9 +50,9 @@ SUBMSAS: # (start, end)
     - 899
   - - 0
     - 999
-  # - - 0 
-  #   - 1500
-  # - - 0
-  #   - 2000
-  # - - 0 
-  #   - 2500
+  - - 0 
+    - 1500
+  - - 0
+    - 2000
+  - - 0 
+    - 2500
