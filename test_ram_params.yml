@@ -1,24 +1,31 @@
-PATH_MSAS: /data/msas-pangeblocks/mini-experiments
+PATH_MSAS: /data/msas-pangeblocks/sars-cov-2
+# /data/msas-pangeblocks/sarscov2-100
+# /data/msas-pangeblocks/mini-experiments
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments-ram-usage/mini-experiment-row_maximal-not_alpha
+PATH_OUTPUT: /data/analysis-paper/experiments-ram-usage/sars-cov-2-row_maximal-2500
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
     - "nodes"
-    # - "strings"
-    # - "weighted"
-    # - "depth"
+    - "strings"
+    - "weighted"
+    - "depth"
+    - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
     - 1000
   MIN_LEN: # used only with "weighted"
-    - 50
+    - 15
+    - 20
+    - 25
+    - 30
   MIN_COVERAGE: # used only with "depth"
     - 0.3
-  TIME_LIMIT: 180 # time limit to run each ILP (minutes)
+    - 0.5
+  TIME_LIMIT: 360 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS: 
-  TOTAL: 16  # smk
+  TOTAL: 32  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 DECOMPOSITION:
@@ -28,8 +35,6 @@ USE_WILDPBWT: True
 SUBMSAS: # (start, end)
   # - - start 
   #   - end
-  # - - 0 
-  #   - 49
   - - 0
     - 99
   - - 0 
@@ -50,9 +55,33 @@ SUBMSAS: # (start, end)
     - 899
   - - 0
     - 999
-  - - 0 
-    - 1500
   - - 0
-    - 2000
+    - 1099
+  - - 0
+    - 1199
+  - - 0
+    - 1299
+  - - 0
+    - 1399
+  - - 0
+    - 1499
   - - 0 
-    - 2500
+    - 1599
+  - - 0
+    - 1699
+  - - 0
+    - 1799
+  - - 0 
+    - 1899
+  - - 0
+    - 1999
+  - - 0
+    - 2099
+  - - 0 
+    - 2199
+  - - 0
+    - 2299
+  - - 0
+    - 2399
+  - - 0 
+    - 2499

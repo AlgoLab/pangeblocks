@@ -1,0 +1,30 @@
+PATH_MSAS: "test/sars-cov-2-subMSA" 
+PATH_OUTPUT: "output-test"
+
+OPTIMIZATION:
+  OBJECTIVE_FUNCTION: "weighted" # Options: nodes, strings, weighted, depth, depth_and_len
+  PENALIZATION: 1000   # used only with "weighted"
+  MIN_LEN: 2           # used only with "weighted"
+  TIME_LIMIT: 10       # time limit to run the ILP (minutes)
+
+DECOMPOSITION:
+  STANDARD: False            # False: row-maximal decomposition of blocks | True: standard decomposition
+  ALPHA_CONSISTENT: False
+
+THREADS: 
+  TOTAL: 16  # smk
+  SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
+  ILP: 8     # gurobi threads
+
+# maximum memory in MB to be used with the ILP
+RESOURCES:
+  MEM_MB: 90000
+
+# Maximal blocks with at least the following number of rows and columns will be fixed in the solution
+MIN_ROWS_FIX_BLOCK: 0
+MIN_COLS_FIX_BLOCK: 0
+
+# subMSAs with more than this number of cells (nrwos x ncols) will be split into smaller subMSAs
+MAX_POSITIONS_SUBMSAS: 80000
+
+LOG_LEVEL: "INFO"

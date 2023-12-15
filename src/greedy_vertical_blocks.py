@@ -63,7 +63,7 @@ def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[st
 
         else:
             
-            if len(chars_block)>= args.threshold_vertical_blocks:
+            if len(chars_block)>= threshold_vertical_blocks:
                 end_col = col-1 # end column is included
                 vertical_blocks.append(
                     (list(range(n_seqs)), start_col, end_col, "".join(chars_block))
@@ -74,7 +74,7 @@ def compute_vertical_blocks(filename: Union[str,Path], output: Optional[Union[st
             chars_block = []
         
     # special case for block ending in the last column
-    if len(chars_block)>= args.threshold_vertical_blocks:
+    if len(chars_block)>= threshold_vertical_blocks:
         end_col = col # end column is included
         vertical_blocks.append(
             (list(range(n_seqs)), start_col, end_col, "".join(chars_block))
