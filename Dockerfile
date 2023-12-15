@@ -30,14 +30,17 @@ RUN apt-get clean
 # Install the application and its dependencies
 ADD requirements.txt /app/
 RUN pip install -r requirements.txt
-RUN mkdir /data /results
 
+# Prepare the data volumes
+RUN mkdir /data /results
 VOLUME ["/data"]
 VOLUME ["/results"]
-ENV PATH=$PATH:/app
+VOLUME ["/config"]
 
 # Install the app only at the end, so dockerfile development is faster
+ENV PATH=$PATH:/app
 ADD . /app
 # Command used to start the application
-CMD ["/app/pangeblock"]
-
+# CMD ["/app/pangeblock"]
+CMD ["/usr/local/bin/snakemake", "-s", "/app/pangeblocks.smk", "-c32", "--configfile=/config/params.yml"]
+# CMD ["touch /results/results.txt"]
