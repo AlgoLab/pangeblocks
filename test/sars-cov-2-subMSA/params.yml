@@ -1,5 +1,5 @@
-PATH_MSAS: "test/sars-cov-2-subMSA" 
-PATH_OUTPUT: "output-test"
+PATH_MSAS: "/data" 
+PATH_OUTPUT: "/results"
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION: "weighted" # Options: nodes, strings, weighted, depth, depth_and_len
