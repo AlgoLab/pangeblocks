@@ -73,6 +73,5 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 docker run -it --user $(id -u):$(id -g) \ 
 -v ./test/sars-cov-2-subMSA/:/data \
 --mount type=bind,source=/tmp/pgb,target=/results \
--v ./test/sars-cov-2-subMSA/:/config 
 algolab/pangeblocks:latest
 ```
