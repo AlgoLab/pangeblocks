@@ -21,8 +21,11 @@ RUN apt-get install -qqy \
     build-essential \
     ca-certificates \
     cmake \
+    curl \
     dirmngr \
+    libsdsl-dev \
     make \
+    time \
     util-linux \
     wget
 RUN apt-get clean
@@ -38,10 +41,6 @@ VOLUME ["/data"]
 VOLUME ["/results"]
 VOLUME ["/config"]
 
-RUN apt install -qqy libsdsl-dev
-RUN apt install -qqy time
-RUN apt install -qqy curl
-RUN apt-get clean
 RUN /usr/bin/curl -LJo /usr/local/bin/vg --silent https://github.com/vgteam/vg/releases/download/v1.53.0/vg
 RUN chmod 755 /usr/local/bin/vg
 
@@ -52,12 +51,6 @@ ADD . /app
 WORKDIR "/app/lib/Wild-pBWT"
 RUN make
 
-RUN apt-get clean
 WORKDIR /app
 ENV XDG_CACHE_HOME=/results/.cache
-# Awful hack
-#RUN mkdir /app/.snakemake
-#RUN chmod 777 /app/.snakemake
-# Command used to start the application
 CMD ["/app/pangeblocks"]
-#CMD ["/usr/local/bin/snakemake", "-s", "/app/test/sars-cov-2-subMSA/pangeblocks.smk", "-c32", "--configfile=/config/params.yml"]
