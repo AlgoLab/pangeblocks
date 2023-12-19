@@ -5,7 +5,7 @@ graphviz==0.20.1
 networkx==2.8.5
 rich==12.6.0
 biopython==1.79
-snakemake==7.17.1
+snakemake==7.32.4
 seaborn==0.12.1
 pydantic==1.10.2
 tqdm

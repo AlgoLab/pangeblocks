@@ -66,3 +66,13 @@ snakemake -s eda.smk -c16         # compute stats for each MSA
 The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPUT/analysis-msas`:
 1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
 2. `problematic_msas.tsv`: contains a list of MSAs that has no information
+
+### Running under docker
+
+```
+docker run -it --user 1000:1000 \ 
+-v ./test/sars-cov-2-subMSA/:/data \
+--mount type=bind,source=/tmp/pgb,target=/results \
+-v ./test/sars-cov-2-subMSA/:/config 
+pangeblocks:latest
+```
