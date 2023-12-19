@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""
+Compute a Variation Graph from an MSA.
+
+This programs only parses some command line options and produces the snakemake call to compute a single graph.
+"""
+import argparse
+import pathlib
+import subprocess
+import os
+
+# Command line options
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--path-msa",
+    help="path to MSA in .fa format",
+    dest="path_msa",
+    type=pathlib.Path,
+    default="/data/sars-cov-2.fa",
+)
+parser.add_argument(
+    "--path-gfa",
+    help="path to save the output in GFA format",
+    dest="path_gfa",
+    type=pathlib.Path,
+    default="/results/sars-cov-2.gfa",
+)
+parser.add_argument(
+    "--dir-subsolutions",
+    help="directory where suboptimal coverage are saved",
+    dest="dir_subsolutions",
+    type=pathlib.Path,
+    default="/results/submsa",
+)
+parser.add_argument(
+    "--path-vert-blocks",
+    help="json file with vertical blocks",
+    dest="path_vert_blocks",
+    type=pathlib.Path,
+)
+parser.add_argument(
+    "--log-level",
+    default="ERROR",
+    dest="log_level",
+    help="set log level (ERROR/WARNING/INFO/DEBUG)",
+)
+parser.add_argument(
+    "--obj-function",
+    help="the objective function to optimize",
+    dest="obj_function",
+    choices=["nodes", "strings", "weighted", "depth", "depth_and_len"],
+    default="weighted",
+)
+parser.add_argument(
+    "--penalization",
+    help="used only with the weighted obj function",
+    dest="penalization",
+    default=1000,
+    type=int,
+)
+parser.add_argument(
+    "--min-len",
+    help="used only with the weighted obj function",
+    dest="min_len",
+    default=2,
+    type=int,
+)
+parser.add_argument(
+    "--time-limit", help="Timeout (in minutes)", dest="time_limit", default=10, type=int
+)
+parser.add_argument(
+    "--threshold-vertical-blocks",
+    help="minimum width of a vertical block",
+    dest="alpha",
+    default=50,
+    type=int,
+)
+parser.add_argument(
+    "--min-coverage", help="", dest="min_coverage", default=0.2, type=float
+)
+parser.add_argument(
+    "--larger-decomposition",
+    help="",
+    dest="standard_decomposition",
+    action="store_true",
+)
+parser.add_argument(
+    "--consistent",
+    help="use an alpha-consistent strategy",
+    dest="consistent",
+    action="store_true",
+)
+parser.add_argument(
+    "--cores", help="Number of cores to be used", dest="threads", default="2", type=int
+)
+parser.add_argument(
+    "--submsa_threads", help="", dest="submsa_threads", default=2, type=int
+)
+parser.add_argument("--ilp-threads", help="", dest="ilp_threads", default=2, type=int)
+parser.add_argument(
+    "--max-memory",
+    help="Maximum RAM used (in MBytes)",
+    dest="max_memory",
+    default=5120,
+    type=int,
+)
+parser.add_argument(
+    "--min-rows-block", help="", dest="min_rows_block", default=0, type=int
+)
+parser.add_argument(
+    "--max-rows-block", help="", dest="max_rows_block", default=0, type=int
+)
+parser.add_argument(
+    "--max-msa-size", help="", dest="max_msa_size", default=80000, type=int
+)
+args = parser.parse_args()
+
+cmds = [
+    f"snakemake",
+    f"-c{args.threads}",
+    f"--printshellcmds",
+    f"-s",
+    "pangeblocks1.smk",
+    f"--directory={pathlib.Path(os.path.realpath(args.path_gfa)).parent}",
+    f"--config",
+    f"root_dir={pathlib.Path(os.path.realpath(__file__)).parents[0]}",
+    f"PATH_MSA={args.path_msa}",
+    f"PATH_OUTPUT={args.path_gfa}",
+    f"OBJECTIVE_FUNCTION={args.obj_function}",
+    f"PENALIZATION={args.penalization}",
+    f"MIN_LEN={args.min_len}",
+    f"TIME_LIMIT={args.time_limit}",
+    f"THRESHOLD_VERTICAL_BLOCKS={args.alpha}",
+    f"MIN_COVERAGE={args.min_coverage}",
+    f"STANDARD={args.standard_decomposition}",
+    f"ALPHA_CONSISTENT={args.consistent}",
+    f"SUBMSAS={args.submsa_threads}",
+    f"ILP={args.ilp_threads}",
+    f"MEM_MB={args.max_memory}",
+    f"MIN_ROWS_FIX_BLOCK={args.min_rows_block}",
+    f"MIN_COLS_FIX_BLOCK={args.max_rows_block}",
+    f"MAX_POSITIONS_SUBMSAS={args.max_msa_size}",
+    f"LOG_LEVEL={args.log_level}",
+]
+
+print(" ".join(cmds))
+subprocess.run(cmds)
