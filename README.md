@@ -74,5 +74,5 @@ docker run -it --user 1000:1000 \
 -v ./test/sars-cov-2-subMSA/:/data \
 --mount type=bind,source=/tmp/pgb,target=/results \
 -v ./test/sars-cov-2-subMSA/:/config 
-pangeblocks:latest
+algolab/pangeblocks:latest
 ```
