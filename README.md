@@ -69,9 +69,26 @@ The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPU
 
 ### Running under docker
 
+To run `pangeblocks` on a small example (MSA with 10 rows and 200 columns), run
+the following command, replacing `/tmp/pgb` with the directory that will contain
+the results.
+
 ```
 docker run -it --user $(id -u):$(id -g) \ 
 -v ./test/sars-cov-2-subMSA/:/data \
 --mount type=bind,source=/tmp/pgb,target=/results \
 algolab/pangeblocks:latest
+```
+
+If you want to run  `pangeblocks` on your data, you also have to provide the
+directory containing the MSA, replacing `./test/sars-cov-2-subMSA/` with your
+directory and adding the correct  `pangeblocks` call, specifying the arguments.
+For example:
+
+```
+docker run -it --user $(id -u):$(id -g) \ 
+-v ./DATADIR/:/data \
+--mount type=bind,source=/tmp/pgb,target=/results \
+algolab/pangeblocks:latest
+/app/pangeblocks --path-msa /data/my.msa
 ```
