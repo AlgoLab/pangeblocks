@@ -191,7 +191,7 @@ def solve_submsa(path_msa, start_column, end_column,
     if path_opt_solution:
         full_msa = load_submsa(path_msa) # to obtain labels from blocks
         Path(path_opt_solution).parent.mkdir(exist_ok=True, parents=True)
-        with open(path_opt_solution, "w") as fp:
+        with open(path_opt_solution, "w") as fp:    
             blocks = [astuple(block) for block in opt_coverage]
             # blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]),b[3]] for b in blocks]
             blocks = [[ [int(s) for s in b[0]],int(b[1]), int(b[2]), label_from_block(b, full_msa)] for b in blocks] 

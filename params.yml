@@ -1,39 +1,8 @@
-PATH_MSAS: /data/msas-pangeblocks/sars-cov-2
-
-# /data/msas-pangeblocks/mini-experiments 
-# /data/msas-pangeblocks/sars-cov-2-clean/
-# /data/msas-pangeblocks/mini-experiments
-# /data/msas-pangeblocks/sars-cov-2-clean
-#/data/msas-pangeblocks/mini-experiments/ 
-
-# test/alpha
-# "/data/msas-pangeblocks/sars-cov-2"
-# "/data/msas-pangeblocks/sars-cov-2"
-# "/data/msas-pangeblocks/sars-cov-2"
-# "/data/msas-plasmids/fftnsi-op1.53-ep0.123" 
-# "/data/plasmids/target-fasta/seqs-for-msa"
-# "/data/alessia/covid/big-msa" 
-# "test" 
-# "/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0"
-#"/data/alessia/covid/small-msa" 
-#"/data/msas-pangeblocks/HLA-zoo/no-reverse-complement/mafft.op5-ep0" #
+# Folder with MSAs in .fa format
+PATH_MSAS: /data/analysis-paper/msas/paper/50
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/experiments/sars-cov-2-row_maximal-not_alpha_consistent-not_fixblock
-# /data/analysis-paper/experiments/mini-experiment-row_maximal-alpha_consistent-not_fixblock
-# /data/analysis-paper/experiments/sars-cov-2-row_maximal-alpha_consistent-not_fixblock
-#/data/analysis-paper/experiments/mini-experiments-row_maximal-not_alpha-not_fixblock
-# /data/analysis-paper/experiments/sars-cov-2-clean-row-maximal-decomp-not-alpha-consistent
-# /data/analysis-paper/experiments/mini-experiment-standard-decomp-not-alpha-consistent
-# /data/analysis-paper/experiments/alpha-consistent 
-# "/data/pangeblocks-experiments/sars-cov-2"
-# "/data/pangeblocks-experiments/plasmids-fftnsi"
-# "/data/pangeblocks-experiments/covid/small-msa" 
-# "/data/alessia/covid/output-big-msa"
-# "output-test-grid"
-# "/data/pangeblocks-experiments/pbwt/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0" 
-#"/data/alessia/covid/pangeblocks-small-msa-wildpbwt" 
-# "/data/pangeblocks-experiments/HLA-zoo-pangeblocks/output-HLA-zoo-mafft.op5-ep0"
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-row_maximal
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -45,31 +14,31 @@ OPTIMIZATION:
   PENALIZATION: # used only with "weighted" and "depth"
     - 1000
   MIN_LEN: # used only with "weighted"
-    - 15
+    # - 15
     - 20
-    - 25
-    - 30
+    # - 25
+    # - 30
   MIN_COVERAGE: # used only with "depth"
-    - 0.3
-    - 0.5
+    - 0.11
+    # - 0.3
+    # - 0.5
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    - 1 
-    - 5
-    - 10
-    - 15
-    - 20
-    - 25
-    - 30
-    - 35
-    - 40
-    - 45
-    - 50
-  TIME_LIMIT: 180 # time limit to run each ILP (minutes)
+  #  # 20 sequences
+  - 200
+   # 50 sequences
+  # - 1
+  # - 61
+  # - 290
+  # - 435
+  # - 500
+  # 100 sequences
+  # - 266
+  TIME_LIMIT: 240 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
-THREADS: 
-  TOTAL: 16  # smk
+THREADS:
+  TOTAL: 32  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
-  ILP: 8    # gurobi threads
+  ILP: 8     # gurobi threads
 DECOMPOSITION:
   STANDARD: False
   ALPHA_CONSISTENT: False
@@ -77,10 +46,10 @@ USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
 # this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 80000
+MAX_POSITIONS_SUBMSAS: 2000000 # 200000 Row-maximal | 100000 Standard
 
 RESOURCES:
-  MEM_MB: 90000 # maximum memory in MB
+  MEM_MB: 15000 # maximum memory in MB
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
 MIN_ROWS_FIX_BLOCK: 0

@@ -6,7 +6,7 @@ panels*/
 experiment*/
 *experiment/
 test-*/
-*ipynb
+# *ipynb
 *json
 Wild-pBWT/
 fil-result/

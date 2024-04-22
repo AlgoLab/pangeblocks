@@ -1,6 +1,5 @@
-name: vg
+name: mafft
 channels:
   - bioconda
-  - conda-forge
 dependencies:
-  - vg
+  - mafft

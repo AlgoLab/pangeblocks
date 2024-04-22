@@ -1,7 +1,10 @@
-configfile: "test_ram_params.yml"
+configfile: "rules/params/scalability.yaml"
 from pathlib import Path
 import pandas as pd
 from os.path import join as pjoin
+
+DECOMPOSITION = "complete" if config["DECOMPOSITION"]["STANDARD"] else "row-maximal"
+print(DECOMPOSITION)
 
 PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
@@ -17,7 +20,7 @@ MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 
 # path msas
 MSAS = list(Path(PATH_MSAS).glob("*.fa"))
-NAMES = [path.stem for path in MSAS]
+NAMES = [path.stem for path in MSAS] # if "100" not in path.stem]
 # NAMES = [path.stem for path in MSAS if "83" in path.stem]
 
 print(NAMES)
@@ -32,6 +35,11 @@ Path(PATH_OUTPUT).mkdir(parents=True, exist_ok=True)
 config["NAMES"] = NAMES
 with open(Path(PATH_OUTPUT).joinpath("config.json"), "w") as fp:
     json.dump(config, fp, indent=1)
+
+
+def get_mem_mb(wildcards, attempt):
+    return attempt*10000
+
 
 def get_files(wildcards):
     "Return a list of files to be generated based on parameters provided in the config file"
@@ -75,7 +83,7 @@ rule install_wild_pbwt:
     log:
         pjoin(PATH_OUTPUT, "logs", "rule-install_wild_pbwt.err.log"),
     conda:
-        "envs/wild-pbwt.yml"
+        "../envs/wild-pbwt.yml"
     shell:
         """
         if ! [ -f "Wild-pBWT/bin/wild-pbwt"]; then
@@ -103,13 +111,13 @@ rule ilp:
         standard_decomposition=config["DECOMPOSITION"]["STANDARD"],
         alpha_consistent=config["DECOMPOSITION"]["ALPHA_CONSISTENT"]
     threads:
-        config["THREADS"]["TOTAL"]
+        config["THREADS"]["ILP"]
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-start_{start}-end_{end}-rule-ilp.log"),
     conda: 
-        "envs/pangeblocks.yml"
+        "../envs/pangeblocks.yml"
     resources: 
-        mem_mb=80000
+        mem_mb=get_mem_mb
     shell:
         """
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \
@@ -119,5 +127,6 @@ rule ilp:
         --time-limit {params.time_limit} --solve-ilp True \
         --use-wildpbwt {params.use_wildpbwt} --bin-wildpbwt {input.bin_wildpbwt} \
         --standard-decomposition {params.standard_decomposition} --threads-ilp {params.threads_ilp} \
+        --solve-ilp True \
         --workers {params.workers} --alpha-consistent {params.alpha_consistent} > {output.auxfile} 2> {log.stderr}
         """

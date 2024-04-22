@@ -1,0 +1,4 @@
+# PGGB
+PGGB_INPUT: /data/analysis-paper/data/seqs/seqs-for-msa
+
+PGGB_OUTPUT: /data/analysis-paper/paper-graphs-tools/pggb

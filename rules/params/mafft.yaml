@@ -1,0 +1,6 @@
+# MAFFT
+PATH_SEQS: "/data/analysis-paper/data/seqs/seqs-for-msa"
+MAFFT_OUTPUT: "/data/analysis-paper/msas/" 
+
+OP: 1.53
+EP: 0

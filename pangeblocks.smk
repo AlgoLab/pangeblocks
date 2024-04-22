@@ -2,6 +2,8 @@ configfile: "params.yml"
 from pathlib import Path
 import json
 from os.path import join as pjoin
+DECOMPOSITION = "complete" if config["DECOMPOSITION"]["STANDARD"] else "row-maximal"
+print(DECOMPOSITION)
 
 PATH_OUTPUT = config["PATH_OUTPUT"]
 PATH_MSAS   = config["PATH_MSAS"]
@@ -20,8 +22,7 @@ MIN_COVERAGE=config["OPTIMIZATION"]["MIN_COVERAGE"]
 # path msas
 MSAS = list(Path(PATH_MSAS).glob("*.fa"))
 NAMES = [path.stem for path in MSAS]
-# SUBSET_HLA = ["A-3105", "B-3106", "C-3107", "DQA1-3117", "DQB1-3119", "DRB1-3123"]
-# NAMES = [path.stem for path in MSAS if path.stem in SUBSET_HLA]
+
 print(NAMES)
 EXT_MSA = MSAS[0].suffix
 
@@ -29,6 +30,12 @@ Path(PATH_OUTPUT).mkdir(parents=True, exist_ok=True)
 config["NAMES"] = NAMES
 with open(Path(PATH_OUTPUT).joinpath("config.json"), "w") as fp:
     json.dump(config, fp, indent=1)
+
+
+
+def get_mem_mb(wildcards, attempt):
+    return 1.5*attempt*1000
+
 
 def get_graphs(wildcards):
     "Return a list of graphs to be generated based on parameters provided in the config file"
@@ -142,13 +149,13 @@ rule ilp:
         min_nrows_fix_block=config["MIN_ROWS_FIX_BLOCK"],
         min_ncols_fix_block=config["MIN_COLS_FIX_BLOCK"]
     threads:
-        config["THREADS"]["TOTAL"]
+        config["THREADS"]["ILP"]
     log:
         stderr=pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-ilp.log"),
     conda: 
         "envs/pangeblocks.yml"
     resources: 
-        mem_mb=config["RESOURCES"]["MEM_MB"]
+        mem_mb=get_mem_mb
     shell:
         """
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \

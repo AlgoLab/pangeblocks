@@ -1,0 +1,5 @@
+name: pggb
+channels:
+  - bioconda
+dependencies:
+  - pggb

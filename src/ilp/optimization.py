@@ -67,7 +67,7 @@ class Optimization:
         self.penalization = kwargs.get("penalization", 1)
         self.min_len = kwargs.get("min_len", 1)
         self.min_coverage = kwargs.get("min_coverage", 1)
-        self.time_limit = kwargs.get("time_limit", 180)
+        self.time_limit = kwargs.get("time_limit", 360)
         self.threads_ilp = kwargs.get("threads_ilp", 4)
         
     def __call__(self, solve_ilp: bool = False):
@@ -240,6 +240,9 @@ class Optimization:
             logging.info("saving ILP model")
             Path(self.path_save_ilp).parent.mkdir(exist_ok=True, parents=True)
             model.write(self.path_save_ilp)
-
-        return optimal_coverage
+        
+        if solve_ilp:
+            return optimal_coverage
+        else:
+            return []
         
