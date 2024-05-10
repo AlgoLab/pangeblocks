@@ -42,7 +42,7 @@ rule pggb:
     resources:
         mem_mb=80000
     conda:
-        "../envs/pggb.yaml"
+        "../envs/pggb.yml"
     shell:
         """
         f={input[0]}

@@ -2,7 +2,7 @@
 PATH_MSAS: /data/analysis-paper/msas/paper/50
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-row_maximal
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-complete
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -23,33 +23,40 @@ OPTIMIZATION:
     # - 0.3
     # - 0.5
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-  #  # 20 sequences
-  - 200
-   # 50 sequences
-  # - 1
-  # - 61
-  # - 290
-  # - 435
-  # - 500
-  # 100 sequences
-  # - 266
+  #  50 sequences (ommit complete MSA)
+    - 1
+    - 60
+    - 61
+    - 84
+    - 90
+    - 128
+    - 158
+    - 171
+    - 172 
+    - 202
+    - 249
+    - 290
+    - 366
+    - 408
+    - 435
+    - 439
+    - 488
+    - 500
+    - 610
   TIME_LIMIT: 240 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS:
-  TOTAL: 32  # smk
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8     # gurobi threads
 DECOMPOSITION:
-  STANDARD: False
+  STANDARD: True
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
 # this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 2000000 # 200000 Row-maximal | 100000 Standard
+MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Standard
 
-RESOURCES:
-  MEM_MB: 15000 # maximum memory in MB
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
 MIN_ROWS_FIX_BLOCK: 0

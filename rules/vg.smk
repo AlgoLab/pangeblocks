@@ -24,7 +24,7 @@ rule vg_graph:
         # out=pjoin(PATH_OUTPUT,"logs","{name_msa}-rule-vg_graph.out.log"),
         err=pjoin(PATH_OUTPUT,"logs","{name_msa}-rule-vg_graph.err.log"),
     conda:
-        "../envs/pggb.yaml"
+        "../envs/pggb.yml"
     shell:
         "/usr/bin/time -v vg construct --msa {input.path_msa} 2> {log.err} > {output.path_vg}"
 
@@ -37,7 +37,7 @@ rule vg_to_gfa:
         # out=pjoin(PATH_OUTPUT,"logs","{name_msa}-rule-vg_to_gfa.out.log"),
         err=pjoin(PATH_OUTPUT,"logs","{name_msa}-rule-vg_to_gfa.err.log"),
     conda:
-        "../envs/pggb.yaml"
+        "../envs/pggb.yml"
     shell:
         "/usr/bin/time -v vg view --gfa {input.path_vg} 2> {log.err} > {output.path_gfa}"
 
@@ -47,6 +47,6 @@ rule unchop:
     output:
         path_unchop_gfa=pjoin(PATH_OUTPUT, "{name_msa}.gfa")
     conda:
-        "../envs/pggb.yaml"
+        "../envs/pggb.yml"
     shell:
         "vg mod -u {input.path_gfa} > {output.path_unchop_gfa}"

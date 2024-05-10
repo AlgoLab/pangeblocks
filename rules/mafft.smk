@@ -28,7 +28,7 @@ rule create_msa:
     log:
         err=pjoin(PATH_OUTPUT, "mafft.op{op}-ep{ep}", "logs", "{name_msa}.err.log")
     conda:
-        "../envs/mafft.yaml"
+        "../envs/mafft.yml"
     shell:
         """
         /usr/bin/time -v mafft --op {params.op} --ep {params.ep} {input} > {output} 2> {log.err}

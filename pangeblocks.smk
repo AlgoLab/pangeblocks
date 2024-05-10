@@ -205,7 +205,7 @@ rule unchop_gfa:
     log:
         pjoin(PATH_OUTPUT, "logs", "{name_msa}-{obj_func}-penalization{penalization}-min_len{min_len}-min_coverage{min_coverage}-alpha{alpha}-rule-unchop_gfa.log")
     conda:
-        "envs/vg.yml"
+        "envs/pggb.yml"
     shell:
         """
         mkdir -p "$(dirname "{output.path_unchop_gfa}")" 

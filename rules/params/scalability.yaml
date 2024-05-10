@@ -1,7 +1,7 @@
 PATH_MSAS: /data/analysis-paper/msas/paper/50
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/paper-experiment-scalability/sars-cov-2-50-row_maximal
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-scalability/sars-cov-2-50-complete
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -27,7 +27,7 @@ THREADS:
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8    # gurobi threads
 DECOMPOSITION:
-  STANDARD: False
+  STANDARD: True
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 

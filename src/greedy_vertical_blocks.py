@@ -96,7 +96,7 @@ if __name__=="__main__":
     parser.add_argument("-sc","--start-column", help="First column in the MSA to consider. Default=0", type=int, default=0, dest="start_column")
     parser.add_argument("-ec","--end-column", help="Last column in the MSA to consider. Default=-1", type=int, default=-1, dest ="end_column")
     # parser.add_argument("-vb","--only-vertical-blocks", help="Output only vertical blocks: those using all sequences", type=bool, default=False, dest="only_vertical")
-    parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length at least the threshold will be considered to split the MSA", type=int, dest="threshold_vertical_blocks", default=1)
+    parser.add_argument("--threshold-vertical-blocks", help="vertical blocks with length at least the threshold will be considered to split the MSA. Default 1", type=int, dest="threshold_vertical_blocks", default=1)
     parser.add_argument("--log-level", default='ERROR', help="set log level (ERROR/WARNING/INFO/DEBUG)", dest="log_level")
     args = parser.parse_args()
 
