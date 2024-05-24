@@ -20,8 +20,8 @@ rule index:
     output:
         pjoin(PATH_INPUT, "{name_input}.fa.gz"),
         pjoin(PATH_INPUT, "{name_input}.fa.gz.fai")
-    resources:
-        mem_mb=80000
+    # resources:
+    #     mem_mb=200000
     shell:
         """
         f={input}
@@ -40,15 +40,14 @@ rule pggb:
     params:
         path_output=PATH_OUTPUT
     resources:
-        mem_mb=80000
+        # mem_mb=200000
+        limit_space=1,
     conda:
         "../envs/pggb.yml"
     shell:
         """
         f={input[0]}
-        /usr/bin/time -v pggb -i $f.gz -t 16 -s 1000 -p 70 -n $(cat $f.gz.fai | wc -l) \
-        -G 2000,2000,2000,2000 -P 1,7,11,2,33,1 \
-        -k 19 -o {params.path_output}/$(basename $f .fa) 2> {log.err} 
+        /usr/bin/time -v pggb -i $f.gz -t 16 -n $(cat $f.gz.fai | wc -l) -o {params.path_output}/$(basename $f .fa.gz) 2> {log.err} 
         """
 
 

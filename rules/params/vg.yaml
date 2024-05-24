@@ -1,5 +1,5 @@
 # directory with MSAs
-PATH_MSAS: /data/analysis-paper/msas/paper
+PATH_MSAS: /data/analysis-paper/msas/paper/50-vg
 
 # VG
-VG_OUTPUT: /data/analysis-paper/paper-graphs-tools/vg
+VG_OUTPUT: paper-graphs-tools/vg
