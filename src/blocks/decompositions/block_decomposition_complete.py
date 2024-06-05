@@ -1,5 +1,10 @@
 from .. import Block
 
+import logging
+logging.basicConfig(level=logging.INFO,
+                    format='[Complete Decomposition] %(asctime)s.%(msecs)03d | %(message)s',
+                    datefmt='%Y-%m-%d@%H:%M:%S')
+
 def block_decomposition(block1: Block, block2: Block):
     """Decompose 2 blocks based on their intersection
 
@@ -12,9 +17,9 @@ def block_decomposition(block1: Block, block2: Block):
                 does not intersect, the output is an empty list.
     """
     # sort blocks (left most first)
-    b1,b2=sorted([block1,block2], key=lambda b: (b.start,b.end))
+    b1,b2=sorted([block1,block2], key=lambda b: b.start)
 
-    nb = [] # new blocks
+    blocks=[]
     # not empty intersection
     common_rows = list(set(b1.K).intersection(set(b2.K)))
     common_cols = list(set(range(b1.start,b1.end+1)).intersection(set(range(b2.start,b2.end+1))))
@@ -23,39 +28,48 @@ def block_decomposition(block1: Block, block2: Block):
         K = list(common_rows)
         K.sort()
 
-        # Condition 1 
-        if b1.start == b2.start and b1.end < b2.end:
-            # new blocks
-            nb1 = Block(b2.K, b1.start, b1.end)
-            nb2 = Block(b2.K, b1.end+1, b2.end)
-            nb3 = Block(set(b1.K)-set(b2.K), b1.start, b1.end) 
-            nb.extend([nb1, nb2, nb3])
+        if b1.start < b2.start:                                   # manuscript eq (1)
+            blocks.append( Block(b1.K, b1.start, b2.start - 1) )     
 
-        # Condition 2
-        elif b1.start < b2.start and b2.end < b1.end:
-            nb1 = Block(b1.K, b1.start, b2.start-1)
-            nb2 = Block(b1.K, b2.start, b2.end)
-            nb3 = Block(b1.K, b2.end+1, b1.end)
-            nb4 = Block(set(b2.K)-set(b1.K), b2.start, b2.end)
-            nb.extend([nb1, nb2, nb3, nb4])
+        if b1.end < b2.end:
+            blocks.append( Block(b2.K, b1.end + 1 , b2.end) )     # manuscript eq (2)
+        
+        if b1.end > b2.end:
+            blocks.append( Block(b1.K, b2.end + 1 , b1.end) )     # manuscript eq (3)
 
-        # Condition 3
-        elif b1.start < b2.start and b1.end == b2.end:
-            nb1 = Block(b1.K, b1.start, b2.start-1)
-            nb2 = Block(b1.K, b2.start, b2.end)
-            nb3 = Block(set(b2.K)-set(b1.K),b2.start, b2.end)
-            nb.extend([nb1, nb2, nb3])
+        # extra blocks, part of the complete decomposition 
+        K_inter = set(b1.K).intersection(b2.K) 
+        K1_minus_K2 = set(b1.K) - set(b2.K)
+        K2_minus_K1 = set(b2.K) - set(b1.K)
 
-        # Condition4
-        elif b1.start < b2.start and b2.start < b1.end and b1.end < b2.end:
-            # left_label   = b1.label[:b2.start-1-b1.start+1]
-            # center_label = b2.label[:b1.end-b2.start+1]
-            # right_label  = b2.label[b1.end-b2.start+1:]
-            nb1 = Block(b1.K, b1.start, b2.start-1)
-            nb2 = Block(set(b1.K)-set(b2.K), b2.start, b1.end)
-            nb3 = Block(set(b1.K).intersection(b2.K), b2.start, b1.end)
-            nb4 = Block(set(b2.K)-set(b1.K), b2.start, b1.end)
-            nb5 = Block(b2.K, b1.end+1, b2.end)
-            nb.extend([nb1, nb2, nb3, nb4, nb5])
+        if K_inter:                                              # manuscript eq (4)
+            blocks.append( Block(K_inter, b1.start, b1.end) )  
 
-    return nb
+        if K1_minus_K2:                                          # manuscript eq (5)
+            blocks.extend([
+                Block(K1_minus_K2, b1.start, b1.end),
+                Block(K1_minus_K2, b2.start, b2.end)
+            ])
+        
+        if K2_minus_K1:                                          # manuscript eq (6)
+            blocks.extend([
+                Block(K2_minus_K1, b1.start, b1.end),
+                Block(K2_minus_K1, b2.start, b2.end)
+            ])
+        
+        if K_inter and b2.start < b1.end:                       # manuscript eq (7)
+            blocks.append(
+                Block(K_inter, b2.start, b1.end)
+            )
+
+        if K1_minus_K2 and b2.start < b1.end:                   # manuscript eq (8) 
+            blocks.append(
+                Block(K1_minus_K2, b2.start, b1.end)
+            )
+            
+        if K2_minus_K1 and b2.start < b1.end:                  # manuscript eq (9) 
+            blocks.append(
+                Block(K2_minus_K1, b2.start, b1.end)
+            )
+ 
+    return blocks

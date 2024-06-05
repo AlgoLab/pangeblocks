@@ -1,15 +1,10 @@
 from .. import Block
 
-
 import logging
 logging.basicConfig(level=logging.INFO,
-                    format='[Block Decomposition Row Maximal] %(asctime)s.%(msecs)03d | %(message)s',
+                    format='[Row-maximal Decomposition] %(asctime)s.%(msecs)03d | %(message)s',
                     datefmt='%Y-%m-%d@%H:%M:%S')
 
-# logging.Formatter(
-#     fmt='%(asctime)s.%(msecs)03d',
-#     datefmt='%Y-%m-%d,%H:%M:%S'
-# )
 def block_decomposition(block1: Block, block2: Block):
     """Decompose 2 blocks based on their intersection
     Args:
