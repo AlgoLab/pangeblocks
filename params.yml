@@ -1,8 +1,8 @@
 # Folder with MSAs in .fa format
-PATH_MSAS: /data/analysis-paper/msas/paper/50
+PATH_MSAS: /data/analysis-paper/msas/paper/20
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-complete
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-20-complete
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -24,25 +24,42 @@ OPTIMIZATION:
     # - 0.5
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
   #  50 sequences (ommit complete MSA)
+    # - 1
+    # - 60
+    # - 61
+    # - 84
+    # - 90
+    # - 128
+    # - 158
+    # - 171
+    # - 172 
+    # - 202
+    # - 249
+    # - 290
+    # - 366
+    # - 408
+    # - 435
+    # - 439
+    # - 488
+    # - 500
+    # - 610
+    # 20 sequences (ommit complete MSA)
     - 1
-    - 60
-    - 61
     - 84
-    - 90
-    - 128
-    - 158
-    - 171
-    - 172 
+    - 96
+    - 102
+    - 180
     - 202
-    - 249
-    - 290
-    - 366
-    - 408
-    - 435
-    - 439
-    - 488
-    - 500
-    - 610
+    - 234
+    - 277
+    - 309
+    - 364
+    - 453
+    - 481
+    - 659
+    - 1036
+    - 1137
+    - 1246
   TIME_LIMIT: 240 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS:

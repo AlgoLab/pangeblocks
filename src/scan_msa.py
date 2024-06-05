@@ -207,7 +207,7 @@ if __name__ == "__main__":
     # Command line options
     parser = argparse.ArgumentParser()
     parser.add_argument("path_msa", help="MSA filename",)
-    parser.add_argument("-o","--output-dir", help="json file to save vertical blocks", dest="outdir")
+    parser.add_argument("-o","--output-dir", help="output directory", dest="outdir")
     args = parser.parse_args()
 
     PATH_MSA = Path(args.path_msa)

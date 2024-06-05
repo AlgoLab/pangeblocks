@@ -23,19 +23,35 @@ import logging
 
 
 def load_submsa(filename, start_column=0, end_column=-1):
-    "Return MSA from start_column to end_column (both included)"
+    "Return 0-indexed MSA from start_column to end_column (both included)"
     # load MSA
     msa = AlignIO.read(filename, "fasta")
     
     # filter sub-MSA if start/end columns are given
     if start_column>0 or end_column!=-1:
         # get last column
-        # n_seqs = len(align)
         n_cols = msa.get_alignment_length()
         assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
-        msa = msa[:, start_column:end_column+1] # end_column included
-    # logging.info(f"msa ({start_column}, {end_column}): {msa}")
+        if end_column == -1:
+            msa = msa[:, start_column:] # end_column included
+        else:
+            msa = msa[:, start_column:end_column+1] # end_column included
     return msa
+
+# def load_submsa(filename, start_column=0, end_column=-1):
+#     "Return MSA from start_column to end_column (both included)"
+#     # load MSA
+#     msa = AlignIO.read(filename, "fasta")
+    
+#     # filter sub-MSA if start/end columns are given
+#     if start_column>0 or end_column!=-1:
+#         # get last column
+#         # n_seqs = len(align)
+#         n_cols = msa.get_alignment_length()
+#         assert start_column < n_cols and end_column < n_cols, f"start_column={start_column}, end_column={end_column}. Must be < {n_cols} (number of columns in the MSA)"
+#         msa = msa[:, start_column:end_column+1] # end_column included
+#     # logging.info(f"msa ({start_column}, {end_column}): {msa}")
+#     return msa
 
 class Optimization:
     "Generates/solves ILP model for a subMSA, from column start_column to end_column"

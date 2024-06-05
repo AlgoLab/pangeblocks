@@ -6,7 +6,8 @@ from .analyzer import BlockAnalyzer
 # from .block_decomposition import block_decomposition
 from .decompositions import (
     block_decomposition_row_maximal,
-    block_decomposition_standard
+    block_decomposition_standard, 
+    block_decomposition_complete,
 )
 
 from dataclasses import astuple
@@ -36,8 +37,8 @@ class Decomposer:
 
         logging.info(f">>>> Decomposer standard_decomposition={standard_decomposition}")
         if standard_decomposition is True:
-            logging.info("Using standard decomposition")
-            self.block_decomposition=block_decomposition_standard
+            logging.info("Using complete decomposition")
+            self.block_decomposition=block_decomposition_complete
         else:
             logging.info("Using row maximal decomposition")
             self.block_decomposition=block_decomposition_row_maximal
