@@ -1,8 +1,8 @@
 # Folder with MSAs in .fa format
-PATH_MSAS: /data/analysis-paper/msas/paper/20
+PATH_MSAS: /data/analysis-paper/msas/paper/50
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-20-complete
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-row_maximal
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -24,58 +24,77 @@ OPTIMIZATION:
     # - 0.5
   THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
   #  50 sequences (ommit complete MSA)
-    # - 1
-    # - 60
-    # - 61
-    # - 84
-    # - 90
-    # - 128
-    # - 158
-    # - 171
-    # - 172 
-    # - 202
-    # - 249
-    # - 290
-    # - 366
-    # - 408
-    # - 435
-    # - 439
-    # - 488
-    # - 500
-    # - 610
-    # 20 sequences (ommit complete MSA)
     - 1
+    - 60
+    - 61
     - 84
-    - 96
-    - 102
-    - 180
+    - 90
+    - 128
+    - 158
+    - 171
+    - 172 
     - 202
-    - 234
-    - 277
-    - 309
-    - 364
-    - 453
-    - 481
-    - 659
-    - 1036
-    - 1137
-    - 1246
+    - 249
+    - 290
+    - 366
+    - 408
+    - 435
+    - 439
+    - 488
+    - 500
+    - 610
+    # 20 sequences (ommit complete MSA)
+    # - 1
+    # - 84
+    # - 96
+    # - 102
+    # - 180
+    # - 202
+    # - 234
+    # - 277
+    # - 309
+    # - 364
+    # - 453
+    # - 481
+    # - 659
+    # - 1036
+    # - 1137
+    # - 1246
+    # 100 sequences (ommit complete MSA)
+    # - 1 
+    # - 30
+    # - 31 
+    # - 66 
+    # - 98 
+    # - 107
+    # - 117
+    # - 122
+    # - 128
+    # - 135
+    # - 147
+    # - 200
+    # - 215
+    # - 266
+    # - 269
+    # - 285
+    # - 338
+    # - 382
+    # - 500
   TIME_LIMIT: 240 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
 THREADS:
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8     # gurobi threads
 DECOMPOSITION:
-  STANDARD: True
+  STANDARD: False
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
 # this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Standard
+MAX_POSITIONS_SUBMSAS: 200000 # 200000 Row-maximal | 100000 Standard
 
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
 MIN_ROWS_FIX_BLOCK: 0
 MIN_COLS_FIX_BLOCK: 0
-# standard decomposition . If False, use row-maximal-decomposition

@@ -1,5 +1,6 @@
 import numpy as np
 from collections import defaultdict
+from dataclasses import astuple
 from typing import Union, Optional
 from pathlib import Path
 from Bio import AlignIO
@@ -68,6 +69,7 @@ class InputBlockSet:
 
         logging.info(f"get missing blocks ({self.start_column},{self.end_column})")
         missing_blocks = self.get_missing_blocks(coverage_panel, self.msa, start_column)
+        logging.info(f"$$$ number of missing blocks {len(missing_blocks)} ({self.start_column},{self.end_column})")
         logging.info(f"end missing blocks ({self.start_column},{self.end_column})")
         
         # block decomposition
@@ -92,8 +94,8 @@ class InputBlockSet:
 
         # missing blocks and fixed blocks will be joined to ommit them from the ILP
         missing_blocks.extend(fixed_blocks)
-        # for enum, block in enumerate(missing_blocks):
-        #     logging.info(f"Missing block #{enum}: {block}")
+        for enum, block in enumerate(missing_blocks):
+            logging.info(f"Missing block #{enum}: {block}")
 
         # one character blocks: ensure a feasible solution
         logging.info(f"get blocks one char ({self.start_column},{self.end_column})")
@@ -102,27 +104,16 @@ class InputBlockSet:
         blocks_one_char = sorted(blocks_one_char, key=lambda b: b.start)
     
         # row maximal decomposition
-        if not self.standard_decomposition:
-            # Input set: input blocks:decomposition of blocks  of one position in the MSA)
-            # to avoid having duplicated one_char blocks
-            from dataclasses import astuple
-            decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
-            for enum, block in enumerate(blocks_one_char):
-                logging.debug(f"Block one-char #{enum}: {block}")
-                decomposed_blocks.add(astuple(block))
-            decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            input_set_ilp = decomposed_blocks
-            
-        else:
-            # standard decomposition 
-            from dataclasses import astuple
-            logging.info(f"# decomposed blocks {len(decomposed_blocks)}")
-            decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
-            for enum, block in enumerate(blocks_one_char):
-                logging.debug(f"Block one-char #{enum}: {block}")
-                decomposed_blocks.add(astuple(block))
-            decomposed_blocks = [Block(*b) for b in decomposed_blocks]
-            input_set_ilp = decomposed_blocks
+        # if not self.standard_decomposition:
+
+        # Input set: input blocks:decomposition of blocks  of one position in the MSA)
+        # to avoid having duplicated one_char blocks
+        decomposed_blocks=set(astuple(b) for b in decomposed_blocks)
+        for enum, block in enumerate(blocks_one_char):
+            logging.debug(f"Block one-char #{enum}: {block}")
+            decomposed_blocks.add(astuple(block))
+        decomposed_blocks = [Block(*b) for b in decomposed_blocks]
+        input_set_ilp = decomposed_blocks
         
         return input_set_ilp , missing_blocks
     
@@ -224,6 +215,7 @@ class InputBlockSet:
 
         blocks_one_char = []
         n_cols=msa.get_alignment_length()
+        logging.info(f"number of columns MSA one-char blocks {n_cols}")
         n_seqs=len(msa)
 
         for col in range(n_cols):
@@ -239,7 +231,9 @@ class InputBlockSet:
                 blocks_one_char.append(
                         Block(K=K, start=col+start_column, end=col+start_column) 
                 )
-
+        n_blocks_one_char = len(blocks_one_char) 
+        logging.info(f"number of blocks one-char {n_blocks_one_char}")
+        
         return blocks_one_char
 
     @staticmethod

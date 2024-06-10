@@ -180,13 +180,15 @@ def solve_submsa(path_msa, start_column, end_column,
             logging.info(f"Optimal Coverage block {b.str()}")
         logging.info(f"Number of blocks optimal solution {len(opt_coverage)} ({start_column},{end_column})")
 
+        logging.info(f"positions covered by opt solution {sum([block.ncells() for block in opt_coverage])}")
+        logging.info(f"positions covered by missing blocks {sum([block.ncells() for block in missing_blocks])}")
         opt_coverage.extend(missing_blocks)
         logging.info(f"Number of blocks optimal solution plus missing blocks {len(opt_coverage)} ({start_column},{end_column})")
         for b in missing_blocks:
             logging.info(f"Optimal Coverage block (missing_block) {b.str()}")
 
     logging.info(f"positions in the MSA {n_seqs*n_cols}")
-    logging.info(f"positions covered by opt solution {sum([block.ncells() for block in opt_coverage])}")
+    # logging.info(f"positions covered by opt solution {sum([block.ncells() for block in opt_coverage])}")
 
     if path_opt_solution:
         full_msa = load_submsa(path_msa) # to obtain labels from blocks
