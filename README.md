@@ -1,12 +1,43 @@
 <img src="img/logo-pangeblocks.png" width="300" height="200">
 
-**Customized pangenome graph construction from maximal blocks in an MSA**
+**Customized construction of pangenome graphs via maximal blocks**
+
+## Pangenome graphs
+___
+A pangenome graph is a data structure for a set of genomic sequences, where nodes are labeled by substrings in the alphabet $\{A,C,G,T\}$ in the case of DNA (and $\{A,C,G,U\}$ in the case of RNA). Input sequences are represented by paths in the graph, where each input sequence is spell by the concatenation of labels of the nodes in its path. 
+
+## What is a block?
+___
+In the context of an MSA, a **block** is defined as set of rows
+that shares the same string in an interval of columns.
+
+Formally, a block composed of the set of rows $K$, in the interval $[b,e]$ 
+is defined as the triplet $(K, b, e)$. 
+
+In the image below, each block is highlighted by a different color. For example, 
+
+- The yellow one in the middle: $(\{\square, \lozenge, \triangle \}, 3, 5)$  spelling **A - -**
+- The blue one spanning all rows:  $(\{ \circ ,\square, \lozenge, \triangle, \triangledown \}, 7, 8)$  spelling **G A**
+- The green one in column  5: $(\{\circ,\triangledown \}, 5, 5)$ spelling spelling the single character **C**
+
+
+## How it works?
 ___
 
-**ALPHABET** $\{A,C,G,T,-,N\}$. (Not case sensitive)
-We recommend to map all characters not in the alphabet to N.
+`pangeblocks` creates a variation graph from an MSA by selecting a set of blocks. 
+It creates a search space of blocks from **maximal blocks**, and then an Integer Linear Programming model selects the best subset of blocks to cover all cells of the MSA.
 
-___
+<img src="img/matrix-cover-style.svg" width="400" height="200">
+
+- For each block we create a node with its label.
+- Consecutive blocks are connected by an arc.
+- Each input sequence in the MSA is spelled by a path in the graph 
+
+<img src="img/variation-graph.svg" width="400" height="200">
+
+Finally, indels are removed from the graph (could be the remotion of an entire node, or the removal of indels in the label of a node), and non-branching paths are collapsed. 
+
+<img src="img/variation-graph-postprocessed.svg" width="400" height="200">
 
 
 ### Create a virtual environment
@@ -17,8 +48,7 @@ mamba activate pangeblocks
 
 ### Create Variation Graphs from MSAs
 
-[PANGEBLOCKS]
-To construct variation graphs from MSAs, run `PangeBlocks``:
+To construct variation graphs from MSAs, run `pangeblocks`:
 ```bash
 snakemake -s pangeblock.smk -c32 --use-conda # variation graph as GFA
 ```
@@ -87,6 +117,14 @@ docker run -it --user $(id -u):$(id -g) \
 algolab/pangeblocks:latest
 /app/pangeblocks --path-msa /data/my.msa
 ```
+
+
+___
+
+## Considerations
+
+
+- **ALPHABET** $\{A,C,G,T,-,N\}$ **Not** case sensitive. We recommend to map all characters not in the alphabet to N.
 
 
 ___
