@@ -2,7 +2,7 @@
 PATH_MSAS: /data/analysis-paper/msas/paper/50
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
-PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-row_maximal
+PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-complete
 
 OPTIMIZATION:
   OBJECTIVE_FUNCTION:
@@ -86,13 +86,13 @@ THREADS:
   SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
   ILP: 8     # gurobi threads
 DECOMPOSITION:
-  STANDARD: False
+  STANDARD: True
   ALPHA_CONSISTENT: False
 USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
 # this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 200000 # 200000 Row-maximal | 100000 Standard
+MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Standard
 
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution

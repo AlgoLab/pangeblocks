@@ -1,5 +1,29 @@
-# Pangeblocks (work in progress)
-Pangenome graph construction from maximal blocks in an MSA 
+<img src="img/logo-pangeblocks.png" width="300" height="200">
+
+**Customized pangenome graph construction from maximal blocks in an MSA**
+___
+
+**ALPHABET** $\{A,C,G,T,-,N\}$. (Not case sensitive)
+We recommend to map all characters not in the alphabet to N.
+
+___
+
+
+### Create a virtual environment
+```bash
+mamba create env -n pangeblocks -f envs/snakemake.yml
+mamba activate pangeblocks
+```
+
+### Create Variation Graphs from MSAs
+
+[PANGEBLOCKS]
+To construct variation graphs from MSAs, run `PangeBlocks``:
+```bash
+snakemake -s pangeblock.smk -c32 --use-conda # variation graph as GFA
+```
+
+### Parameters
 
 Set the parameters in `params.yml`:
 ```yaml
@@ -36,36 +60,7 @@ THREADS:
   SUBMSAS: 16
   ILP: 8
 ```
-___
 
-### Create a virtual environment and install dependencies
-```bash
-python3 -m venv .pbenv
-source .pbenv/bin/activate
-pip install -r requirements.txt
-```
-
-or
-```bash
-mamba create env -n pangeblocks -f envs/pangeblocks.yml
-mamba activate pangeblocks
-```
-
-### Create Variation Graphs from MSAs
-
-[PANGEBLOCKS]
-To construct variation graphs from MSAs, run `PangeBlocks``:
-```bash
-snakemake -s pangeblock.smk -c32 --use-conda # variation graph as GFA
-```
-___
-[OPTIONAL]
-```bash
-snakemake -s eda.smk -c16         # compute stats for each MSA
-```
-The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPUT/analysis-msas`:
-1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
-2. `problematic_msas.tsv`: contains a list of MSAs that has no information
 
 ### Running under docker
 
@@ -92,3 +87,13 @@ docker run -it --user $(id -u):$(id -g) \
 algolab/pangeblocks:latest
 /app/pangeblocks --path-msa /data/my.msa
 ```
+
+
+___
+[OPTIONAL]
+```bash
+snakemake -s eda.smk -c16         # compute stats for each MSA
+```
+The above smk pipeline will analyze the MSAs and output two files in `PATH_OUTPUT/analysis-msas`:
+1. `stats_msas.tsv` with basic information about the MSAS: path, number of columns and rows (sequences), number of identical columns, and number of unique sequences
+2. `problematic_msas.tsv`: contains a list of MSAs that has no information
