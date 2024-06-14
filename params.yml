@@ -1,5 +1,5 @@
 # Folder with MSAs in .fa format
-PATH_MSAS: /data/analysis-paper/msas/paper/50
+PATH_MSAS: /data/analysis-paper/msas/paper/50-pangeblocks
 
 # Format: /path/to/directory/<name-experiment>-<standard/row-maximal>-decomp-<not>-alpha-consistent
 PATH_OUTPUT: /data/analysis-paper/paper-experiment-decomposition/sars-cov-2-50-complete
@@ -43,7 +43,7 @@ OPTIMIZATION:
     - 488
     - 500
     - 610
-    # 20 sequences (ommit complete MSA)
+    # # 20 sequences (ommit complete MSA)
     # - 1
     # - 84
     # - 96
@@ -92,8 +92,7 @@ USE_WILDPBWT: True
 
 # When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
 # this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Standard
-
+MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Complete
 
 # Maximal blocks with at least the following number of rows and columns will be fixed in the solution
 MIN_ROWS_FIX_BLOCK: 0

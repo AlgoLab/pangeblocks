@@ -27,17 +27,17 @@ ___
 `pangeblocks` creates a variation graph from an MSA by selecting a set of blocks. 
 It creates a search space of blocks from **maximal blocks**, and then an Integer Linear Programming model selects the best subset of blocks to cover all cells of the MSA.
 
-<img src="img/matrix-cover-style.svg" width="400" height="200">
+<img src="img/matrix-cover-style.svg" width="600" height="300">
 
 - For each block we create a node with its label.
 - Consecutive blocks are connected by an arc.
 - Each input sequence in the MSA is spelled by a path in the graph 
 
-<img src="img/variation-graph.svg" width="400" height="200">
+<img src="img/variation-graph.svg" width="600" height="300">
 
 Finally, indels are removed from the graph (could be the remotion of an entire node, or the removal of indels in the label of a node), and non-branching paths are collapsed. 
 
-<img src="img/variation-graph-postprocessed.svg" width="400" height="200">
+<img src="img/variation-graph-postprocessed.svg" width="600" height="400">
 
 
 ### Create a virtual environment
@@ -123,9 +123,9 @@ ___
 
 ## Considerations
 
-
-- **ALPHABET** $\{A,C,G,T,-,N\}$ **Not** case sensitive. We recommend to map all characters not in the alphabet to N.
-
+- Maximal blocks are computed with the [Wild-PBWT](https://github.com/AlgoLab/Wild-pBWT)
+- ILPs are solved using Gurobi
+- Each MSA must be in the **ALPHABET** $\{A,C,G,T,-,N\}$ **Not** case sensitive. We recommend to map all characters not in the alphabet to N.
 
 ___
 [OPTIONAL]
