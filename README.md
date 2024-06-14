@@ -1,10 +1,10 @@
-<img src="img/logo-pangeblocks.png" width="300" height="200">
+<img src="img/logo-pangeblocks-no-background.png" width="300" height="200">
 
 **Customized construction of pangenome graphs via maximal blocks**
 
 ## Pangenome graphs
 ___
-A pangenome graph is a data structure for a set of genomic sequences, where nodes are labeled by substrings in the alphabet $\{A,C,G,T\}$ in the case of DNA (and $\{A,C,G,U\}$ in the case of RNA). Input sequences are represented by paths in the graph, where each input sequence is spell by the concatenation of labels of the nodes in its path. 
+A pangenome graph is a data structure for a set of genomic sequences, where nodes are labeled by substrings in the alphabet $\lbrace A,C,G,T \rbrace$ in the case of DNA, and $\lbrace A,C,G,U \rbrace$ in the case of RNA (unknown basis are represented by an $N$). Input sequences are represented by paths in the graph, where each input sequence is spell by the concatenation of labels of the nodes in its path. 
 
 ## What is a block?
 ___
@@ -16,9 +16,9 @@ is defined as the triplet $(K, b, e)$.
 
 In the image below, each block is highlighted by a different color. For example, 
 
-- The yellow one in the middle: $(\{\square, \lozenge, \triangle \}, 3, 5)$  spelling **A - -**
-- The blue one spanning all rows:  $(\{ \circ ,\square, \lozenge, \triangle, \triangledown \}, 7, 8)$  spelling **G A**
-- The green one in column  5: $(\{\circ,\triangledown \}, 5, 5)$ spelling spelling the single character **C**
+- The yellow one in the middle: $(\lbrace \square, \lozenge, \triangle \rbrace, 3, 5)$  spelling **A - -**
+- The blue one spanning all rows:  $(\lbrace \circ ,\square, \lozenge, \triangle, \triangledown \rbrace, 7, 8)$  spelling **G A**
+- The green one in column  5: $(\lbrace \circ,\triangledown \rbrace, 5, 5)$ spelling spelling the single character **C**
 
 
 ## How it works?
