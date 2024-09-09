@@ -1,0 +1,6 @@
+# make_prg
+MAKEPRG_INPUT: /data/analysis-paper/msas/paper/100-pangeblocks
+
+MAKEPRG_OUTPUT: /data/analysis-paper/paper-graphs-tools/make_prg
+
+BIN: /home/avila/make_prg/make_prg_0.5.0

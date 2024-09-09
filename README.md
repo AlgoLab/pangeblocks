@@ -42,7 +42,7 @@ Finally, indels are removed from the graph (could be the remotion of an entire n
 
 ### Create a virtual environment
 ```bash
-mamba create env -n pangeblocks -f envs/snakemake.yml
+mamba create -n pangeblocks -f envs/snakemake.yml
 mamba activate pangeblocks
 ```
 

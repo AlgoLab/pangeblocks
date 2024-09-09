@@ -1,0 +1,6 @@
+# founderblockgraph
+FBG_INPUT: /data/analysis-paper/msas/paper/100-pangeblocks
+
+FBG_OUTPUT: /data/analysis-paper/paper-graphs-tools/founderblockgraph
+
+BIN: /home/avila/founderblockgraphs/founderblockgraph
