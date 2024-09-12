@@ -6,7 +6,7 @@
 
 ### Create a virtual environment
 ```bash
-mamba create -n pangeblocks -f envs/snakemake.yml
+mamba env create -n pangeblocks -f envs/snakemake.yml
 mamba activate pangeblocks
 ```
 
@@ -14,7 +14,7 @@ mamba activate pangeblocks
 
 To construct variation graphs from MSAs, run `pangeblocks`:
 ```bash
-snakemake -s pangeblock.smk -c32 --use-conda # variation graph as GFA
+snakemake -s pangeblocks.smk -c4 --use-conda # variation graph as GFA
 ```
 
 ### Parameters
@@ -63,10 +63,10 @@ the following command, replacing `/tmp/pgb` with the directory that will contain
 the results.
 
 ```
-docker run -it --user $(id -u):$(id -g) \ 
--v ./test/sars-cov-2-subMSA/:/data \
---mount type=bind,source=/tmp/pgb,target=/results \
-algolab/pangeblocks:latest
+mkdir /tmp/pgb-out
+docker run -it --user $(id -u):$(id -g) -v ./test/sars-cov-2-subMSA/:/data \
+    --mount type=bind,source=/tmp/pgb-out,target=/results algolab/pangeblocks:latest
+ls /tmp/pgb-out/sars-cov-2.gfa # <- this is the graph
 ```
 
 If you want to run  `pangeblocks` on your data, you also have to provide the
