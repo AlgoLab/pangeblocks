@@ -1,44 +1,8 @@
 <img src="img/logo-pangeblocks-no-background.png" width="300" height="200">
 
-**Customized construction of pangenome graphs via maximal blocks**
+# **Customized construction of pangenome graphs via maximal blocks**
 
-## Pangenome graphs
-___
-A pangenome graph is a data structure for a set of genomic sequences, where nodes are labeled by substrings in the alphabet $\lbrace A,C,G,T \rbrace$ in the case of DNA, and $\lbrace A,C,G,U \rbrace$ in the case of RNA (unknown basis are represented by an $N$). Input sequences are represented by paths in the graph, where each input sequence is spell by the concatenation of labels of the nodes in its path. 
-
-## What is a block?
-___
-In the context of an MSA, a **block** is defined as set of rows
-that shares the same string in an interval of columns.
-
-Formally, a block composed of the set of rows $K$, in the interval $[b,e]$ 
-is defined as the triplet $(K, b, e)$. 
-
-In the image below, each block is highlighted by a different color. For example, 
-
-- The yellow one in the middle: $(\lbrace \square, \lozenge, \triangle \rbrace, 3, 5)$  spelling **A - -**
-- The blue one spanning all rows:  $(\lbrace \circ ,\square, \lozenge, \triangle, \triangledown \rbrace, 7, 8)$  spelling **G A**
-- The green one in column  5: $(\lbrace \circ,\triangledown \rbrace, 5, 5)$ spelling spelling the single character **C**
-
-
-## How it works?
-___
-
-`pangeblocks` creates a variation graph from an MSA by selecting a set of blocks. 
-It creates a search space of blocks from **maximal blocks**, and then an Integer Linear Programming model selects the best subset of blocks to cover all cells of the MSA.
-
-<img src="img/matrix-cover-style.svg" width="600" height="300">
-
-- For each block we create a node with its label.
-- Consecutive blocks are connected by an arc.
-- Each input sequence in the MSA is spelled by a path in the graph 
-
-<img src="img/variation-graph.svg" width="600" height="300">
-
-Finally, indels are removed from the graph (could be the remotion of an entire node, or the removal of indels in the label of a node), and non-branching paths are collapsed. 
-
-<img src="img/variation-graph-postprocessed.svg" width="600" height="400">
-
+## How to run
 
 ### Create a virtual environment
 ```bash
@@ -118,17 +82,34 @@ algolab/pangeblocks:latest
 /app/pangeblocks --path-msa /data/my.msa
 ```
 
-
 ___
 
 ## Considerations
 
 - Maximal blocks are computed with the [Wild-PBWT](https://github.com/AlgoLab/Wild-pBWT)
-- ILPs are solved using Gurobi
+- ILPs are solved using [Gurobi](https://www.gurobi.com/)
 - Each MSA must be in the **ALPHABET** $\{A,C,G,T,-,N\}$ **Not** case sensitive. We recommend to map all characters not in the alphabet to N.
 
 ___
-[OPTIONAL]
+
+## How does it work?
+___
+`pangeblocks` creates a variation graph from an MSA by selecting a set of blocks. 
+It creates a search space of blocks from **maximal blocks**, and then an Integer Linear Programming model selects the best subset of blocks to cover all cells of the MSA.
+
+<img src="img/matrix-cover-style.svg" width="600" height="300">
+
+- For each block we create a node with its label.
+- Consecutive blocks are connected by an arc.
+- Each input sequence in the MSA is spelled by a path in the graph 
+
+<img src="img/variation-graph.svg" width="600" height="300">
+
+Finally, indels are removed from the graph (could be the remotion of an entire node, or the removal of indels in the label of a node), and non-branching paths are collapsed. 
+
+<img src="img/variation-graph-postprocessed.svg" width="600" height="400">
+
+## Supplementary tools
 ```bash
 snakemake -s eda.smk -c16         # compute stats for each MSA
 ```
