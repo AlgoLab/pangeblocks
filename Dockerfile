@@ -53,4 +53,4 @@ RUN make
 
 WORKDIR /app
 ENV XDG_CACHE_HOME=/results/.cache
-CMD ["/app/pangeblocks"]
+CMD ["/app/pangeblocks_docker"]
