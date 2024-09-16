@@ -12,18 +12,18 @@ import os
 # Command line options
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--dir-msa",
-    help="directory to MSAs in .fa format",
-    dest="dir_msa",
+    "--path-msa",
+    help="path to MSA in .fa format",
+    dest="path_msa",
     type=pathlib.Path,
-    # default="/data/sars-cov-2.fa",
+    default="/data/sars-cov-2.fa",
 )
 parser.add_argument(
-    "--dir-output",
-    help="path to save the outputs in GFA format",
-    dest="dir_output",
+    "--path-gfa",
+    help="path to save the output in GFA format",
+    dest="path_gfa",
     type=pathlib.Path,
-    # default="/results/sars-cov-2.gfa",
+    default="/results/sars-cov-2.gfa",
 )
 parser.add_argument(
     "--dir-subsolutions",
@@ -120,13 +120,12 @@ cmds = [
     f"-c{args.threads}",
     f"--printshellcmds",
     f"-s",
-    "pangeblocks-cli.smk",
-    "--use-conda",
-    f"--directory={pathlib.Path(os.path.realpath(__file__)).parent}",
+    "pangeblocks_docker.smk",
+    f"--directory={pathlib.Path(os.path.realpath(args.path_gfa)).parent}",
     f"--config",
     f"root_dir={pathlib.Path(os.path.realpath(__file__)).parents[0]}",
-    f"PATH_MSAS={args.dir_msa}",
-    f"PATH_OUTPUT={args.dir_output}",
+    f"PATH_MSA={args.path_msa}",
+    f"PATH_OUTPUT={args.path_gfa}",
     f"OBJECTIVE_FUNCTION={args.obj_function}",
     f"PENALIZATION={args.penalization}",
     f"MIN_LEN={args.min_len}",
