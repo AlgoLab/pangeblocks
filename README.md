@@ -58,9 +58,9 @@ options:
 #### Example 
 
 ```bash
-./pangeblocks --dir-msa test/sars-cov-2-subMSA --dir-output output-sars-cov-2 --obj-function weighted --penalization 100 --min-len
+./pangeblocks --dir-msa test/sars-cov-2-subMSA --dir-output output-sars-cov-2 --obj-function weighted --penalization 100 --min-len 20
 ```
-
+you will find the final graph in `output-sars-cov-2/gfa-unchop` 
 
 ### Run a grid experiment
 ___
