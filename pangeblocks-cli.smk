@@ -154,7 +154,7 @@ rule ilp:
     conda: 
         "envs/pangeblocks.yml"
     resources: 
-        mem_mb=get_mem_mb
+        mem_mb=config["MEM_MB"]
     shell:
         """
         /usr/bin/time --verbose src/exact_cover.py --path-msa {input.path_msa} --obj-function {wildcards.obj_func} \

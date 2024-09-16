@@ -5,58 +5,121 @@
 ## How to run
 
 ### Create a virtual environment
+
 ```bash
 mamba env create -n pangeblocks -f envs/snakemake.yml
 mamba activate pangeblocks
 ```
 
-### Create Variation Graphs from MSAs
+`pangeblocks` is a snakemake pipeline and it requires gurobi. 
+We provide a CLI that parses some command line options and produces the snakemake call to compute graphs from a directory with <msa>.fa files
+
+```bash
+usage: pangeblocks [-h] [--dir-msa DIR_MSA] [--dir-output DIR_OUTPUT] [--dir-subsolutions DIR_SUBSOLUTIONS] [--path-vert-blocks PATH_VERT_BLOCKS] [--log-level LOG_LEVEL]
+                   [--obj-function {nodes,strings,weighted,depth,depth_and_len}] [--penalization PENALIZATION] [--min-len MIN_LEN] [--time-limit TIME_LIMIT]
+                   [--threshold-vertical-blocks ALPHA] [--min-coverage MIN_COVERAGE] [--larger-decomposition] [--consistent] [--cores THREADS] [--submsa_threads SUBMSA_THREADS]
+                   [--ilp-threads ILP_THREADS] [--max-memory MAX_MEMORY] [--min-rows-block MIN_ROWS_BLOCK] [--max-rows-block MAX_ROWS_BLOCK] [--max-msa-size MAX_MSA_SIZE]
+
+options:
+  -h, --help            show this help message and exit
+  --dir-msa DIR_MSA     directory to MSAs in .fa format
+  --dir-output DIR_OUTPUT
+                        path to save the outputs in GFA format
+  --dir-subsolutions DIR_SUBSOLUTIONS
+                        directory where suboptimal coverage are saved
+  --path-vert-blocks PATH_VERT_BLOCKS
+                        json file with vertical blocks
+  --log-level LOG_LEVEL
+                        set log level (ERROR/WARNING/INFO/DEBUG)
+  --obj-function {nodes,strings,weighted,depth,depth_and_len}
+                        the objective function to optimize
+  --penalization PENALIZATION
+                        used only with the 'weighted', 'depth', and 'depth_and_len' obj function
+  --min-len MIN_LEN     used only with the 'weighted' obj function
+  --time-limit TIME_LIMIT
+                        Timeout (in minutes) to stop ILP
+  --threshold-vertical-blocks ALPHA
+                        minimum width of a vertical block
+  --min-coverage MIN_COVERAGE
+                        used only with 'depth' obj function
+  --larger-decomposition
+                        if True, use complete-decomposition of blocks, otherwise use row-maximal decomposition
+  --consistent          use an alpha-consistent strategy
+  --cores THREADS       Number of cores to be used
+  --submsa_threads SUBMSA_THREADS
+  --ilp-threads ILP_THREADS
+  --max-memory MAX_MEMORY
+                        Maximum RAM used (in MBytes)
+  --min-rows-block MIN_ROWS_BLOCK
+  --max-rows-block MAX_ROWS_BLOCK
+  --max-msa-size MAX_MSA_SIZE
+```
+
+#### Example 
+
+```bash
+./pangeblocks --dir-msa test/sars-cov-2-subMSA --dir-output output-sars-cov-2 --obj-function weighted --penalization 100 --min-len
+```
+
+
+### Run a grid experiment
+___
 
 To construct variation graphs from MSAs, run `pangeblocks`:
 ```bash
-snakemake -s pangeblocks.smk -c4 --use-conda # variation graph as GFA
+snakemake -s pangeblocks.smk -c16 --use-conda # variation graph as GFA
 ```
 
 ### Parameters
 
 Set the parameters in `params.yml`:
 ```yaml
-PATH_MSAS: "msas" # folder containing MSAs in .fasta/.fa format
-PATH_OUTPUT: "output" # folder where to save the results
+PATH_MSAS: /data/msas
+PATH_OUTPUT: /data/output
 OPTIMIZATION:
-  OBJECTIVE_FUNCTION:
-    - "nodes"    # minimize number of nodes 
-    - "strings"  # minimize length of the graph
-    - "weighted" # penalize by PENALIZATION blocks shorter that MIN_LEN (other blocks cost=1)
-    - "depth"    # penalize by PENALIZATION blocks used by less than MIN_COVERAGE (other blocks cost=1)
+  OBJECTIVE_FUNCTION:  # list of objective functions to try
+    - "nodes"
+    - "strings"
+    - "weighted"
+    - "depth"
+    - "depth_and_len"
   PENALIZATION: # used only with "weighted" and "depth"
-    - 3
-    - 5
-    - 7 
-    - 128
+    - 1000
   MIN_LEN: # used only with "weighted"
-    - 3
-    - 5
-    - 10   
+    - 15
+    - 20
+    - 25
+    - 30
   MIN_COVERAGE: # used only with "depth"
-    - 0.1
-    - 0.2
+    - 0.11
     - 0.3
-  THRESHOLD_VERTICAL_BLOCKS: # minimum length for vertical blocks to be fixed in the optimal solution
+    - 0.5
+  THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
     - 1
     - 2
     - 8
     - 16
-  TIME_LIMIT: 30 # time limit to run each ILP (minutes)
+  TIME_LIMIT: 240 # time limit to run each ILP (minutes)
 LOG_LEVEL: "INFO"
-THREADS: 
-  TOTAL: 32
-  SUBMSAS: 16
-  ILP: 8
+THREADS:
+  SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
+  ILP: 8     # gurobi threads
+DECOMPOSITION:
+  STANDARD: True          # True: use complete decomposition of blocks | False: use row-maximal decomposition of blocks
+  ALPHA_CONSISTENT: False # True: use an alpha consistent decomposition of blocks
+USE_WILDPBWT: True
+
+# When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
+# this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
+MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Complete
+
+# Maximal blocks with at least the following number of rows and columns will be fixed in the solution
+MIN_ROWS_FIX_BLOCK: 0
+MIN_COLS_FIX_BLOCK: 0
 ```
 
-
 ### Running under docker
+___
 
 To run `pangeblocks` on a small example (MSA with 10 rows and 200 columns), run
 the following command, replacing `/tmp/pgb` with the directory that will contain

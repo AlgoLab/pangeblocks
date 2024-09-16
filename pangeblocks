@@ -53,20 +53,20 @@ parser.add_argument(
 )
 parser.add_argument(
     "--penalization",
-    help="used only with the weighted obj function",
+    help="used only with the 'weighted', 'depth', and 'depth_and_len' obj function",
     dest="penalization",
     default=1000,
     type=int,
 )
 parser.add_argument(
     "--min-len",
-    help="used only with the weighted obj function",
+    help="used only with the 'weighted' obj function",
     dest="min_len",
     default=2,
     type=int,
 )
 parser.add_argument(
-    "--time-limit", help="Timeout (in minutes)", dest="time_limit", default=10, type=int
+    "--time-limit", help="Timeout (in minutes) to stop ILP", dest="time_limit", default=10, type=int
 )
 parser.add_argument(
     "--threshold-vertical-blocks",
@@ -76,11 +76,11 @@ parser.add_argument(
     type=int,
 )
 parser.add_argument(
-    "--min-coverage", help="", dest="min_coverage", default=0.2, type=float
+    "--min-coverage", help="used only with 'depth' obj function", dest="min_coverage", default=0.2, type=float
 )
 parser.add_argument(
     "--larger-decomposition",
-    help="",
+    help="if True, use complete-decomposition of blocks, otherwise use row-maximal decomposition",
     dest="standard_decomposition",
     action="store_true",
 )
