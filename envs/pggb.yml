@@ -1,5 +1,7 @@
 name: pggb
 channels:
+  - conda-forge
+  - defaults
   - bioconda
 dependencies:
   - pggb

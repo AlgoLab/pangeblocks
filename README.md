@@ -11,7 +11,7 @@ mamba env create -n pangeblocks -f envs/snakemake.yml
 mamba activate pangeblocks
 ```
 
-`pangeblocks` is a snakemake pipeline and it requires gurobi. 
+`pangeblocks` is a snakemake pipeline and it requires gurobi ([check license](https://www.gurobi.com/)). 
 We provide a CLI that parses some command line options and produces the snakemake call to compute graphs from a directory with <msa>.fa files
 
 ```bash
@@ -150,7 +150,8 @@ ___
 ## Considerations
 
 - Maximal blocks are computed with the [Wild-PBWT](https://github.com/AlgoLab/Wild-pBWT)
-- ILPs are solved using [Gurobi](https://www.gurobi.com/)
+- **Troubleshooting** Wild-PBWT requires SDSL, [check this to install it](https://github.com/msgr0/Wild-pBWT?tab=readme-ov-file#prerequisites)
+- ILPs are solved using [Gurobi](https://www.gurobi.com/), you might need a license 
 - Each MSA must be in the **ALPHABET** $\{A,C,G,T,-,N\}$ **Not** case sensitive. We recommend to map all characters not in the alphabet to N.
 
 ___
