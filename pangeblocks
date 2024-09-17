@@ -16,26 +16,11 @@ parser.add_argument(
     help="directory to MSAs in .fa format",
     dest="dir_msa",
     type=pathlib.Path,
-    # default="/data/sars-cov-2.fa",
 )
 parser.add_argument(
     "--dir-output",
     help="path to save the outputs in GFA format",
     dest="dir_output",
-    type=pathlib.Path,
-    # default="/results/sars-cov-2.gfa",
-)
-parser.add_argument(
-    "--dir-subsolutions",
-    help="directory where suboptimal coverage are saved",
-    dest="dir_subsolutions",
-    type=pathlib.Path,
-    default="/results/submsa",
-)
-parser.add_argument(
-    "--path-vert-blocks",
-    help="json file with vertical blocks",
-    dest="path_vert_blocks",
     type=pathlib.Path,
 )
 parser.add_argument(

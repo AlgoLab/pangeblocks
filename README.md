@@ -14,7 +14,7 @@ conda activate pangeblocks
 ```
 
 #### Gurobi
-`pangeblocks` requires gurobi ([check license](https://www.gurobi.com/)). 
+`pangeblocks` requires gurobi ([check license](https://www.gurobi.com/)).
 
 #### Example 
 To run `pangeblocks` on the example data we provide (MSA with 10 rows and 200 columns), run:
@@ -36,20 +36,16 @@ ls /tmp/pgb-out/sars-cov-2.gfa # <- this is the graph
 `pangeblocks` is a snakemake pipeline. We provide a CLI that parses command line options and exectues the snakemake pipeline to compute graphs from a directory with <msa>.fa files.
 
 ```bash
-usage: pangeblocks [-h] [--dir-msa DIR_MSA] [--dir-output DIR_OUTPUT] [--dir-subsolutions DIR_SUBSOLUTIONS] [--path-vert-blocks PATH_VERT_BLOCKS] [--log-level LOG_LEVEL]
-                   [--obj-function {nodes,strings,weighted,depth,depth_and_len}] [--penalization PENALIZATION] [--min-len MIN_LEN] [--time-limit TIME_LIMIT]
-                   [--threshold-vertical-blocks ALPHA] [--min-coverage MIN_COVERAGE] [--larger-decomposition] [--consistent] [--cores THREADS] [--submsa_threads SUBMSA_THREADS]
-                   [--ilp-threads ILP_THREADS] [--max-memory MAX_MEMORY] [--min-rows-block MIN_ROWS_BLOCK] [--max-rows-block MAX_ROWS_BLOCK] [--max-msa-size MAX_MSA_SIZE]
+usage: pangeblocks [-h] [--dir-msa DIR_MSA] [--dir-output DIR_OUTPUT] [--log-level LOG_LEVEL] [--obj-function {nodes,strings,weighted,depth,depth_and_len}] [--penalization PENALIZATION]
+                   [--min-len MIN_LEN] [--time-limit TIME_LIMIT] [--threshold-vertical-blocks ALPHA] [--min-coverage MIN_COVERAGE] [--larger-decomposition] [--consistent]
+                   [--cores THREADS] [--submsa_threads SUBMSA_THREADS] [--ilp-threads ILP_THREADS] [--max-memory MAX_MEMORY] [--min-rows-block MIN_ROWS_BLOCK]
+                   [--max-rows-block MAX_ROWS_BLOCK] [--max-msa-size MAX_MSA_SIZE]
 
 options:
   -h, --help            show this help message and exit
   --dir-msa DIR_MSA     directory to MSAs in .fa format
   --dir-output DIR_OUTPUT
                         path to save the outputs in GFA format
-  --dir-subsolutions DIR_SUBSOLUTIONS
-                        directory where suboptimal coverage are saved
-  --path-vert-blocks PATH_VERT_BLOCKS
-                        json file with vertical blocks
   --log-level LOG_LEVEL
                         set log level (ERROR/WARNING/INFO/DEBUG)
   --obj-function {nodes,strings,weighted,depth,depth_and_len}
@@ -79,58 +75,11 @@ options:
 ### Run a grid experiment
 ___
 
-To construct variation graphs from MSAs, run `pangeblocks`:
+To construct variation graphs from MSAs, **set parameters** in `params.yml` and then run `pangeblocks` 
 ```bash
 snakemake -s pangeblocks.smk -c16 --use-conda # variation graph as GFA
 ```
-
-### Parameters
-
-Set the parameters in `params.yml`:
-```yaml
-PATH_MSAS: /data/msas
-PATH_OUTPUT: /data/output
-OPTIMIZATION:
-  OBJECTIVE_FUNCTION:  # list of objective functions to try
-    - "nodes"
-    - "strings"
-    - "weighted"
-    - "depth"
-    - "depth_and_len"
-  PENALIZATION: # used only with "weighted" and "depth"
-    - 1000
-  MIN_LEN: # used only with "weighted"
-    - 15
-    - 20
-    - 25
-    - 30
-  MIN_COVERAGE: # used only with "depth"
-    - 0.11
-    - 0.3
-    - 0.5
-  THRESHOLD_VERTICAL_BLOCKS: # minimum length of vertical blocks to be fixed in the optimal solution
-    - 1
-    - 2
-    - 8
-    - 16
-  TIME_LIMIT: 240 # time limit to run each ILP (minutes)
-LOG_LEVEL: "INFO"
-THREADS:
-  SUBMSAS: 1 # ThreadPoolExecutor; 1 -> for loop
-  ILP: 8     # gurobi threads
-DECOMPOSITION:
-  STANDARD: True          # True: use complete decomposition of blocks | False: use row-maximal decomposition of blocks
-  ALPHA_CONSISTENT: False # True: use an alpha consistent decomposition of blocks
-USE_WILDPBWT: True
-
-# When spliting the MSA into subMSAs, they will have at most this number of cells/positions 
-# this will limit the number of constraints used by the ILP. Eg: 100 rows x 1000 columns = 100000 positions
-MAX_POSITIONS_SUBMSAS: 100000 # 200000 Row-maximal | 100000 Complete
-
-# Maximal blocks with at least the following number of rows and columns will be fixed in the solution
-MIN_ROWS_FIX_BLOCK: 0
-MIN_COLS_FIX_BLOCK: 0
-```
+for each file in the directory defined at `PATH_INPUT` a .gfa file will be created in `PATH_OUTPUT/gfa-unchop`
 
 ### Running under docker
 ___
