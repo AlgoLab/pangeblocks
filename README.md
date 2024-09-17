@@ -1,18 +1,39 @@
 <img src="img/logo-pangeblocks-no-background.png" width="300" height="200">
 
-# **Customized construction of pangenome graphs via maximal blocks**
+# Customized construction of pangenome graphs via maximal blocks
 
 ## How to run
 
-### Create a virtual environment
-
+### Prerequisites
+Clone the repo and setup the conda environment:
 ```bash
+git clone https://github.com/AlgoLab/pangeblocks.git
+cd pangeblocks
 mamba env create -n pangeblocks -f envs/snakemake.yml
-mamba activate pangeblocks
+conda activate pangeblocks
 ```
 
-`pangeblocks` is a snakemake pipeline and it requires gurobi ([check license](https://www.gurobi.com/)). 
-We provide a CLI that parses some command line options and produces the snakemake call to compute graphs from a directory with <msa>.fa files
+#### Gurobi
+`pangeblocks` requires gurobi ([check license](https://www.gurobi.com/)). 
+
+#### Example 
+To run `pangeblocks` on the example data we provide (MSA with 10 rows and 200 columns), run:
+```bash
+./pangeblocks --dir-msa test/sars-cov-2-subMSA --dir-output output-sars-cov-2 --obj-function weighted --penalization 100 --min-len 20
+```
+You will find the final graph in `output-sars-cov-2/gfa-unchop`.
+
+Alternatively, you can run `pangeblocks` on the small example using docker:
+```
+mkdir /tmp/pgb-out
+docker run -it --user $(id -u):$(id -g) -v ./test/sars-cov-2-subMSA/:/data \
+    --mount type=bind,source=/tmp/pgb-out,target=/results algolab/pangeblocks:latest
+ls /tmp/pgb-out/sars-cov-2.gfa # <- this is the graph
+```
+
+### Tweak the execution
+
+`pangeblocks` is a snakemake pipeline. We provide a CLI that parses command line options and exectues the snakemake pipeline to compute graphs from a directory with <msa>.fa files.
 
 ```bash
 usage: pangeblocks [-h] [--dir-msa DIR_MSA] [--dir-output DIR_OUTPUT] [--dir-subsolutions DIR_SUBSOLUTIONS] [--path-vert-blocks PATH_VERT_BLOCKS] [--log-level LOG_LEVEL]
@@ -54,13 +75,6 @@ options:
   --max-rows-block MAX_ROWS_BLOCK
   --max-msa-size MAX_MSA_SIZE
 ```
-
-#### Example 
-
-```bash
-./pangeblocks --dir-msa test/sars-cov-2-subMSA --dir-output output-sars-cov-2 --obj-function weighted --penalization 100 --min-len 20
-```
-you will find the final graph in `output-sars-cov-2/gfa-unchop` 
 
 ### Run a grid experiment
 ___
@@ -121,18 +135,7 @@ MIN_COLS_FIX_BLOCK: 0
 ### Running under docker
 ___
 
-To run `pangeblocks` on a small example (MSA with 10 rows and 200 columns), run
-the following command, replacing `/tmp/pgb` with the directory that will contain
-the results.
-
-```
-mkdir /tmp/pgb-out
-docker run -it --user $(id -u):$(id -g) -v ./test/sars-cov-2-subMSA/:/data \
-    --mount type=bind,source=/tmp/pgb-out,target=/results algolab/pangeblocks:latest
-ls /tmp/pgb-out/sars-cov-2.gfa # <- this is the graph
-```
-
-If you want to run  `pangeblocks` on your data, you also have to provide the
+If you want to run  `pangeblocks` on your data using docker, you have to provide the
 directory containing the MSA, replacing `./test/sars-cov-2-subMSA/` with your
 directory and adding the correct  `pangeblocks` call, specifying the arguments.
 For example:
